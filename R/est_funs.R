@@ -141,14 +141,13 @@ get.Seff <- function(dat, B, s2, args, return.sums = T) {
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 get.root <- function(dat, score, start, args = list()) {
 
-  #tryCatch(
-    #expr =
-  rootSolve::multiroot(
+  tryCatch(
+    expr = rootSolve::multiroot(
       f = function(theta) score(dat = dat, args = args,
                                 B = head(theta, -1), s2 = exp(tail(theta, 1))),
-      start = start)$root#,
-    #warning = function(w) rep(NA, length(start)),
-    #error = function(e) rep(NA, length(start)))
+      start = start)$root,
+    warning = function(w) rep(NA, length(start)),
+    error = function(e) rep(NA, length(start)))
 
 }
 
