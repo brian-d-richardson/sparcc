@@ -81,6 +81,7 @@ sim1 <- function(n, q, x.shape = 1, c.shape = 1,
   # semiparametric efficient score
   Beff <- get.root(dat = dat, score = get.Seff, start = Bcc,
                    args = list(mu = mu, d.mu = d.mu, SF = SF, fy = fy,
+                               eta1 = eta1,
                                x.nds = x.nds, x.wts = x.wts,
                                c.nds = c.nds, c.wts = c.wts,
                                y.nds = y.nds, y.wts = y.wts))
