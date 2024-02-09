@@ -64,7 +64,7 @@ sim1 <- function(n, q, x.shape = 1, c.shape = 1,
   fy <- function(y, x, B, s2) dnorm(x = y, mean = mu(x, B), sd = sqrt(s2))
 
   # full data score vector
-  SF <- function(y, x, B, s2) {
+  SF <- function(y, x, B, s2, mu, d.mu) {
     cbind((y - mu(x, B)) * d.mu(x, B),
           (y - mu(x, B)) ^ 2 - s2)
   }
