@@ -1,7 +1,14 @@
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #' complete case score function
 #'
-#' @param
+#' @param dat a data frame including columns Y, W, Delta, Z
+#' @param B a numeric vector, parameters in the outcome model
+#' @param s2 a positive number, variance in the outcome model
+#' @param args list of additional arguments
+#' @param return.sums logical indicator for returning sum of scores as opposed
+#' to individual scores, default is TRUE
+#'
+#' @return complete case score function values
 #'
 #' @export
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -26,7 +33,9 @@ get.Scc <- function(dat, B, s2, args, return.sums = T) {
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #' MLE score function
 #'
-#' @param
+#' @inheritParams get.Scc
+#'
+#' @return maximum likelihood score function values
 #'
 #' @export
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -68,7 +77,9 @@ get.Sml <- function(dat, B, s2, args, return.sums = T) {
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #' semiparametric efficient score function
 #'
-#' @param
+#' @inheritParams get.Scc
+#'
+#' @return semiparametric efficient score function values
 #'
 #' @export
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -117,9 +128,14 @@ get.Seff <- function(dat, B, s2, args, return.sums = T) {
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #' find root of estimating function
 #'
-#' @param
+#' @inheritParams get.Scc
+#' @param score a function of theta = c(beta, log(s2)), the estimating function
+#' to be solved
+#' @param start a numeric vector, starting value for root search
 #'
 #' @importFrom rootSolve multiroot
+#'
+#' @return root of estimating function
 #'
 #' @export
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

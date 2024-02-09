@@ -1,7 +1,13 @@
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #' simulation setup 1
 #'
-#' @param
+#' @inheritParams get.q
+#' @inheritParams gen.data
+#'
+#' @param mx a positive number, the number of nodes in quadrature grid for X
+#' @param mc a positive number, the number of nodes in quadrature grid for C
+#' @param my a positive number, the number of nodes in quadrature grid for Y
+#' @param seed a positive integer, the seed value for random number generation
 #'
 #' @importFrom statmod gauss.quad
 #'

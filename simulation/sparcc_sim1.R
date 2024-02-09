@@ -15,10 +15,9 @@
 # prep workspace ----------------------------------------------------------
 
 rm(list = ls())
-setwd(dirname(getwd()))
-source("R/int_eq.R"); source("R/est_funs.R");
-source("R/misc_helpers.R"); source("R/sims.R");
-source("R/data_gen.R")
+library(devtools)
+install_github("brian-d-richardson/sparcc")
+library(sparcc)
 
 # simulation parameters ---------------------------------------------------
 

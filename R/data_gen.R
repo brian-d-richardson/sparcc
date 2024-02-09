@@ -1,8 +1,11 @@
 #' get censoring probability q given X and C ~ gamma
 #'
-#' @param
+#' @param x.rate a positive number, rate parameter for gamma distribution of X
+#' @param x.shape a positive number, shape parameter for gamma distribution of X
+#' @param c.rate a positive number, rate parameter for gamma distribution of C
+#' @param c.shape a positive number, shape parameter for gamma distribution of C
 #'
-#' @return
+#' @return censoring proportion q
 #'
 #' @export
 get.q <- function(x.rate, x.shape, c.rate, c.shape) {
@@ -20,9 +23,10 @@ get.q <- function(x.rate, x.shape, c.rate, c.shape) {
 
 #' get rate parameter for C given desired censoring proportion
 #'
-#' @param
+#' @inheritParams get.q
+#' @param q a number in [0,1], the censoring proportion
 #'
-#' @return
+#' @return rate parameter for gamma distribution of C
 #'
 #' @export
 get.c.rate <- function(q, x.rate, x.shape, c.shape) {
@@ -36,9 +40,13 @@ get.c.rate <- function(q, x.rate, x.shape, c.shape) {
 
 #' generate data
 #'
-#' @param
+#' @inheritParams get.q
+#' @param n a positive integer, the sample size
+#' @param q a number in [0,1], the censoring proportion
+#' @param B a vector of numbers, parameters in the outcome model
+#' @param s2 a positive number, variance in the outcome model
 #'
-#' @return
+#' @return a data frame
 #'
 #' @export
 gen.data <- function(n, q, B, s2, x.rate, x.shape, c.rate, c.shape) {

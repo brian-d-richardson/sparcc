@@ -1,7 +1,9 @@
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #' compute d vector in integral equation
 #'
-#' @param
+#' @inheritParams get.b
+#'
+#' @return d matrix
 #'
 #' @export
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -19,12 +21,14 @@ get.d <- function(x.nds, x.wts, c.nds, c.wts) {
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #' compute M matrix in integral equation
 #'
-#' @param
+#' @inheritParams get.b
+#'
+#' @return M matrix
 #'
 #' @export
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 get.M <- function(B, s2, mu, fy,
-                  x.nds, x.wts, c.nds, c.wts, y.wts, y.nds) {
+                  x.nds, x.wts, c.nds, c.wts, y.nds, y.wts) {
 
   mx <- length(x.nds)
   mc <- length(c.nds)
@@ -56,12 +60,24 @@ get.M <- function(B, s2, mu, fy,
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #' compute b matrix in integral equation
 #'
-#' @param
+#' @param B a numeric vector, parameters in the outcome model
+#' @param s2 a positive number, variance in the outcome model
+#' @param mu a function, mean of outcome Y given covariates X, Z
+#' @param fy a function, conditional density of outcome Y given covariates X, Z
+#' @param SF a function, full data score
+#' @param x.nds a numeric vector, nodes for quadrature rule for X
+#' @param x.wts a numeric vector, weights for quadrature rule for X
+#' @param c.nds a numeric vector, nodes for quadrature rule for C
+#' @param c.wts a numeric vector, weights for quadrature rule for C
+#' @param y.nds a numeric vector, nodes for quadrature rule for Y
+#' @param y.wts a numeric vector, weights for quadrature rule for Y
+#'
+#' @return b matrix
 #'
 #' @export
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 get.b <- function(B, s2, mu, d.mu, fy, SF,
-                  x.nds, x.wts, c.nds, c.wts, y.wts, y.nds) {
+                  x.nds, x.wts, c.nds, c.wts, y.nds, y.wts) {
 
   mx <- length(x.nds)
   mc <- length(c.nds)
@@ -93,7 +109,9 @@ get.b <- function(B, s2, mu, d.mu, fy, SF,
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #' compute a function at nodes
 #'
-#' @param
+#' @inheritParams get.b
+#'
+#' @return approximated a values at nodes
 #'
 #' @export
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -120,7 +138,13 @@ get.a <- function(B, s2, mu, d.mu, fy, SF,
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #' interpolate a function between nodes
 #'
-#' @param
+#' @param a.vals a numeric matrix, values of a function at nodes
+#' @param x.nds a numeric vector, nodes for quadrature rule for X
+#' @param x.wts a numeric vector, weights for quadrature rule for X
+#' @param x.new a numeric vector, x values at which to interpolate a
+#' @param eta1 a function, density of X
+#'
+#' @return interpolated values of a
 #'
 #' @export
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

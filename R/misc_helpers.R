@@ -1,6 +1,8 @@
 #' Assess estimating equation
 #'
-#' @param ee ...
+#' @param ee a numeric matrix, estimating function values at each observation
+#' @param digits a non-negative integer, number of digits to round results,
+#' default is 2
 #'
 #' @return individual or summation estimating function values
 #'
@@ -21,11 +23,14 @@ assess.ee <- function(ee, digits = 2) {
 
 #' Assess data generation
 #'
-#' @param
+#' @inheritParams gen.data
+#' @inheritParams get.q
 #'
-#' @return
+#' @param x.mean a positive number, the mean of X
 #'
 #' @importFrom ggplot2 ggplot geom_histogram labs ggtitle
+#'
+#' @return a plot of generated data
 #'
 #' @export
 assess.dat <- function(n, q, B, x.mean, x.shape, c.shape) {
