@@ -1,2 +1,2 @@
-# sparc
+# sparcc
 semiparametric estimation with censored covariates
