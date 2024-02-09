@@ -42,33 +42,6 @@ sim1 <- function(n, q, x.shape = 1, c.shape = 1,
   dat <- dat.list$dat            # observed data
   datcc <- dat.list$datcc        # complete case data
 
-  ## define densities
-
-  # X density
-  eta1 <- function(x) dexp(x, rate = x.rate / x.shape)
-
-  # C density
-  eta2 <- function(c) dexp(c, rate = c.rate / c.shape)
-
-  # mean function mu(X, B) = E(Y | X)
-  mu <- function(x, B) {
-    B[1] + B[2]*x
-  }
-
-  # gradient of mu w.r.t. B
-  d.mu <- function(x, B) {
-    cbind(1, x)
-  }
-
-  # Y density
-  fy <- function(y, x, B, s2) dnorm(x = y, mean = mu(x, B), sd = sqrt(s2))
-
-  # full data score vector
-  SF <- function(y, x, B, s2) {
-    cbind((y - mu(x, B)) * d.mu(x, B),
-          (y - mu(x, B)) ^ 2 - s2)
-  }
-
   ## create quadrature rules
 
   # X quadrature
@@ -112,3 +85,31 @@ sim1 <- function(n, q, x.shape = 1, c.shape = 1,
   return(ret)
 
 }
+
+## define densities
+
+# X density
+eta1 <- function(x) dexp(x, rate = x.rate / x.shape)
+
+# C density
+eta2 <- function(c) dexp(c, rate = c.rate / c.shape)
+
+# mean function mu(X, B) = E(Y | X)
+mu <- function(x, B) {
+  B[1] + B[2]*x
+}
+
+# gradient of mu w.r.t. B
+d.mu <- function(x, B) {
+  cbind(1, x)
+}
+
+# Y density
+fy <- function(y, x, B, s2) dnorm(x = y, mean = mu(x, B), sd = sqrt(s2))
+
+# full data score vector
+SF <- function(y, x, B, s2) {
+  cbind((y - mu(x, B)) * d.mu(x, B),
+        (y - mu(x, B)) ^ 2 - s2)
+}
+
