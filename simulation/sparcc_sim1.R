@@ -16,13 +16,14 @@
 
 rm(list = ls())
 library(devtools)
-install_github("brian-d-richardson/sparcc")
-library(sparcc)
+#install_github("brian-d-richardson/sparcc"); library(sparcc)
+setwd(dirname(getwd()))
+load_all()
 
 # simulation parameters ---------------------------------------------------
 
 # baseline seed (specific to cluster)
-args <- 1#commandArgs(TRUE)
+args <- commandArgs(TRUE)
 base.seed <- 10^6 * as.integer(args)
 
 # number of sims per cluster
@@ -66,7 +67,7 @@ sim.out <- pbapply::pbvapply(
 
 # save sim results
 write.csv(sim.out, row.names = F,
-          paste0("sim_data/sim1/sd", as.integer(args), ".csv"))
+          paste0("simulation/sim_data/sim1/sd", as.integer(args), ".csv"))
 
 
 
