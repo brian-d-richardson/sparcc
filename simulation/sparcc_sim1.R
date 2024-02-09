@@ -22,7 +22,7 @@ library(sparcc)
 # simulation parameters ---------------------------------------------------
 
 # baseline seed (specific to cluster)
-args <- commandArgs(TRUE)
+args <- 1#commandArgs(TRUE)
 base.seed <- 10^6 * as.integer(args)
 
 # number of sims per cluster

@@ -42,6 +42,14 @@ sim1 <- function(n, q, x.shape = 1, c.shape = 1,
   dat <- dat.list$dat            # observed data
   datcc <- dat.list$datcc        # complete case data
 
+  ## define densities
+
+  # X density
+  eta1 <- function(x) dexp(x, rate = x.rate / x.shape)
+
+  # C density
+  eta2 <- function(c) dexp(c, rate = c.rate / c.shape)
+
   ## create quadrature rules
 
   # X quadrature
@@ -85,14 +93,6 @@ sim1 <- function(n, q, x.shape = 1, c.shape = 1,
   return(ret)
 
 }
-
-## define densities
-
-# X density
-eta1 <- function(x) dexp(x, rate = x.rate / x.shape)
-
-# C density
-eta2 <- function(c) dexp(c, rate = c.rate / c.shape)
 
 # mean function mu(X, B) = E(Y | X)
 mu <- function(x, B) {
