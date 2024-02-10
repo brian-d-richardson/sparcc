@@ -55,18 +55,31 @@ assess.dat <- function(n, q, B, s2, x.mean, x.shape, c.shape) {
   x.bar <- mean(datf$X)                            # sample mean of X
   x.rate.hat <- mean(dat$Delta) / mean(dat$W)      # mle for exponential X rate
   c.rate.hat <- mean(1 - dat$Delta) / mean(dat$W)  # mle for exponential C rate
+  x.grid <- seq(0, max(c(datf$X, datf$C)), 0.01)
 
   # plot data
-  ggplot(data = datf) +
-    geom_histogram(aes(x = X), fill = "blue", alpha = 0.5, bins = 30) +
-    geom_histogram(aes(x = C), fill = "red", alpha = 0.5, bins = 30) +
+  ggplot() +
+    geom_histogram(data = datf,
+                   aes(x = X,
+                       y = after_stat(density)),
+                   fill = "blue", alpha = 0.5, bins = 200) +
+    geom_histogram(data = datf,
+                   aes(x = C,
+                       y = after_stat(density)),
+                   fill = "red", alpha = 0.5, bins = 200) +
+    geom_line(aes(x = x.grid,
+                  y = dexp(x = x.grid, rate = x.rate.hat)),
+              color = "blue", linewidth = 1) +
+    geom_line(aes(x = x.grid,
+                  y = dexp(x = x.grid, rate = c.rate.hat)),
+              color = "red", linewidth = 1) +
     labs(x = "X (blue) or C (red)",
          y = "Count") +
-    ggtitle("Distributions of X and C",
+    ggtitle("Estimated vs Observed Distributions of X and C",
             subtitle = paste0("x.shape = ", x.shape, "; ",
-                              "c.shape = ", c.shape, "; ",
-                              "q.hat = ", q.hat, "; ",
-                              "x.bar = ", round(x.bar, 3), "\n",
-                              "x.rate.hat = ", round(x.rate.hat, 3), "; ",
-                              "c.rate.hat = ", round(c.rate.hat, 3)))
+                              "c.shape = ", c.shape, "\n",
+                              "q.hat = ", round(q.hat, 2), "; ",
+                              "x.bar = ", round(x.bar, 2), "\n",
+                              "x.rate.hat = ", round(x.rate.hat, 2), "; ",
+                              "c.rate.hat = ", round(c.rate.hat, 2)))
 }

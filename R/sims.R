@@ -1,3 +1,22 @@
+# mean function mu(X, B) = E(Y | X)
+mu <- function(x, B) {
+  B[1] + B[2]*x
+}
+
+# gradient of mu w.r.t. B
+d.mu <- function(x, B) {
+  cbind(1, x)
+}
+
+# Y density
+fy <- function(y, x, B, s2) dnorm(x = y, mean = mu(x, B), sd = sqrt(s2))
+
+# full data score vector
+SF <- function(y, x, B, s2) {
+  cbind((y - mu(x, B)) * d.mu(x, B),
+        (y - mu(x, B)) ^ 2 - s2)
+}
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #' simulation setup 1
 #'
@@ -42,13 +61,16 @@ sim1 <- function(n, q, x.shape = 1, c.shape = 1,
   dat <- dat.list$dat            # observed data
   datcc <- dat.list$datcc        # complete case data
 
-  ## define densities
+  ## estimate nuisance densities
+
+  x.rate.hat <- mean(dat$Delta) / mean(dat$W)      # mle for exponential X rate
+  c.rate.hat <- mean(1 - dat$Delta) / mean(dat$W)  # mle for exponential C rate
 
   # X density
-  eta1 <- function(x) dexp(x, rate = x.rate / x.shape)
+  eta1 <- function(x) dexp(x, rate = x.rate.hat)
 
   # C density
-  eta2 <- function(c) dexp(c, rate = c.rate / c.shape)
+  eta2 <- function(c) dexp(c, rate = c.rate.hat)
 
   ## create quadrature rules
 
@@ -74,7 +96,7 @@ sim1 <- function(n, q, x.shape = 1, c.shape = 1,
   Bcc <- get.root(dat = dat, score = get.Scc, start = c(0, 0, 0))
 
   # MLE
-  Bmle <- get.root(dat = dat, score = get.Sml, start = Bcc,
+  Bmle <- get.root.notrycatch(dat = dat, score = get.Sml, start = Bcc,
                    args = list(mu = mu, d.mu = d.mu, SF = SF, fy = fy,
                                x.nds = x.nds, x.wts = x.wts))
 
@@ -94,23 +116,3 @@ sim1 <- function(n, q, x.shape = 1, c.shape = 1,
   return(ret)
 
 }
-
-# mean function mu(X, B) = E(Y | X)
-mu <- function(x, B) {
-  B[1] + B[2]*x
-}
-
-# gradient of mu w.r.t. B
-d.mu <- function(x, B) {
-  cbind(1, x)
-}
-
-# Y density
-fy <- function(y, x, B, s2) dnorm(x = y, mean = mu(x, B), sd = sqrt(s2))
-
-# full data score vector
-SF <- function(y, x, B, s2) {
-  cbind((y - mu(x, B)) * d.mu(x, B),
-        (y - mu(x, B)) ^ 2 - s2)
-}
-
