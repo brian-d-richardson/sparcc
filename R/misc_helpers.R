@@ -62,11 +62,11 @@ assess.dat <- function(n, q, B, s2, x.mean, x.shape, c.shape) {
     geom_histogram(data = datf,
                    aes(x = X,
                        y = after_stat(density)),
-                   fill = "blue", alpha = 0.5, bins = 200) +
+                   fill = "blue", alpha = 0.5, bins = n/50) +
     geom_histogram(data = datf,
                    aes(x = C,
                        y = after_stat(density)),
-                   fill = "red", alpha = 0.5, bins = 200) +
+                   fill = "red", alpha = 0.5, bins = n/50) +
     geom_line(aes(x = x.grid,
                   y = dexp(x = x.grid, rate = x.rate.hat)),
               color = "blue", linewidth = 1) +
