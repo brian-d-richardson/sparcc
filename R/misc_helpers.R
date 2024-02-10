@@ -33,7 +33,7 @@ assess.ee <- function(ee, digits = 2) {
 #' @return a plot of generated data
 #'
 #' @export
-assess.dat <- function(n, q, B, x.mean, x.shape, c.shape) {
+assess.dat <- function(n, q, B, s2, x.mean, x.shape, c.shape) {
 
   x.rate <- x.shape / x.mean
 
@@ -43,14 +43,18 @@ assess.dat <- function(n, q, B, x.mean, x.shape, c.shape) {
     x.shape = x.shape,
     c.shape = c.shape)
 
-  # generate full data (Y, X, C)
-  datf <- gen.data(n = n, q = q, B = B,
-                   x.rate = x.rate, x.shape = x.shape,
-                   c.rate = c.rate, c.shape = c.shape)$datf
+  # generate data
+  dat <- gen.data(n = n, q = q, B = B, s2 = s2,
+                  x.rate = x.rate, x.shape = x.shape,
+                  c.rate = c.rate, c.shape = c.shape)
+  datf <- dat$datf # full data (Y, X, C)
+  dat <- dat$dat   # observed data (Y, W, Delta)
 
   # compute empirical values
-  q.hat <- mean(datf$X > datf$C)  # censoring proportion
-  x.bar <- round(mean(datf$X), 2) # sample mean of X
+  q.hat <- mean(datf$X > datf$C)                   # censoring proportion
+  x.bar <- mean(datf$X)                            # sample mean of X
+  x.rate.hat <- mean(dat$Delta) / mean(dat$W)      # mle for exponential X rate
+  c.rate.hat <- mean(1 - dat$Delta) / mean(dat$W)  # mle for exponential C rate
 
   # plot data
   ggplot(data = datf) +
@@ -62,5 +66,7 @@ assess.dat <- function(n, q, B, x.mean, x.shape, c.shape) {
             subtitle = paste0("x.shape = ", x.shape, "; ",
                               "c.shape = ", c.shape, "; ",
                               "q.hat = ", q.hat, "; ",
-                              "x.bar = ", x.bar))
+                              "x.bar = ", round(x.bar, 3), "\n",
+                              "x.rate.hat = ", round(x.rate.hat, 3), "; ",
+                              "c.rate.hat = ", round(c.rate.hat, 3)))
 }
