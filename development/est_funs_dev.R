@@ -15,14 +15,14 @@
 # prep workspace ----------------------------------------------------------
 
 rm(list = ls())
-setwd(dirname(getwd()))
-source("R/int_eq.R"); source("R/est_funs.R"); source("R/misc_helpers.R")
+install_github("brian-d-richardson/sparcc")
+library(sparcc)
 library(statmod)
 
 # define parameters -------------------------------------------------------
 
-n <- 1000                  # sample size
-s2 <- 0.5                  # variance of Y|X,Z
+n <- 10000                 # sample size
+s2 <- 1.1                  # variance of Y|X,Z
 q <- .6                    # censoring proportion
 B <- c(1, 2)               # outcome model parameters
 mx <- 21                   # number of nodes for X

@@ -15,10 +15,9 @@
 # prep workspace ----------------------------------------------------------
 
 rm(list = ls())
-setwd(dirname(getwd()))
-library(devtools)
+install_github("brian-d-richardson/sparcc")
+library(sparcc)
 library(ggplot2)
-load_all()
 
 # define parameters -------------------------------------------------------
 

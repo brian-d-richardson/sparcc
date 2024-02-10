@@ -14,17 +14,17 @@
 #' @export
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 sim1 <- function(n, q, x.shape = 1, c.shape = 1,
-                 mx = 50, mc = 15, my = 2, seed) {
+                 mx = 100, mc = 15, my = 2, seed) {
 
   ## for troublehsooting
   #library(devtools); load_all()
-  #n = 10000; q = 0.8; x.shape = 1; c.shape = 1; mx = 50; mc = 15; my = 2; seed = 1
+  #n = 10000; q = 0.8; x.shape = 1; c.shape = 1; mx = 100; mc = 15; my = 2; seed = 1
 
   set.seed(seed)
 
   ## define parameters
   B <- c(1, 2)               # outcome model parameters
-  s2 <- 0.81                 # Var(Y|X,Z)
+  s2 <- 1.1                  # Var(Y|X,Z)
   x.mean <- 0.25
   x.rate <- x.shape / x.mean # rate parameter for gamma distribution of X
   c.rate <- get.c.rate(      # rate parameter for gamma distribution of C
