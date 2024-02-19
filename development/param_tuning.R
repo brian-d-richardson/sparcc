@@ -20,15 +20,24 @@ library(statmod)
 library(ggplot2)
 library(tidyverse)
 library(pbapply)
-source("R/int_eq.R"); source("R/est_funs.R"); source("R/misc_helpers.R")
+library(devtools)
+load_all()
 
 # define parameters -------------------------------------------------------
 
 n <- 10000                 # sample size
 q <- .8                    # censoring proportion
 B <- c(1, 2)               # outcome model parameters
-x.rate <- 4                # rate parameter for gamma distribution of X
-c.rate <- x.rate*q/(1-q)   # rate parameter for exp distribution of C
+s2 <- 1.1                  # Var(Y|X,Z)
+x.mean <- 0.25
+x.shape <- 2
+c.shape <- 1
+x.rate <- x.shape / x.mean # rate parameter for gamma distribution of X
+c.rate <- get.c.rate(      # rate parameter for gamma distribution of C
+  q = q,
+  x.rate = x.rate,
+  x.shape = x.shape,
+  c.shape = c.shape)
 
 # X density
 eta1 <- function(x) dexp(x, rate = x.rate)
@@ -47,30 +56,30 @@ d.mu <- function(x, B) {
 }
 
 # Y density
-fy <- function(y, x, B) dnorm(x = y, mean = mu(x, B), sd = 1)
+fy <- function(y, x, B, s2) dnorm(x = y, mean = mu(x, B), sd = sqrt(s2))
 
 # full data score vector
-SBF <- function(y, x, B) {
-  (y - mu(x, B)) *
-   d.mu(x, B)
+SF <- function(y, x, B, s2) {
+  cbind((y - mu(x, B)) * d.mu(x, B),
+        (y - mu(x, B)) ^ 2 - s2)
 }
 
 # generate data -----------------------------------------------------------
 
-X <- rexp(n, x.rate)                         # censored covariate
-C <- rexp(n, c.rate)                         # censoring time
-W <- ifelse(X <= C, X, C)                    # observed covariate
-Delta <- ifelse(X <= C, 1, 0)                # uncensored indicator
-Y <- rnorm(n, cbind(1, X) %*% B, sd = 1)     # outcome
-dat0 <- data.frame(Y, W = X, Delta = 1)      # oracle data
-dat <- data.frame(Y, W, Delta)               # observed data
-datcc <- dat[Delta == 1,]                    # complete case data
+## generate data
+dat.list <- gen.data(n = n, q = q, B = B, s2 = s2,
+                     x.rate = x.rate, x.shape = x.shape,
+                     c.rate = c.rate, c.shape = c.shape)
+datf <- dat.list$datf          # full data
+dat0 <- dat.list$dat0          # oracle data
+dat <- dat.list$dat            # observed data
+datcc <- dat.list$datcc        # complete case data
 
 
 # search over grid of mx, mc, my ------------------------------------------
 
 # grid of possible values for mx and mc
-mx.grid <- seq(20, 80, by = 10)
+mx.grid <- seq(20, 120, by = 10)
 mc.grid <- seq(10, 20, by = 5)
 my.grid <- seq(2, 5, by = 1)
 search.in <- expand.grid(mx = mx.grid,
@@ -80,15 +89,15 @@ search.in <- expand.grid(mx = mx.grid,
 # store Seff and computation time for each mx, mc, my (takes ~ 2 min to run)
 search.out <- pbvapply(
   X = 1:nrow(search.in),
-  FUN.VALUE = numeric(6),
+  FUN.VALUE = numeric(7),
   FUN = function(ii) {
 
     # X quadrature
-    x.nds <- seq(10^-6, max(X), length = search.in$mx[ii])
+    x.nds <- seq(10^-6, max(datf$X), length = search.in$mx[ii])
     x.wts <- eta1(x.nds) / sum(eta1(x.nds))
 
     # C quadrature
-    c.nds <- seq(10^-6, max(C), length = search.in$mc[ii])
+    c.nds <- seq(10^-6, max(datf$C), length = search.in$mc[ii])
     c.wts <- eta2(c.nds) / sum(eta2(c.nds))
 
     # Y quadrature
@@ -99,8 +108,8 @@ search.out <- pbvapply(
     # evaluate efficient score
     st <- Sys.time()
     Seff <- get.Seff(
-      dat = dat, B = B,
-      args = list(mu = mu, d.mu = d.mu, SBF = SBF, fy = fy, eta1 = eta1,
+      dat = dat, B = B, s2 = s2,
+      args = list(mu = mu, d.mu = d.mu, SF = SF, fy = fy, eta1 = eta1,
                   x.nds = x.nds, x.wts = x.wts,
                   c.nds = c.nds, c.wts = c.wts,
                   y.nds = y.nds, y.wts = y.wts))
@@ -115,12 +124,12 @@ search.out <- pbvapply(
   t() %>%
   as.data.frame()
 
-#write.csv(search.out, "sim_data/param_tuning/mc_mc_res.csv", row.names = F)
+#write.csv(search.out, "simulation/sim_data/param_tuning/mc_mc_res.csv", row.names = F)
 
 # plot results ------------------------------------------------------------
 
 # load results
-#search.out <- read.csv("sim_data/param_tuning/mc_mc_res.csv")
+#search.out <- read.csv("simulation/sim_data/param_tuning/mc_mc_res.csv")
 search.out.long <- search.out %>%
   pivot_longer(cols = c(Seff1, Seff2, Time)) %>%
   mutate(mc = factor(mc),

@@ -1,22 +1,3 @@
-# mean function mu(X, B) = E(Y | X)
-mu <- function(x, B) {
-  B[1] + B[2]*x
-}
-
-# gradient of mu w.r.t. B
-d.mu <- function(x, B) {
-  cbind(1, x)
-}
-
-# Y density
-fy <- function(y, x, B, s2) dnorm(x = y, mean = mu(x, B), sd = sqrt(s2))
-
-# full data score vector
-SF <- function(y, x, B, s2) {
-  cbind((y - mu(x, B)) * d.mu(x, B),
-        (y - mu(x, B)) ^ 2 - s2)
-}
-
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #' simulation setup 1
 #'
@@ -33,7 +14,7 @@ SF <- function(y, x, B, s2) {
 #' @export
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 sim1 <- function(n, q, x.shape = 1, c.shape = 1,
-                 mx = 100, mc = 15, my = 2, seed) {
+                 mx = 100, mc = 15, my = 3, seed) {
 
   ## for troublehsooting
   #library(devtools); load_all()
@@ -44,7 +25,7 @@ sim1 <- function(n, q, x.shape = 1, c.shape = 1,
   ## define parameters
   B <- c(1, 2)               # outcome model parameters
   s2 <- 1.1                  # Var(Y|X,Z)
-  x.mean <- 0.25
+  x.mean <- 1
   x.rate <- x.shape / x.mean # rate parameter for gamma distribution of X
   c.rate <- get.c.rate(      # rate parameter for gamma distribution of C
     q = q,
@@ -89,14 +70,19 @@ sim1 <- function(n, q, x.shape = 1, c.shape = 1,
 
   ## estimate parameters
 
+  # complete case lm to get starting value
+  naive.lm <- lm(Y ~ W, data = datcc)
+
   # oracle
-  B0 <- get.root(dat = dat0, score = get.Scc, start = c(0, 0, 0))
+  B0 <- get.root(dat = dat0, score = get.Scc,
+                 start = c(naive.lm$coef, log(var(naive.lm$resid))))
 
   # complete case
-  Bcc <- get.root(dat = dat, score = get.Scc, start = c(0, 0, 0))
+  Bcc <- get.root(dat = dat, score = get.Scc,
+                  start = c(naive.lm$coef, log(var(naive.lm$resid))))
 
   # MLE
-  Bmle <- get.root.notrycatch(dat = dat, score = get.Sml, start = Bcc,
+  Bmle <- get.root(dat = dat, score = get.Sml, start = Bcc,
                    args = list(mu = mu, d.mu = d.mu, SF = SF, fy = fy,
                                x.nds = x.nds, x.wts = x.wts))
 
@@ -116,3 +102,24 @@ sim1 <- function(n, q, x.shape = 1, c.shape = 1,
   return(ret)
 
 }
+
+
+# mean function mu(X, B) = E(Y | X)
+mu <- function(x, B) {
+  B[1] + B[2]*x
+}
+
+# gradient of mu w.r.t. B
+d.mu <- function(x, B) {
+  cbind(1, x)
+}
+
+# Y density
+fy <- function(y, x, B, s2) dnorm(x = y, mean = mu(x, B), sd = sqrt(s2))
+
+# full data score vector
+SF <- function(y, x, B, s2) {
+  cbind((y - mu(x, B)) * d.mu(x, B),
+        (y - mu(x, B)) ^ 2 - s2)
+}
+

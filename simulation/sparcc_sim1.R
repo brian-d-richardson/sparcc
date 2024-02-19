@@ -16,14 +16,15 @@
 
 rm(list = ls())
 library(devtools)
+library(statmod)
 #install_github("brian-d-richardson/sparcc"); library(sparcc)
-setwd(dirname(getwd()))
+#setwd(dirname(getwd()))
 load_all()
 
 # simulation parameters ---------------------------------------------------
 
 # baseline seed (specific to cluster)
-args <- commandArgs(TRUE)
+args <- 1#commandArgs(TRUE)
 base.seed <- 10^6 * as.integer(args)
 
 # number of sims per cluster
@@ -35,8 +36,8 @@ len.out <- 20
 # varied parameters
 n <- 10000
 q <- c(0.4, 0.8)
-x.shape <- c(1, 4)
-c.shape <- c(1, 4)
+x.shape <- c(1, 2)
+c.shape <- c(1, 2)
 
 # run simulations ---------------------------------------------------------
 
@@ -58,7 +59,7 @@ sim.out <- pbapply::pbvapply(
          c.shape = sim.in$c.shape[ii],
          mx = 100,
          mc = 15,
-         my = 2,
+         my = 3,
          seed = sim.in$sim.id[ii])
 
   },

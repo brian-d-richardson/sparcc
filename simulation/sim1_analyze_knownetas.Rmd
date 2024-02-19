@@ -84,26 +84,20 @@ We first look at which simulation settings lead to errors.
 ```{r}
 
 # true (beta, log s2)
-B <- c(1, 2, log(1.1))
+B <- c(1, 2, log(0.81))
 
 # load simulation results from each of 10 clusters
 sim.out.list <- lapply(
   X = 0:9,
   FUN = function(clust) {
     cbind(clust,
-          read.csv(paste0("sim_data/sim1/sd",
+          read.csv(paste0("sim_data/sim1/unownvar_knownetas/sd",
                           clust, ".csv")))
   })
 
+
 # combine simulation results into 1 data frame
 sim.out <- bind_rows(sim.out.list)
-
-colnames(sim.out) <- c("clust", "n", "q", "x.shape", "c.shape",
-                       "mx", "mc", "my", "seed",
-                       "Bor1", "Bor2", "Bor3",
-                       "Bcc1", "Bcc2", "Bcc3",
-                       "Bml1", "Bml2", "Bml3",
-                       "Bsp1", "Bsp2", "Bsp3")
 
 # make long data frame
 sim.out.long <- sim.out %>% 
@@ -244,9 +238,9 @@ Below are the same plots with the extreme ML estimates filtered out. Some observ
 
 ```{r}
 
-make.est.plot(param. = 1, n. = 10000) + ylim(0, 1.25)
-make.est.plot(param. = 2, n. = 10000) + ylim(-1.5, 3)
-make.est.plot(param. = 3, n. = 10000) + ylim(0, 0.3)
+make.est.plot(param. = 1, n. = 10000) + ylim(0.9, 1.2)
+make.est.plot(param. = 2, n. = 10000) + ylim(0, 4)
+make.est.plot(param. = 3, n. = 10000) + ylim(-0.4, -0.05)
 
 ```
 
@@ -254,9 +248,9 @@ make.est.plot(param. = 3, n. = 10000) + ylim(0, 0.3)
 
 tbl <- sim.out.long %>%
   group_by(q, x.shape, c.shape, method, param) %>% 
-  summarise(bias = 100*mean(estimate - B.true, na.rm = T),
-            emp.se = 100*sd(estimate, na.rm = T),
-            mse = 100*mean((estimate - B.true) ^ 2, na.rm = T)) %>% 
+  summarise(bias = mean(estimate - B.true, na.rm = T),
+            emp.se = sd(estimate, na.rm = T),
+            mse = mean((estimate - B.true) ^ 2, na.rm = T)) %>% 
   gather(key, value, bias:mse) %>% 
   unite(Group, param, key) %>% 
   spread(Group, value)

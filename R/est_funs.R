@@ -141,22 +141,25 @@ get.Seff <- function(dat, B, s2, args, return.sums = T) {
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 get.root <- function(dat, score, start, args = list()) {
 
-  tryCatch(
+  est <- tryCatch(
     expr = rootSolve::multiroot(
       f = function(theta) score(dat = dat, args = args,
                                 B = head(theta, -1), s2 = exp(tail(theta, 1))),
       start = start)$root,
     warning = function(w) rep(NA, length(start)),
     error = function(e) rep(NA, length(start)))
-
+  names(est) <- paste0("B", 1:length(start))
+  return(est)
 }
 
 
 get.root.notrycatch <- function(dat, score, start, args = list()) {
 
-  rootSolve::multiroot(
+  est <- rootSolve::multiroot(
     f = function(theta) score(dat = dat, args = args,
                               B = head(theta, -1), s2 = exp(tail(theta, 1))),
     start = start)$root
+  names(est) <- paste0("B", 1:length(start))
+  return(est)
 }
 

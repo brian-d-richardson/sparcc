@@ -16,7 +16,8 @@
 
 rm(list = ls())
 setwd(dirname(getwd()))
-source("R/int_eq.R"); source("R/est_funs.R"); source("R/misc_helpers.R")
+library(devtools)
+load_all()
 
 # define parameters -------------------------------------------------------
 
