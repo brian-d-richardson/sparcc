@@ -13,7 +13,7 @@
 #'
 #' @export
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-sim1 <- function(n, q, x.shape = 1, c.shape = 1,
+sim1 <- function(n, q, x.mean, x.shape = 1, c.shape = 1,
                  mx = 100, mc = 15, my = 3, seed) {
 
   ## for troublehsooting
@@ -25,7 +25,6 @@ sim1 <- function(n, q, x.shape = 1, c.shape = 1,
   ## define parameters
   B <- c(1, 2)               # outcome model parameters
   s2 <- 1.1                  # Var(Y|X,Z)
-  x.mean <- 1
   x.rate <- x.shape / x.mean # rate parameter for gamma distribution of X
   c.rate <- get.c.rate(      # rate parameter for gamma distribution of C
     q = q,

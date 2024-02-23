@@ -26,7 +26,7 @@ n <- 10000            # sample size
 q <- 0.8              # censoring proportion
 B <- c(1, 2)          # beta
 s2 <- 1.1             # variance of Y|X,Z
-x.mean <- 1           # mean of X
+x.mean <- 4           # mean of X
 
 # generate data -----------------------------------------------------------
 
@@ -34,13 +34,13 @@ assess.dat(n = n, q = q, B = B, s2 = s2, x.mean = x.mean,
            x.shape = 1, c.shape = 1)
 
 assess.dat(n = n, q = q, B = B, s2 = s2, x.mean = x.mean,
-           x.shape = 1, c.shape = 2)
+           x.shape = 1, c.shape = 1.25)
 
 assess.dat(n = n, q = q, B = B, s2 = s2, x.mean = x.mean,
-           x.shape = 2, c.shape = 1)
+           x.shape = 1.25, c.shape = 1)
 
 assess.dat(n = n, q = q, B = B, s2 = s2, x.mean = x.mean,
-           x.shape = 2, c.shape = 2)
+           x.shape = 1.25, c.shape = 1.25)
 
 # assess estimation of etas -----------------------------------------------
 

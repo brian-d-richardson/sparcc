@@ -91,7 +91,7 @@ sim.out.list <- lapply(
   X = 0:9,
   FUN = function(clust) {
     cbind(clust,
-          read.csv(paste0("sim_data/sim1/sd",
+          read.csv(paste0("sim_data/sim1/estetas_meanX0_25_shape1_25/sd",
                           clust, ".csv")))
   })
 
@@ -188,14 +188,33 @@ pal_dark <- c('#991122', '#114419', '#223b55', '#6b611d', '#117799', '#55193b', 
 # boxplot of simulated estimates
 make.est.plot <- function(param., n. = 10000, est_cutoff = Inf) {
   
-  sim.out.long %>% 
+  # data for plot
+  plot.dat <- sim.out.long %>% 
     filter(param == param.,
-           n == n.,
-           abs(estimate - B.true) < est_cutoff) %>%  
+           n == n.) %>%  
+    mutate(remove = abs(estimate - B.true) > est_cutoff,
+           lab.y = 0.5*(B.true - est_cutoff))
+  
+  # count removed observations
+  remove.dat <- plot.dat %>% 
+    group_by(q, method, x.shape, c.shape, lab.y, B.true) %>% 
+    summarise(n.remove = sum(remove, na.rm = T)) %>% 
+    mutate(label = ifelse(n.remove > 0,
+                          paste0(n.remove, "\n",
+                                 method.labs[method],
+                                 "\npoints outside\nrange"), ""),
+           lab.y = ifelse(n.remove > 0, lab.y, B.true))
+  
+  # create plot
+  plot.dat %>% 
+    filter(remove == F) %>% 
     ggplot(aes(y = estimate,
                color = method,
                fill = method)) +
     geom_boxplot() +
+    geom_text(data = remove.dat,
+              aes(x = -0.15, y = lab.y, label = label),
+              size = 2, color = "black") +
     geom_hline(aes(yintercept = B.true),
                linetype = "dashed",
                linewidth = 0.6,
@@ -217,7 +236,8 @@ make.est.plot <- function(param., n. = 10000, est_cutoff = Inf) {
                               n.rep, " replicates per setting")) +
     theme_bw() +
     theme(axis.ticks.x = element_blank(),
-          axis.text.x = element_blank()) +
+          axis.text.x = element_blank(),
+          axis.title.x = element_blank()) +
     scale_fill_manual(values = pal_light[c(1, 2, 3, 6)],
                       labels = method.labs) +
     scale_color_manual(values = pal_dark[c(1, 2, 3, 6)],
@@ -228,7 +248,7 @@ make.est.plot <- function(param., n. = 10000, est_cutoff = Inf) {
 
 We now look at plots of parameter estimates over the various settings. For the heavy censoring setting ($q = 0.8$), some of the ML estimates are extremely large, making the plots difficult to read.
 
-```{r}
+```{r message = F}
 
 make.est.plot(param. = 1, n. = 10000)
 make.est.plot(param. = 2, n. = 10000)
@@ -242,15 +262,17 @@ Below are the same plots with the extreme ML estimates filtered out. Some observ
 * For both moderate ($q=0.4$) and heavy censoring ($q=0.8$), and for both parameters, the MLE is biased when $X$ is misspecified.
 * When $X$ is misspecified but $C$ is correctly specified, the semiparametric estimator is (almost) unbiased.
 
-```{r}
 
-make.est.plot(param. = 1, n. = 10000) + ylim(0, 1.25)
-make.est.plot(param. = 2, n. = 10000) + ylim(-1.5, 3)
-make.est.plot(param. = 3, n. = 10000) + ylim(0, 0.3)
+```{r message = F}
+
+make.est.plot(param. = 1, n. = 10000, est_cutoff = 1)
+make.est.plot(param. = 2, n. = 10000, est_cutoff = 0.5)
+make.est.plot(param. = 3, n. = 10000, est_cutoff = 0.2)
 
 ```
 
-```{r include = F, echo = F}
+
+```{r}
 
 tbl <- sim.out.long %>%
   group_by(q, x.shape, c.shape, method, param) %>% 

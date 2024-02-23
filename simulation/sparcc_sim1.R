@@ -55,6 +55,7 @@ sim.out <- pbapply::pbvapply(
 
     sim1(n = sim.in$n[ii],
          q = sim.in$q[ii],
+         x.mean = 2,
          x.shape = sim.in$x.shape[ii],
          c.shape = sim.in$c.shape[ii],
          mx = 100,
