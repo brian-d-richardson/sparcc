@@ -91,7 +91,7 @@ sim.out.list <- lapply(
   X = 0:9,
   FUN = function(clust) {
     cbind(clust,
-          read.csv(paste0("sim_data/sim1/estetas_meanX0_25_shape1_25/sd",
+          read.csv(paste0("sim_data/sim1/estetas_meanX1_shape_1_25/sd",
                           clust, ".csv")))
   })
 
@@ -262,15 +262,13 @@ Below are the same plots with the extreme ML estimates filtered out. Some observ
 * For both moderate ($q=0.4$) and heavy censoring ($q=0.8$), and for both parameters, the MLE is biased when $X$ is misspecified.
 * When $X$ is misspecified but $C$ is correctly specified, the semiparametric estimator is (almost) unbiased.
 
-
 ```{r message = F}
 
-make.est.plot(param. = 1, n. = 10000, est_cutoff = 1)
-make.est.plot(param. = 2, n. = 10000, est_cutoff = 0.5)
-make.est.plot(param. = 3, n. = 10000, est_cutoff = 0.2)
+make.est.plot(param. = 1, n. = 10000) + ylim(0.9, 1.2)
+make.est.plot(param. = 2, n. = 10000) + ylim(1.2, 2.5)
+make.est.plot(param. = 3, n. = 10000) + ylim(0, 0.2)
 
 ```
-
 
 ```{r}
 
