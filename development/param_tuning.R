@@ -15,7 +15,7 @@
 # prep workspace ----------------------------------------------------------
 
 rm(list = ls())
-setwd(dirname(getwd()))
+#setwd(dirname(getwd()))
 library(statmod)
 library(ggplot2)
 library(tidyverse)
@@ -25,7 +25,7 @@ load_all()
 
 # define parameters -------------------------------------------------------
 
-n <- 10000                 # sample size
+n <- 8000                 # sample size
 q <- .8                    # censoring proportion
 B <- c(1, 2)               # outcome model parameters
 s2 <- 1.1                  # Var(Y|X,Z)
@@ -40,10 +40,10 @@ c.rate <- get.c.rate(      # rate parameter for gamma distribution of C
   c.shape = c.shape)
 
 # X density
-eta1 <- function(x) dexp(x, rate = x.rate)
+#eta1 <- function(x) dexp(x, rate = x.rate)
 
 # C density
-eta2 <- function(c) dexp(c, rate = c.rate)
+#eta2 <- function(c) dexp(c, rate = c.rate)
 
 # mean function mu(X, B) = E(Y | X)
 mu <- function(x, B) {
@@ -76,17 +76,28 @@ dat <- dat.list$dat            # observed data
 datcc <- dat.list$datcc        # complete case data
 
 
+# estimate nuisance distributions -----------------------------------------
+
+x.rate.hat <- mean(dat$Delta) / mean(dat$W)     # mle for exponential X rate
+c.rate.hat <- mean(1 - dat$Delta) / mean(dat$W) # mle for exponential C rate
+
+# X density
+eta1 <- function(x) dexp(x, rate = x.rate.hat)
+
+# C density
+eta2 <- function(c) dexp(c, rate = c.rate.hat)
+
 # search over grid of mx, mc, my ------------------------------------------
 
 # grid of possible values for mx and mc
-mx.grid <- seq(20, 120, by = 10)
+mx.grid <- seq(80, 140, by = 10)
 mc.grid <- seq(10, 20, by = 5)
-my.grid <- seq(2, 5, by = 1)
+my.grid <- seq(2, 4, by = 1)
 search.in <- expand.grid(mx = mx.grid,
                          mc = mc.grid,
                          my = my.grid)
 
-# store Seff and computation time for each mx, mc, my (takes ~ 2 min to run)
+# store Seff and computation time for each mx, mc, my (takes ~ 4 min to run)
 search.out <- pbvapply(
   X = 1:nrow(search.in),
   FUN.VALUE = numeric(7),
@@ -124,12 +135,12 @@ search.out <- pbvapply(
   t() %>%
   as.data.frame()
 
-#write.csv(search.out, "simulation/sim_data/param_tuning/mc_mc_res.csv", row.names = F)
+#write.csv(search.out, "development/dev_data/m_tuning.csv", row.names = F)
 
 # plot results ------------------------------------------------------------
 
 # load results
-#search.out <- read.csv("simulation/sim_data/param_tuning/mc_mc_res.csv")
+#search.out <- read.csv("development/dev_data/m_tuning.csv")
 search.out.long <- search.out %>%
   pivot_longer(cols = c(Seff1, Seff2, Time)) %>%
   mutate(mc = factor(mc),

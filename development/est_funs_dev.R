@@ -18,17 +18,19 @@ rm(list = ls())
 #setwd(dirname(getwd()))
 library(statmod)
 library(devtools)
+library(conf)
 load_all()
 
 # define parameters -------------------------------------------------------
 
-B <- c(1, 2)               # outcome model parameters
-s2 <- 1.1                  # Var(Y|X,Z)
-q <- 0.8                   # censoring proportion
-n <- 10000                 # sample size
-x.mean <- 0.25
-x.shape <- 10
-c.shape <- 10
+set.seed(1)
+B <- c(1, 2)              # outcome model parameters
+s2 <- 1.1                 # Var(Y|X,Z)
+q <- 0.8                  # censoring proportion
+n <- 10000                # sample size
+x.mean <- 0.5
+x.shape <- 1.2
+c.shape <- 1.2
 x.rate <- x.shape / x.mean # rate parameter for gamma distribution of X
 c.rate <- get.c.rate(      # rate parameter for gamma distribution of C
   q = q,
@@ -38,6 +40,8 @@ c.rate <- get.c.rate(      # rate parameter for gamma distribution of C
 mx <- 100                  # nodes in quadrature grid for X
 mc <- 15                   # nodes in quadrature grid for C
 my <- 3                    # nodes in quadrature grid for Y
+specify.x.gamma <- T       # indicator for estimating X as gamma
+specify.c.gamma <- T       # indicator for estimating C as gamma
 
 # mean function mu(X, B) = E(Y | X)
 mu <- function(x, B) {
@@ -70,23 +74,48 @@ datcc <- dat.list$datcc        # complete case data
 
 # estimate nuisance distributions -----------------------------------------
 
-x.rate.hat <- mean(dat$Delta) / mean(dat$W)      # mle for exponential X rate
-c.rate.hat <- mean(1 - dat$Delta) / mean(dat$W)  # mle for exponential C rate
+# estimate distribution of X
+if (specify.x.gamma) {
+  x.param.hat <- gammaMLE(yi = dat$W,                      # gamma parameters
+                          si = dat$Delta,
+                          scale = F)$estimate
+  eta1 <- function(x) dgamma(x = x,                        # gamma density
+                             shape = x.param.hat["shape"],
+                             rate = x.param.hat["rate"])
+} else {
+  x.rate.hat <- mean(dat$Delta) / mean(dat$W)      # exponential rate parameter
+  eta1 <- function(x) dexp(x, rate = x.rate.hat)   # exponential density
+}
 
-# X density
-eta1 <- function(x) dexp(x, rate = x.rate.hat)
-
-# C density
-eta2 <- function(c) dexp(c, rate = c.rate.hat)
+# estimate distribution of C
+if (specify.c.gamma) {
+  c.param.hat <- gammaMLE(yi = dat$W,                      # gamma parameters
+                          si = 1 - dat$Delta,
+                          scale = F)$estimate
+  eta2 <- function(x) dgamma(x = x,                        # gamma density
+                             shape = c.param.hat["shape"],
+                             rate = c.param.hat["rate"])
+} else {
+  c.rate.hat <- mean(1 - dat$Delta) / mean(dat$W)  # exponential rate parameter
+  eta2 <- function(x) dexp(x, rate = c.rate.hat)   # exponential density
+}
 
 # create quadrature rules -------------------------------------------------
 
+x.upper <- max(datf$X)  # oracle max
+c.upper <- max(datf$C)
+
+#x.upper <- sum(1/(1:n)) / x.rate.hat # estimated expected max
+#c.upper <- sum(1/(1:n)) / c.rate.hat
+#x.upper <- qexp((n-1)/n, rate = x.rate.hat)  # estimated (n-1)/n quantile
+#c.upper <- qexp((n-1)/n, rate = c.rate.hat)
+
 # X quadrature
-x.nds <- seq(10^-6, max(datf$X), length = mx)
+x.nds <- seq(10^-5, x.upper, length = mx)
 x.wts <- eta1(x.nds) / sum(eta1(x.nds))
 
 # C quadrature
-c.nds <- seq(10^-6, max(datf$C), length = mc)
+c.nds <- seq(10^-5, c.upper, length = mc)
 c.wts <- eta2(c.nds) / sum(eta2(c.nds))
 
 # Y quadrature
@@ -126,13 +155,18 @@ assess.ee(Seff)
 
 # estimate beta -----------------------------------------------------------
 
-# oracle
-B0 <- get.root(dat = dat0, score = get.Scc, start = c(0, 0, 0))
-B0
+# complete case lm to get starting value
+naive.lm <- lm(Y ~ W, data = datcc)
 
 # complete case
-Bcc <- get.root(dat = dat, score = get.Scc, start = c(0, 0, 0))
+Bcc <- get.root(dat = dat, score = get.Scc,
+                start = c(naive.lm$coef, log(var(naive.lm$resid))))
 Bcc
+
+# oracle
+B0 <- get.root.notrycatch(dat = dat0, score = get.Scc,
+                          start = Bcc)
+B0
 
 # MLE
 Bmle <- get.root(dat = dat, score = get.Sml, start = Bcc,

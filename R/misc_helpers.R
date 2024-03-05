@@ -33,37 +33,55 @@ assess.ee <- function(ee, digits = 2) {
 #' @return a plot of generated data
 #'
 #' @export
-assess.dat <- function(n, q, B, s2, x.mean, x.shape, c.shape) {
+assess.dat <- function(n, q, B, s2, x.mean, x.shape, c.shape,
+                       specify.x.gamma, specify.c.gamma) {
 
-  x.rate <- x.shape / x.mean
-
+  x.rate <- x.shape / x.mean # rate parameter for gamma distribution of X
   c.rate <- get.c.rate(      # rate parameter for gamma distribution of C
     q = q,
     x.rate = x.rate,
     x.shape = x.shape,
     c.shape = c.shape)
 
-  # generate data
-  dat <- gen.data(n = n, q = q, B = B, s2 = s2,
-                  x.rate = x.rate, x.shape = x.shape,
-                  c.rate = c.rate, c.shape = c.shape)
-  datf <- dat$datf # full data (Y, X, C)
-  dat <- dat$dat   # observed data (Y, W, Delta)
+  dat.list <- gen.data(n = n, q = q, B = B, s2 = s2,
+                       x.rate = x.rate, x.shape = x.shape,
+                       c.rate = c.rate, c.shape = c.shape)
+  datf <- dat.list$datf          # full data
+  dat0 <- dat.list$dat0          # oracle data
+  dat <- dat.list$dat            # observed data
+  datcc <- dat.list$datcc        # complete case data
 
   # compute empirical values
   q.hat <- mean(datf$X > datf$C)                   # censoring proportion
   x.bar <- mean(datf$X)                            # sample mean of X
-  x.rate.hat <- mean(dat$Delta) / mean(dat$W)      # mle for exponential X rate
-  c.rate.hat <- mean(1 - dat$Delta) / mean(dat$W)  # mle for exponential C rate
-  x.grid <- seq(0, max(c(datf$X, datf$C)), 0.01)   # grid to plot X density
-  eta1 <- function(x) dexp(x, rate = 1 / mean(datf$X))   # X density
-  eta2 <- function(c) dexp(c, rate = 1 / mean(datf$C))   # C density
 
-  # estimate densities
-  x.rate.hat <- mean(dat$Delta) / mean(dat$W)      # mle for exponential X rate
-  c.rate.hat <- mean(1 - dat$Delta) / mean(dat$W)  # mle for exponential C rate
-  eta1hat <- function(x) dexp(x, rate = x.rate.hat)   # X density
-  eta2hat <- function(c) dexp(c, rate = c.rate.hat)   # C density
+  # estimate distribution of X
+  if (specify.x.gamma) {
+    x.param.hat <- gammaMLE(yi = dat$W,                      # gamma parameters
+                            si = dat$Delta,
+                            scale = F)$estimate
+    eta1 <- function(x) dgamma(x = x,                        # gamma density
+                               shape = x.param.hat["shape"],
+                               rate = x.param.hat["rate"])
+  } else {
+    x.rate.hat <- mean(dat$Delta) / mean(dat$W)      # exponential rate parameter
+    eta1 <- function(x) dexp(x, rate = x.rate.hat)   # exponential density
+  }
+
+  # estimate distribution of C
+  if (specify.c.gamma) {
+    c.param.hat <- gammaMLE(yi = dat$W,                      # gamma parameters
+                            si = 1 - dat$Delta,
+                            scale = F)$estimate
+    eta2 <- function(x) dgamma(x = x,                        # gamma density
+                               shape = c.param.hat["shape"],
+                               rate = c.param.hat["rate"])
+  } else {
+    c.rate.hat <- mean(1 - dat$Delta) / mean(dat$W)  # exponential rate parameter
+    eta2 <- function(x) dexp(x, rate = c.rate.hat)   # exponential density
+  }
+
+  x.grid <- seq(0, max(c(datf$X, datf$C)), 0.01)   # grid to plot X density
 
   # plot data
   ggplot() +
@@ -81,21 +99,11 @@ assess.dat <- function(n, q, B, s2, x.mean, x.shape, c.shape) {
     geom_line(aes(x = x.grid,
                   y = eta2(x.grid)),
               color = "red", linewidth = 1) +
-    geom_line(aes(x = x.grid,
-                  y = eta1hat(x = x.grid)),
-              color = "blue", linewidth = 1, linetype = "dashed") +
-    geom_line(aes(x = x.grid,
-                  y = eta2hat(c = x.grid)),
-              color = "red", linewidth = 1, linetype = "dashed") +
     labs(x = "X (blue) or C (red)",
          y = "Count") +
     ggtitle("Estimated vs Observed Distributions of X and C",
-            subtitle = paste0("x.shape = ", x.shape, "; ",
-                              "c.shape = ", c.shape, "\n",
-                              "q.hat = ", round(q.hat, 2), "; ",
-                              "x.bar = ", round(x.bar, 2), "\n",
-                              "x.rate.hat = ", round(x.rate.hat, 2), "; ",
-                              "c.rate.hat = ", round(c.rate.hat, 2)))
+            subtitle = paste0("q.hat = ", round(q.hat, 2), "; ",
+                              "x.bar = ", round(x.bar, 2)))
 }
 
 
@@ -110,7 +118,8 @@ assess.dat <- function(n, q, B, s2, x.mean, x.shape, c.shape) {
 #' @return empirical distribution of estimated parameters for eta1 and eta2
 #'
 #' @export
-assess.eta.est <- function(n.rep, n, q, B, s2, x.mean, x.shape, c.shape) {
+assess.eta.est <- function(n.rep, n, q, B, s2, x.mean, x.shape, c.shape,
+                           specify.x.gamma, specify.c.gamma) {
 
   # rate parameters for X and C
   x.rate <- x.shape / x.mean
@@ -120,9 +129,9 @@ assess.eta.est <- function(n.rep, n, q, B, s2, x.mean, x.shape, c.shape) {
     x.shape = x.shape,
     c.shape = c.shape)
 
-  rate.hat <- vapply(
+  param.hat <- t(pbapply::pbvapply(
     X = 1:n.rep,
-    FUN.VAL = numeric(2),
+    FUN.VAL = numeric(4),
     FUN = function(x) {
 
         # generate data
@@ -130,29 +139,47 @@ assess.eta.est <- function(n.rep, n, q, B, s2, x.mean, x.shape, c.shape) {
                         x.rate = x.rate, x.shape = x.shape,
                         c.rate = c.rate, c.shape = c.shape)$dat
 
-        # estimate nuisance density parameters
-        x.rate.hat <- mean(dat$Delta) / mean(dat$W)
-        c.rate.hat <- mean(1 - dat$Delta) / mean(dat$W)
-        return(c(x.rate.hat, c.rate.hat))
-      })
+        # estimate distribution of X
+        if (specify.x.gamma) {
+          x.param.hat <- gammaMLE(yi = dat$W,                # gamma params
+                                  si = dat$Delta,
+                                  scale = F)$estimate
+        } else {
+          x.param.hat <- c(1, mean(dat$Delta) / mean(dat$W)) # exp params
+        }
+
+        # estimate distribution of C
+        if (specify.c.gamma) {
+          c.param.hat <- gammaMLE(yi = dat$W,                    # gamma params
+                                  si = 1 - dat$Delta,
+                                  scale = F)$estimate
+        } else {
+          c.param.hat <- c(1, mean(1 - dat$Delta) / mean(dat$W)) # exp params
+        }
+        ret <- c(x.param.hat, c.param.hat)
+        names(ret) <- c("x.shape", "x.rate", "c.shape", "c.rate")
+        return(ret)
+      })) |>
+    as.data.frame()
 
   plot.dat <- data.frame(
-    var = rep(c("X", "C"), each = n.rep),
-    rate = rep(c(x.rate, c.rate), each = n.rep),
-    rate.hat = c(rate.hat[1,], rate.hat[2,])
-  )
+    var = rep(c("X", "C"), each = 2 * n.rep),
+    param = rep(c("shape", "rate", "shape", "rate"), each = n.rep),
+    hat = c(param.hat$x.shape, param.hat$x.rate,
+            param.hat$c.shape, param.hat$c.rate),
+    true = rep(c(x.shape, x.rate, c.shape, c.rate), each = n.rep))
 
   plot <- ggplot(
     data = plot.dat,
-    aes(y = rate.hat,
-        fill = var)) +
+    aes(y = hat,
+        fill = param)) +
     geom_boxplot() +
-    geom_hline(aes(yintercept = rate),
+    geom_hline(aes(yintercept = true),
                linetype = "dashed",
                color = "orange") +
     scale_fill_manual(values = c("red", "blue")) +
-    facet_wrap(~var, scales = "free_y") +
-    labs(y = "Estimated Rate") +
+    facet_wrap(var ~ param, scales = "free_y") +
+    labs(y = "Estimated Parameter") +
     ggtitle("Empirical Distribution of Estimated Nuisance Parameters",
             subtitle = paste0("q = ", q, "; ",
                               "n = ", n, "; ",
