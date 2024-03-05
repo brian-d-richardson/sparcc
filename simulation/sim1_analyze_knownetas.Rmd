@@ -84,28 +84,20 @@ We first look at which simulation settings lead to errors.
 ```{r}
 
 # true (beta, log s2)
-B <- c(1, 2, log(1.1))
+B <- c(1, 2, log(0.81))
 
 # load simulation results from each of 10 clusters
 sim.out.list <- lapply(
   X = 0:9,
   FUN = function(clust) {
     cbind(clust,
-          read.csv(paste0(
-            "sim_data/sim1/gamma_meanX0_5_shape_1_05_var1_1_n1k10k/sd",
-            clust, ".csv")))
+          read.csv(paste0("sim_data/sim1/unownvar_knownetas/sd",
+                          clust, ".csv")))
   })
+
 
 # combine simulation results into 1 data frame
 sim.out <- bind_rows(sim.out.list)
-
-colnames(sim.out) <- c("clust", "n", "q",
-                       "specify.x.gamma", "specify.c.gamma",
-                       "mx", "mc", "my", "seed",
-                       "Bor1", "Bor2", "Bor3",
-                       "Bcc1", "Bcc2", "Bcc3",
-                       "Bml1", "Bml2", "Bml3",
-                       "Bsp1", "Bsp2", "Bsp3")
 
 # make long data frame
 sim.out.long <- sim.out %>% 
@@ -114,10 +106,6 @@ sim.out.long <- sim.out %>%
                values_to = "estimate") %>% 
     mutate(method = factor(substr(method.param, 2, 3),
                            levels = c("or", "cc", "ml", "sp")),
-           specify.x.gamma = factor(specify.x.gamma,
-                                    levels = c(1, 0)),
-           specify.c.gamma = factor(specify.c.gamma,
-                                    levels = c(1, 0)),
            param = factor(substr(method.param, 4, 4)),
            B.true = B[param])
   
@@ -128,7 +116,7 @@ sim.out.long <- sim.out %>%
 # check for simulations with errors
 sim.out.long %>% 
   filter(param == 1) %>% 
-  group_by(q, n, specify.x.gamma, specify.c.gamma, method) %>% 
+  group_by(q, n, x.shape, c.shape, method) %>% 
   summarize(prop.error = mean(is.na(estimate))) %>% 
   filter(prop.error > 0) %>% 
   kable(digits = 3) %>%
@@ -141,13 +129,13 @@ sim.out.long %>%
 # extract simulation parameters
 q <- unique(sim.out$q)
 n <- unique(sim.out$n)
-specify.x.gamma <- unique(sim.out$specify.x.gamma)
-specify.c.gamma <- unique(sim.out$specify.c.gamma)
+x.shape <- unique(sim.out$x.shape)
+c.shape <- unique(sim.out$c.shape)
 mx <- unique(sim.out$mx)
 mc <- unique(sim.out$mc)
 my <- unique(sim.out$my)
 n.rep <- nrow(sim.out) /
-  n_distinct(dplyr::select(sim.out, q, n, specify.x.gamma, specify.c.gamma, mx, mc, my))
+  n_distinct(dplyr::select(sim.out, q, n, x.shape, c.shape, mx, mc, my))
 
 # make labels for plots
 method.labs <- c("Oracle",
@@ -163,11 +151,11 @@ names(q.labs) <- q
 n.labs <- paste0("n = ", n)
 names(n.labs) <- n
 
-specx.labs <- c("X Correct", "X Incorrect")
-names(specx.labs) <- specify.x.gamma
+shapex.labs <- c("X Correct", "X Incorrect")
+names(shapex.labs) <- x.shape
 
-specc.labs <- c("C Correct", "C Incorrect")
-names(specc.labs) <- specify.c.gamma
+shapec.labs <- c("C Correct", "C Incorrect")
+names(shapec.labs) <- c.shape
 
 mx.labs <- paste0("mx = ", mx)
 names(mx.labs) <- mx
@@ -194,42 +182,23 @@ pal_dark <- c('#991122', '#114419', '#223b55', '#6b611d', '#117799', '#55193b', 
 # boxplot of simulated estimates
 make.est.plot <- function(param., n. = 10000, est_cutoff = Inf) {
   
-  # data for plot
-  plot.dat <- sim.out.long %>% 
+  sim.out.long %>% 
     filter(param == param.,
-           n == n.) %>%  
-    mutate(remove = abs(estimate - B.true) > est_cutoff,
-           lab.y = 0.5*(B.true - est_cutoff))
-  
-  # count removed observations
-  remove.dat <- plot.dat %>% 
-    group_by(q, method, specify.x.gamma, specify.c.gamma, lab.y, B.true) %>% 
-    summarise(n.remove = sum(remove, na.rm = T)) %>% 
-    mutate(label = ifelse(n.remove > 0,
-                          paste0(n.remove, "\n",
-                                 method.labs[method],
-                                 "\npoints outside\nrange"), ""),
-           lab.y = ifelse(n.remove > 0, lab.y, B.true))
-  
-  # create plot
-  plot.dat %>% 
-    filter(remove == F) %>% 
+           n == n.,
+           abs(estimate - B.true) < est_cutoff) %>%  
     ggplot(aes(y = estimate,
                color = method,
                fill = method)) +
     geom_boxplot() +
-    geom_text(data = remove.dat,
-              aes(x = -0.15, y = lab.y, label = label),
-              size = 2, color = "black") +
     geom_hline(aes(yintercept = B.true),
                linetype = "dashed",
                linewidth = 0.6,
                color = pal_light[4]) +
-    facet_nested(q ~ specify.x.gamma + specify.c.gamma,
+    facet_nested(q ~ x.shape + c.shape,
                  scales = "free",
                  labeller = labeller(q = q.labs,
-                                     specify.x.gamma = specx.labs,
-                                     specify.c.gamma = specc.labs)) +
+                                     x.shape = shapex.labs,
+                                     c.shape = shapec.labs)) +
     labs(y = "Parameter Estimate",
          fill = "Method",
          color = "Method") +
@@ -242,8 +211,7 @@ make.est.plot <- function(param., n. = 10000, est_cutoff = Inf) {
                               n.rep, " replicates per setting")) +
     theme_bw() +
     theme(axis.ticks.x = element_blank(),
-          axis.text.x = element_blank(),
-          axis.title.x = element_blank()) +
+          axis.text.x = element_blank()) +
     scale_fill_manual(values = pal_light[c(1, 2, 3, 6)],
                       labels = method.labs) +
     scale_color_manual(values = pal_dark[c(1, 2, 3, 6)],
@@ -252,32 +220,37 @@ make.est.plot <- function(param., n. = 10000, est_cutoff = Inf) {
 
 ```
 
-We now look at plots of parameter estimates over the various settings.
-
-```{r message = F}
-
-make.est.plot(param. = 1, n. = n[1])
-make.est.plot(param. = 2, n. = n[1])
-make.est.plot(param. = 3, n. = n[1])
-
-```
-
-```{r message = F}
-
-make.est.plot(param. = 1, n. = n[2])
-make.est.plot(param. = 2, n. = n[2])
-make.est.plot(param. = 3, n. = n[2])
-
-```
-
+We now look at plots of parameter estimates over the various settings. For the heavy censoring setting ($q = 0.8$), some of the ML estimates are extremely large, making the plots difficult to read.
 
 ```{r}
 
+make.est.plot(param. = 1, n. = 10000)
+make.est.plot(param. = 2, n. = 10000)
+make.est.plot(param. = 3, n. = 10000)
+
+```
+
+Below are the same plots with the extreme ML estimates filtered out. Some observations:
+
+* The complete case estimator has low precision under high censoring and for the parameter $\beta_2$ (the coefficient for $X$).
+* For both moderate ($q=0.4$) and heavy censoring ($q=0.8$), and for both parameters, the MLE is biased when $X$ is misspecified.
+* When $X$ is misspecified but $C$ is correctly specified, the semiparametric estimator is (almost) unbiased.
+
+```{r}
+
+make.est.plot(param. = 1, n. = 10000) + ylim(0.9, 1.2)
+make.est.plot(param. = 2, n. = 10000) + ylim(0, 4)
+make.est.plot(param. = 3, n. = 10000) + ylim(-0.4, -0.05)
+
+```
+
+```{r include = F, echo = F}
+
 tbl <- sim.out.long %>%
-  group_by(q, specify.x.gamma, specify.c.gamma, method, param) %>% 
-  summarise(bias = 100*mean(estimate - B.true, na.rm = T),
-            emp.se = 100*sd(estimate, na.rm = T),
-            mse = 100*mean((estimate - B.true) ^ 2, na.rm = T)) %>% 
+  group_by(q, x.shape, c.shape, method, param) %>% 
+  summarise(bias = mean(estimate - B.true, na.rm = T),
+            emp.se = sd(estimate, na.rm = T),
+            mse = mean((estimate - B.true) ^ 2, na.rm = T)) %>% 
   gather(key, value, bias:mse) %>% 
   unite(Group, param, key) %>% 
   spread(Group, value)

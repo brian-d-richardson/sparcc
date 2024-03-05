@@ -10,21 +10,22 @@
 #' @param seed a positive integer, the seed value for random number generation
 #'
 #' @importFrom statmod gauss.quad
+#' @importFrom conf gammaMLE
 #'
 #' @export
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-sim1 <- function(n, q, x.mean, x.shape = 1, c.shape = 1,
+sim1 <- function(n, q, x.mean, s2, x.shape = 1.2, c.shape = 1.2,
+                 specify.x.gamma, specify.c.gamma,
                  mx = 100, mc = 15, my = 3, seed) {
 
   ## for troublehsooting
   #library(devtools); load_all()
-  #n = 10000; q = 0.8; x.shape = 1; c.shape = 1; mx = 100; mc = 15; my = 2; seed = 1
+  #n = 10000; q = 0.8; x.mean = 0.5; s2 = 1.1; x.shape = 1.2; c.shape = 1.2; mx = 100; mc = 15; my = 2; seed = 1
 
   set.seed(seed)
 
   ## define parameters
   B <- c(1, 2)               # outcome model parameters
-  s2 <- 1.1                  # Var(Y|X,Z)
   x.rate <- x.shape / x.mean # rate parameter for gamma distribution of X
   c.rate <- get.c.rate(      # rate parameter for gamma distribution of C
     q = q,
@@ -43,23 +44,47 @@ sim1 <- function(n, q, x.mean, x.shape = 1, c.shape = 1,
 
   ## estimate nuisance densities
 
-  x.rate.hat <- mean(dat$Delta) / mean(dat$W)      # mle for exponential X rate
-  c.rate.hat <- mean(1 - dat$Delta) / mean(dat$W)  # mle for exponential C rate
+  # estimate distribution of X
+  if (specify.x.gamma) {
+    x.param.hat <- gammaMLE(yi = dat$W,                      # gamma parameters
+                            si = dat$Delta,
+                            scale = F)$estimate
+    eta1 <- function(x) dgamma(x = x,                        # gamma density
+                               shape = x.param.hat["shape"],
+                               rate = x.param.hat["rate"])
+  } else {
+    x.rate.hat <- mean(dat$Delta) / mean(dat$W)      # exponential rate parameter
+    eta1 <- function(x) dexp(x, rate = x.rate.hat)   # exponential density
+  }
 
-  # X density
-  eta1 <- function(x) dexp(x, rate = x.rate.hat)
+  # estimate distribution of C
+  if (specify.c.gamma) {
+    c.param.hat <- gammaMLE(yi = dat$W,                      # gamma parameters
+                            si = 1 - dat$Delta,
+                            scale = F)$estimate
+    eta2 <- function(x) dgamma(x = x,                        # gamma density
+                               shape = c.param.hat["shape"],
+                               rate = c.param.hat["rate"])
+  } else {
+    c.rate.hat <- mean(1 - dat$Delta) / mean(dat$W)  # exponential rate parameter
+    eta2 <- function(x) dexp(x, rate = c.rate.hat)   # exponential density
+  }
 
-  # C density
-  eta2 <- function(c) dexp(c, rate = c.rate.hat)
+  x.upper <- max(datf$X)  # oracle max
+  c.upper <- max(datf$C)
+  #x.upper <- sum(1/(1:n)) / x.rate.hat # estimated expected max
+  #c.upper <- sum(1/(1:n)) / c.rate.hat
+  #x.upper <- qexp((n-1)/n, rate = x.rate.hat)  # estimated (n-1)/n quantile
+  #c.upper <- qexp((n-1)/n, rate = c.rate.hat)
 
   ## create quadrature rules
 
   # X quadrature
-  x.nds <- seq(10^-6, max(datf$X), length = mx)
+  x.nds <- seq(10^-5, x.upper, length = mx)
   x.wts <- eta1(x.nds) / sum(eta1(x.nds))
 
   # C quadrature
-  c.nds <- seq(10^-6, max(datf$C), length = mc)
+  c.nds <- seq(10^-5, c.upper, length = mc)
   c.wts <- eta2(c.nds) / sum(eta2(c.nds))
 
   # Y quadrature
@@ -94,7 +119,9 @@ sim1 <- function(n, q, x.mean, x.shape = 1, c.shape = 1,
                                y.nds = y.nds, y.wts = y.wts))
 
   # return setup parameters and estimates
-  ret <- c(n = n, q = q, x.shape = x.shape, c.shape = c.shape,
+  ret <- c(n = n, q = q,
+           specify.x.gamma = specify.x.gamma,
+           specify.c.gamma = specify.c.gamma,
            mx = mx, mc = mc, my = my, seed = seed,
            Bor = B0, Bcc = Bcc, Bml = Bmle, Bsp = Beff)
 
