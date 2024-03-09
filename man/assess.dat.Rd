@@ -4,7 +4,17 @@
 \alias{assess.dat}
 \title{Assess data generation}
 \usage{
-assess.dat(n, q, B, x.mean, x.shape, c.shape)
+assess.dat(
+  n,
+  q,
+  B,
+  s2,
+  x.mean,
+  x.shape,
+  c.shape,
+  specify.x.gamma,
+  specify.c.gamma
+)
 }
 \arguments{
 \item{n}{a positive integer, the sample size}
@@ -12,6 +22,8 @@ assess.dat(n, q, B, x.mean, x.shape, c.shape)
 \item{q}{a number in \link{0,1}, the censoring proportion}
 
 \item{B}{a vector of numbers, parameters in the outcome model}
+
+\item{s2}{a positive number, variance in the outcome model}
 
 \item{x.mean}{a positive number, the mean of X}
 

@@ -152,14 +152,3 @@ get.root <- function(dat, score, start, args = list()) {
   return(est)
 }
 
-
-get.root.notrycatch <- function(dat, score, start, args = list()) {
-
-  est <- rootSolve::multiroot(
-    f = function(theta) score(dat = dat, args = args,
-                              B = head(theta, -1), s2 = exp(tail(theta, 1))),
-    start = start)$root
-  names(est) <- paste0("B", 1:length(start))
-  return(est)
-}
-

@@ -25,25 +25,21 @@ load_all()
 
 # define parameters -------------------------------------------------------
 
-n <- 8000                 # sample size
-q <- .8                    # censoring proportion
-B <- c(1, 2)               # outcome model parameters
+n <- 8000                  # sample size
+q <- 0.8                   # censoring proportion
+B <- c(1, .2)              # outcome model parameters
 s2 <- 1.1                  # Var(Y|X,Z)
-x.mean <- 0.25
-x.shape <- 2
-c.shape <- 1
+x.mean <- 0.5
+x.shape <- 1.2
+c.shape <- 2
 x.rate <- x.shape / x.mean # rate parameter for gamma distribution of X
 c.rate <- get.c.rate(      # rate parameter for gamma distribution of C
   q = q,
   x.rate = x.rate,
   x.shape = x.shape,
   c.shape = c.shape)
-
-# X density
-#eta1 <- function(x) dexp(x, rate = x.rate)
-
-# C density
-#eta2 <- function(c) dexp(c, rate = c.rate)
+specify.x.gamma <- T
+specify.c.gamma <- T
 
 # mean function mu(X, B) = E(Y | X)
 mu <- function(x, B) {
@@ -75,22 +71,35 @@ dat0 <- dat.list$dat0          # oracle data
 dat <- dat.list$dat            # observed data
 datcc <- dat.list$datcc        # complete case data
 
-
 # estimate nuisance distributions -----------------------------------------
 
-x.rate.hat <- mean(dat$Delta) / mean(dat$W)     # mle for exponential X rate
-c.rate.hat <- mean(1 - dat$Delta) / mean(dat$W) # mle for exponential C rate
+# estimate distribution of X
+if (specify.x.gamma) {
+  x.param.hat <- gammaMLE(yi = dat$W, si = dat$Delta, scale = F)$estimate
+  eta1 <- function(x)
+    dgamma(x = x, shape = x.param.hat["shape"], rate = x.param.hat["rate"])
+} else {
+  x.rate.hat <- mean(dat$Delta) / mean(dat$W)
+  eta1 <- function(x) dexp(x, rate = x.rate.hat)
+}
 
-# X density
-eta1 <- function(x) dexp(x, rate = x.rate.hat)
+# estimate distribution of C
+if (specify.c.gamma) {
+  c.param.hat <- gammaMLE(yi = dat$W, si = 1 - dat$Delta, scale = F)$estimate
+  eta2 <- function(x)
+    dgamma(x = x, shape = c.param.hat["shape"], rate = c.param.hat["rate"])
+} else {
+  c.rate.hat <- mean(1 - dat$Delta) / mean(dat$W)
+  eta2 <- function(x) dexp(x, rate = c.rate.hat)
+}
 
-# C density
-eta2 <- function(c) dexp(c, rate = c.rate.hat)
+x.upper <- max(datf$X)  # oracle max
+c.upper <- max(datf$C)
 
 # search over grid of mx, mc, my ------------------------------------------
 
 # grid of possible values for mx and mc
-mx.grid <- seq(80, 140, by = 10)
+mx.grid <- seq(40, 120, by = 10)
 mc.grid <- seq(10, 20, by = 5)
 my.grid <- seq(2, 4, by = 1)
 search.in <- expand.grid(mx = mx.grid,

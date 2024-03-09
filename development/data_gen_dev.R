@@ -18,6 +18,7 @@ rm(list = ls())
 #setwd(dirname(getwd()))
 library(ggplot2)
 library(devtools)
+library(conf)
 load_all()
 
 # define parameters -------------------------------------------------------

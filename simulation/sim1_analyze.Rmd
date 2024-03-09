@@ -1,5 +1,5 @@
 ---
-title: "Sparcc Estimation Example 1, Program 8"
+title: "Sparcc Simulation 1"
 author: "Brian Richardson"
 date: "`r format(Sys.time(), '%m/%d/%Y')`"
 output:
@@ -32,16 +32,9 @@ The assumption that $Y|X$ follows a normal distribution allows us to use Gaussia
 
 In these simulations, we vary the censoring probability $q=\textrm{P}(X>C)$ between $q=0.4$ (moderate censoring) and $q=0.8$ (heavy censoring.
 
-We also vary which nuisance distributions are correct. In all settings, the MLE and semiparametric estimator assume $X \sim \textrm{exponential}(\alpha_1)$ and $C \sim \textrm{exponential}(\alpha_2)$ (which are special cases of the gamma distribution with shape parameter equal to 1). To simulate the scenarios where $X$ and/or $C$ (or neither) are misspecified, we do the following:
-
-* $X$ and $C$ correct: $X \sim \textrm{gamma}(1, 1/4) = \textrm{exponential}(1/4)$ and $C \sim \textrm{gamma}(1, \alpha_2) = \textrm{exponential}(\alpha_2)$, where $\alpha_2$ is chosen such that $\textrm{P}(X>C) = q$,
-* $X$ incorrect, $C$ correct: $X \sim \textrm{gamma}(4, \theta_2)$ and $C \sim \textrm{gamma}(1, \alpha_2)$, where $\theta_2, \alpha_2$ are chosen such that $\textrm{E}(X) = 1/4$ and $\textrm{P}(X>C) = q$,
-* $X$ correct, $C$ incorrect: $X \sim \textrm{gamma}(1, 1/4)$ and $C \sim \textrm{gamma}(4, \alpha_2)$, where $\alpha_2$ is chosen such that $\textrm{P}(X>C) = q$,
-* $X$ and $C$ incorrect: $X \sim \textrm{gamma}(4, \theta_2)$ and $C \sim \textrm{gamma}(4, \alpha_2)$, where $\theta_2, \alpha_2$ are chosen such that $\textrm{E}(X) = 1/4$ and $\textrm{P}(X>C) = q$.
+We also vary which nuisance distributions are correct by modeling $X$ (or $C$) as gamma (correct) or exponential (incorrect).
 
 In all settings, $\textrm{E}(X) = 1/4$ and $\textrm{P}(X>C) = q$.
-
-We estimate the nuisance distributions $\eta_1(x) \equiv f_{X}(x)$ and $\eta_2(c) \equiv f_{C}(c)$ with $\eta_1^*(x, \widehat\alpha_1)=\alpha_1^{-1}\exp(-x/\alpha_1)$, $\eta_2^{\dagger}(c, \widehat\alpha_2)=\alpha_2^{-1}\exp(-c/\alpha_2)$, where $\widehat\alpha_1 = \frac{\sum_{i=1}^n W_i}{\sum_{i=1}^n \Delta_i}$, $\widehat\alpha_2 = \frac{\sum_{i=1}^n W_i}{\sum_{i=1}^n 1-\Delta_i}$ are the MLEs for $\alpha_1, \alpha_2$.
 
 For each simulation, we generate a data set of size $n=10,000$ then compute the complete case estimator $\widehat{\pmb{\beta}}_{cc}$, the oracle estimator $\widehat{\pmb{\beta}}_{or}$, the parametric MLE $\widehat{\pmb{\beta}}_{ml}$, and the semiparametric efficient estimator $\widehat{\pmb{\beta}}$.
 
@@ -84,7 +77,7 @@ We first look at which simulation settings lead to errors.
 ```{r}
 
 # true (beta, log s2)
-B <- c(1, 2, log(1.1))
+B <- c(1, 0.2, log(0.09))
 
 # load simulation results from each of 10 clusters
 sim.out.list <- lapply(
@@ -92,23 +85,18 @@ sim.out.list <- lapply(
   FUN = function(clust) {
     cbind(clust,
           read.csv(paste0(
-            "sim_data/sim1/gamma_meanX0_5_shape_1_05_var1_1_n1k10k/sd",
+            "sim_data/sim1/fine_search_2/sd",
             clust, ".csv")))
   })
 
 # combine simulation results into 1 data frame
 sim.out <- bind_rows(sim.out.list)
 
-colnames(sim.out) <- c("clust", "n", "q",
-                       "specify.x.gamma", "specify.c.gamma",
-                       "mx", "mc", "my", "seed",
-                       "Bor1", "Bor2", "Bor3",
-                       "Bcc1", "Bcc2", "Bcc3",
-                       "Bml1", "Bml2", "Bml3",
-                       "Bsp1", "Bsp2", "Bsp3")
+colnames(sim.out) <- gsub(".B", "", colnames(sim.out))
 
 # make long data frame
 sim.out.long <- sim.out %>% 
+  select(!B2) %>% 
   pivot_longer(cols = starts_with("B"),
                names_to = "method.param",
                values_to = "estimate") %>% 
@@ -192,42 +180,22 @@ pal_dark <- c('#991122', '#114419', '#223b55', '#6b611d', '#117799', '#55193b', 
 ```{r}
 
 # boxplot of simulated estimates
-make.est.plot <- function(param., n. = 10000, est_cutoff = Inf) {
+make.est.plot <- function(param., q.) {
   
-  # data for plot
-  plot.dat <- sim.out.long %>% 
+  sim.out.long %>% 
     filter(param == param.,
-           n == n.) %>%  
-    mutate(remove = abs(estimate - B.true) > est_cutoff,
-           lab.y = 0.5*(B.true - est_cutoff))
-  
-  # count removed observations
-  remove.dat <- plot.dat %>% 
-    group_by(q, method, specify.x.gamma, specify.c.gamma, lab.y, B.true) %>% 
-    summarise(n.remove = sum(remove, na.rm = T)) %>% 
-    mutate(label = ifelse(n.remove > 0,
-                          paste0(n.remove, "\n",
-                                 method.labs[method],
-                                 "\npoints outside\nrange"), ""),
-           lab.y = ifelse(n.remove > 0, lab.y, B.true))
-  
-  # create plot
-  plot.dat %>% 
-    filter(remove == F) %>% 
+           q == q.) %>%  
     ggplot(aes(y = estimate,
                color = method,
                fill = method)) +
     geom_boxplot() +
-    geom_text(data = remove.dat,
-              aes(x = -0.15, y = lab.y, label = label),
-              size = 2, color = "black") +
     geom_hline(aes(yintercept = B.true),
                linetype = "dashed",
                linewidth = 0.6,
                color = pal_light[4]) +
-    facet_nested(q ~ specify.x.gamma + specify.c.gamma,
+    facet_nested(x.shape ~ specify.x.gamma + specify.c.gamma,
                  scales = "free",
-                 labeller = labeller(q = q.labs,
+                 labeller = labeller(#n = n.labs,
                                      specify.x.gamma = specx.labs,
                                      specify.c.gamma = specc.labs)) +
     labs(y = "Parameter Estimate",
@@ -235,10 +203,7 @@ make.est.plot <- function(param., n. = 10000, est_cutoff = Inf) {
          color = "Method") +
     ggtitle(paste0("Empirical Distribution of Parameter Estimates for ",
                    param.labs[param.]),
-            subtitle = paste0("sample size n = ", n., "; ",
-                              "mx = ", mx, "; ",
-                              "mc = ", mc, "; ",
-                              "my = ", my, "; ",
+            subtitle = paste0("censoring proportion q = ", q., "; ",
                               n.rep, " replicates per setting")) +
     theme_bw() +
     theme(axis.ticks.x = element_blank(),
@@ -252,29 +217,44 @@ make.est.plot <- function(param., n. = 10000, est_cutoff = Inf) {
 
 ```
 
-We now look at plots of parameter estimates over the various settings.
 
 ```{r message = F}
 
-make.est.plot(param. = 1, n. = n[1])
-make.est.plot(param. = 2, n. = n[1])
-make.est.plot(param. = 3, n. = n[1])
+make.est.plot(param. = 1, q. = q[1])
+make.est.plot(param. = 2, q. = q[1])
+make.est.plot(param. = 3, q. = q[1])
 
 ```
 
 ```{r message = F}
 
-make.est.plot(param. = 1, n. = n[2])
-make.est.plot(param. = 2, n. = n[2])
-make.est.plot(param. = 3, n. = n[2])
+make.est.plot(param. = 1, q. = q[2])
+make.est.plot(param. = 2, q. = q[2])
+make.est.plot(param. = 3, q. = q[2])
 
 ```
 
+```{r message = F}
+
+make.est.plot(param. = 1, q. = q[3])
+make.est.plot(param. = 2, q. = q[3])
+make.est.plot(param. = 3, q. = q[3])
+
+```
+
+```{r message = F, eval = F}
+
+# filter out MLE outliers
+make.est.plot(param. = 1, q. = q[2]) + ylim(0.95, 1.05)
+make.est.plot(param. = 2, q. = q[2]) + ylim(0, 0.4)
+make.est.plot(param. = 3, q. = q[2]) + ylim(-2.5, -2.3)
+
+```
 
 ```{r}
 
 tbl <- sim.out.long %>%
-  group_by(q, specify.x.gamma, specify.c.gamma, method, param) %>% 
+  group_by(n, q, specify.x.gamma, specify.c.gamma, method, param) %>% 
   summarise(bias = 100*mean(estimate - B.true, na.rm = T),
             emp.se = 100*sd(estimate, na.rm = T),
             mse = 100*mean((estimate - B.true) ^ 2, na.rm = T)) %>% 
@@ -285,20 +265,34 @@ tbl <- sim.out.long %>%
 setNames(tbl, sub(".+_", "", names(tbl))) %>% 
   kable(digits = 2) %>%
   kable_styling("striped") %>%
-  add_header_above(c(" " = 4,
+  add_header_above(c(" " = 5,
                      "beta_0" = 3,
                      "beta_1" = 3,
                      "log(var)" = 3))
 
 ```
 
-## Next Steps
+```{r}
 
-* Estimate the nuisance densities $\eta_1, \eta_2$.
-* Extend the model to include a (discrete) uncensored covariate $Z$.
-* Consider moving computationally intensive tasks to C++.
-* Implement variance estimator.
+# table summarizing for only beta2
+tbl <- sim.out.long %>%
+  filter(param == 2) %>% 
+  group_by(n, q, specify.x.gamma, specify.c.gamma, method) %>% 
+  summarise(bias = 100*mean(estimate - B.true, na.rm = T),
+            emp.se = 100*sd(estimate, na.rm = T),
+            mse = 100*mean((estimate - B.true) ^ 2, na.rm = T)) %>% 
+  gather(key, value, bias:mse) %>% 
+  unite(Group, specify.x.gamma, key) %>% 
+  spread(Group, value)
 
+setNames(tbl, sub(".+_", "", names(tbl))) %>% 
+  kable(digits = 2) %>%
+  kable_styling("striped") %>%
+  add_header_above(c(" " = 4,
+                     "X Inorrect" = 3,
+                     "X Correct" = 3))
+
+```
 
 
 

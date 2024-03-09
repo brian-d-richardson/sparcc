@@ -121,13 +121,13 @@ plot2 <- plot.dat %>%
   ggplot(aes(x = X, y = Y)) +
   geom_point(color = pal[3],
              size = pt.size) +
+  geom_line(aes(y = fit),
+            color = pal[8],
+            linewidth = line.width) +
   geom_line(aes(y = true.fit),
             color = "black",
             linewidth = line.width,
             linetype = "dashed") +
-  geom_line(aes(y = fit),
-            color = pal[8],
-            linewidth = line.width) +
   geom_ribbon(aes(ymin = lwr,
                   ymax = upr),
               fill = pal[8],
@@ -144,7 +144,7 @@ plot2
 
 # indicate censored observations
 plot3 <- plot.dat %>%
-  filter(method == "oracle") %>%
+  filter(method == "oracle", Delta == 1) %>%
   ggplot(aes(x = X, y = Y)) +
   geom_point(aes(x = W),
              color = pal[3],
@@ -153,7 +153,8 @@ plot3 <- plot.dat %>%
              shape = 13,
              color = "red",
              size = pt.size) +
-  geom_line(aes(y = true.fit),
+  geom_line(data = filter(plot.dat, method == "oracle"),
+            aes(y = true.fit),
             color = "black",
             linewidth = line.width,
             linetype = "dashed") +

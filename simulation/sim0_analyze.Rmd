@@ -1,0 +1,302 @@
+---
+title: "Sparcc Simulation 0"
+author: "Brian Richardson"
+date: "`r format(Sys.time(), '%m/%d/%Y')`"
+output:
+  html_document:
+    code_folding: hide
+---
+
+```{r message = F, warning = F}
+
+rm(list = ls())
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(ggh4x)
+library(scales)
+library(ggthemes)
+library(kableExtra)
+
+```
+
+## Simulation Setup
+
+The goal of this program is to evaluate the performance of the semiparametric efficient estimator $\widehat{\pmb{\beta}}$ using simulations in the following setting:
+
+* $X \sim \textrm{gamma}(\theta_1, \theta_2)$,
+* $C \sim \textrm{gamma}(\gamma_1, \gamma_2)$,
+* $Y|X \sim N(\beta_0 + \beta_1X, 1)$.
+
+The assumption that $Y|X$ follows a normal distribution allows us to use Gaussian quadrature to efficiently solve integrals with respect to $y$. 
+
+In these simulations, we vary the censoring probability $q=\textrm{P}(X>C)$ and the sample size $n$.
+
+We also vary which nuisance distributions are correct by modeling $X$ (or $C$) as gamma (correct) or exponential (incorrect).
+
+In all scenarios, $\textrm{E}(X) = 1/4$ and $\textrm{P}(X>C) = q$.
+
+In Simulation 0, the nuisance distributions are assumed known, not estimated.
+
+For each simulation, we generate a data set of size $n$ then compute the complete case estimator $\widehat{\pmb{\beta}}_{cc}$, the oracle estimator $\widehat{\pmb{\beta}}_{or}$, the parametric MLE $\widehat{\pmb{\beta}}_{ml}$, and the semiparametric efficient estimator $\widehat{\pmb{\beta}}$.
+
+## Computing the Semiparametric Estimator
+
+Our current approach for computing $S_{eff}$ is as follows.
+
+* Approximate the integral equation in Proposition 3 using quadrature rules for $X$ and $C$. In particular, assign point mass $r_j = \eta_1^*(x_j, \widehat\alpha_1) / \sum_{k=1}^{m_x} \eta_1^*(x_k, \widehat\alpha_1)$ to each of $m_x$ nodes $x_j$ in the support of $X$, and point mass $t_j = \eta_2^{\dagger}(c_j, \widehat\alpha_2) / \sum_{k=1}^{m_c} \eta_2^{\dagger}(c_k, \widehat\alpha_2)$ to each of $m_c$ nodes $c_j$ in the support of $C$.
+
+* Replace all integrals with respect to $x$ or $c$ with finite sums, using the above quadrature rules. For example, in $\textrm{LHS}_j$, we let $\textrm{E}\{\textrm{I}(x_j\leq C\} = \int_{x_j}^\infty\eta_2(c)\approx\sum_{k=1}^{m_c}t_k\textrm{I}(c_k\geq x_j)$.
+
+* Evaluate integrals with respect to $y$ using Gaussian quadrature using $m_y$ nodes. Let $w_h, \phi_h$ be the nodes and weights for the integral approximation $\int g(u)\exp(-u^2)du \approx \sum_{h=1}^{m_y}g(w_h)\phi_h$. Then all integrals with $f_{Y|X}(y,x_i,\pmb{\beta}, \sigma^2)$ or $f_{Y|X}(y,x_i,\pmb{\beta}, \sigma^2)f_{Y|X}(y,x_j,\pmb{\beta}, \sigma^2)$ in the integrand can be approximated using:
+
+$$
+\int g(y)f_{Y|X}(y,x_i,\pmb{\beta}, \sigma^2)dy \\
+= \int g(y)(2\pi\sigma^2)^{-1/2}\exp\left\{-\frac{1}{2\sigma^2}(y-\mu_i)^2\right\}dy \\ 
+= \pi^{-1/2}\int g(\sqrt{2}\sigma u + \mu_i)\exp(-u^2)du \\
+\approx \pi^{-1/2}\sum_{h=1}^{m_y}g(\sqrt{2}\sigma w_h + \mu_i)\phi_h,
+$$
+
+and
+
+$$
+\int g(y)f_{Y|X}(y,x_i,\pmb{\beta}, \sigma^2)f_{Y|X}(y,x_j,\pmb{\beta}, \sigma^2)dy \\
+= \int g(y)(2\pi, \sigma^2)^{-1}\exp\left\{-\frac{1}{4\sigma^2}(\mu_i-\mu_j)^2\right\}\exp\{-\frac{1}{\sigma^2}(y-\bar{\mu}_{ij})^2dy \\ 
+= (2\pi\sigma)^{-1}\exp\left\{-\frac{1}{4\sigma^2}(\mu_i-\mu_j)^2\right\}\int g(\sigma u + \bar{\mu}_{ij})\exp(-u^2)du \\
+\approx (2\pi\sigma)^{-1}\exp\left\{-\frac{1}{4\sigma^2}(\mu_i-\mu_j)^2\right\}\sum_{h=1}^{m_y}g(\sigma w_h + \bar{\mu}_{ij})\phi_h.
+$$
+
+* Solve for $\eta_1^*(x_j, \widehat\alpha_1)\pmb{a}(x_j, \pmb{\beta})$ at each node $x_j$. This involves solving a symmetric system of linear equations, which is done stably and quickly using the Cholesky decomposition. Then use linear interpolation to evaluate $\eta_1^*(x, \widehat\alpha_1)\pmb{a}(x,\pmb{\beta})$ at any observed $x$ value that is not a node in the quadrature rule for $X$.
+
+* Use the obtained $\pmb{a}(x,\pmb{\beta},\sigma^2)$ values and the quadrature rules for $X$ and $C$ to approximate the efficient score vector $S_{eff}$, evaluated at the observed data $(y_i,w_i,\delta_i)$ for each observation $i$.
+
+* In a previous set of simulations, we showed that $m_y=2$ and $m_c=15$ are sufficiently fine grids for approximating $S_{eff}$, and that $m_x$ may need to be as large as $100$. We will use these values for now.
+
+## Simulation Results
+
+We first look at which simulation settings lead to errors.
+
+```{r}
+
+# true (beta, log s2)
+B <- c(1, 0.2, log(0.09))
+
+# load simulation results from each of 10 clusters
+sim.out.list <- lapply(
+  X = 0:9,
+  FUN = function(clust) {
+    cbind(clust,
+          read.csv(paste0(
+            "sim_data/sim0/fine_search_1/sd",
+            clust, ".csv")))
+  })
+
+# combine simulation results into 1 data frame
+sim.out <- bind_rows(sim.out.list)
+
+colnames(sim.out) <- gsub(".B", "", colnames(sim.out))
+
+# make long data frame
+sim.out.long <- sim.out %>% 
+  select(!B2) %>% 
+  pivot_longer(cols = starts_with("B"),
+               names_to = "method.param",
+               values_to = "estimate") %>% 
+    mutate(method = factor(substr(method.param, 2, 3),
+                           levels = c("or", "cc", "ml", "sp")),
+           specify.x.gamma = factor(specify.x.gamma,
+                                    levels = c(1, 0)),
+           specify.c.gamma = factor(specify.c.gamma,
+                                    levels = c(1, 0)),
+           param = factor(substr(method.param, 4, 4)),
+           B.true = B[param])
+  
+```
+
+```{r message = F}
+
+# check for simulations with errors
+sim.out.long %>% 
+  filter(param == 1) %>% 
+  group_by(q, n, specify.x.gamma, specify.c.gamma, method) %>% 
+  summarize(prop.error = mean(is.na(estimate))) %>% 
+  filter(prop.error > 0) %>% 
+  kable(digits = 3) %>%
+  kable_styling("striped")
+
+```
+
+```{r}
+
+# extract simulation parameters
+q <- unique(sim.out$q)
+n <- unique(sim.out$n)
+specify.x.gamma <- unique(sim.out$specify.x.gamma)
+specify.c.gamma <- unique(sim.out$specify.c.gamma)
+mx <- unique(sim.out$mx)
+mc <- unique(sim.out$mc)
+my <- unique(sim.out$my)
+n.rep <- nrow(sim.out) /
+  n_distinct(dplyr::select(sim.out, q, n, specify.x.gamma, specify.c.gamma, mx, mc, my))
+
+# make labels for plots
+method.labs <- c("Oracle",
+                 "Complete Case",
+                 "Parametric MLE",
+                 "Semiparametric")
+
+names(method.labs) <- c("or", "cc", "ml", "sp")
+
+q.labs <- paste0("q = ", q)
+names(q.labs) <- q
+
+n.labs <- paste0("n = ", n)
+names(n.labs) <- n
+
+specx.labs <- c("X Correct", "X Incorrect")
+names(specx.labs) <- specify.x.gamma
+
+specc.labs <- c("C Correct", "C Incorrect")
+names(specc.labs) <- specify.c.gamma
+
+mx.labs <- paste0("mx = ", mx)
+names(mx.labs) <- mx
+
+mc.labs <- paste0("mc = ", mc)
+names(mc.labs) <- mc
+
+my.labs <- paste0("my = ", my)
+names(my.labs) <- my
+
+param.labs <- c("\u03B20", "\u03B21", "log\u03C3\u00B2")
+
+# colorblind friendly pallette
+#pal_light <- cbbPalette <- c('#BBBBBB', '#228833', '#4477AA', '#AA3377')
+#pal_dark <- cbbPalette <- c('#5d5d5d', '#114419', '#223b55', '#55193b')
+pal_light <- c('#EE6677', '#228833', '#4477AA', '#CCBB44', '#66CCEE', '#AA3377', '#BBBBBB')
+pal_dark <- c('#991122', '#114419', '#223b55', '#6b611d', '#117799', '#55193b', '#5d5d5d')
+
+
+```
+
+```{r}
+
+# boxplot of simulated estimates
+make.est.plot <- function(param., q.) {
+  
+  sim.out.long %>% 
+    filter(param == param.,
+           q == q.) %>%  
+    ggplot(aes(y = estimate,
+               color = method,
+               fill = method)) +
+    geom_boxplot() +
+    geom_hline(aes(yintercept = B.true),
+               linetype = "dashed",
+               linewidth = 0.6,
+               color = pal_light[4]) +
+    facet_nested(n ~ specify.x.gamma + specify.c.gamma,
+                 scales = "free",
+                 labeller = labeller(n = n.labs,
+                                     specify.x.gamma = specx.labs,
+                                     specify.c.gamma = specc.labs)) +
+    labs(y = "Parameter Estimate",
+         fill = "Method",
+         color = "Method") +
+    ggtitle(paste0("Empirical Distribution of Parameter Estimates for ",
+                   param.labs[param.]),
+            subtitle = paste0("censoring proportion q = ", q., "; ",
+                              n.rep, " replicates per setting")) +
+    theme_bw() +
+    theme(axis.ticks.x = element_blank(),
+          axis.text.x = element_blank(),
+          axis.title.x = element_blank()) +
+    scale_fill_manual(values = pal_light[c(1, 2, 3, 6)],
+                      labels = method.labs) +
+    scale_color_manual(values = pal_dark[c(1, 2, 3, 6)],
+                      labels = method.labs)
+}
+
+```
+
+```{r message = F, eval = F}
+
+make.est.plot(param. = 1, q. = q[1])
+make.est.plot(param. = 2, q. = q[1])
+make.est.plot(param. = 3, q. = q[1])
+
+```
+
+```{r message = F}
+
+make.est.plot(param. = 1, q. = q[1]) + ylim(0.95, 1.05)
+make.est.plot(param. = 2, q. = q[1]) + ylim(0, 0.4)
+make.est.plot(param. = 3, q. = q[1]) + ylim(-2.5, -2.3)
+
+```
+
+
+
+```{r message = F, eval = F}
+
+make.est.plot(param. = 1, q. = q[2])
+make.est.plot(param. = 2, q. = q[2])
+make.est.plot(param. = 3, q. = q[2])
+
+```
+
+```{r message = F}
+
+# filter out MLE outliers
+make.est.plot(param. = 1, q. = q[2]) + ylim(0.95, 1.05)
+make.est.plot(param. = 2, q. = q[2]) + ylim(-0.2, 0.6)
+make.est.plot(param. = 3, q. = q[2]) + ylim(-2.5, -2.3)
+
+```
+
+```{r}
+
+tbl <- sim.out.long %>%
+  group_by(n, q, specify.x.gamma, specify.c.gamma, method, param) %>% 
+  summarise(bias = 100*mean(estimate - B.true, na.rm = T),
+            emp.se = 100*sd(estimate, na.rm = T),
+            mse = 100*mean((estimate - B.true) ^ 2, na.rm = T)) %>% 
+  gather(key, value, bias:mse) %>% 
+  unite(Group, param, key) %>% 
+  spread(Group, value)
+
+setNames(tbl, sub(".+_", "", names(tbl))) %>% 
+  kable(digits = 2) %>%
+  kable_styling("striped") %>%
+  add_header_above(c(" " = 5,
+                     "beta_0" = 3,
+                     "beta_1" = 3,
+                     "log(var)" = 3))
+
+```
+
+```{r}
+
+# table summarizing for only beta2
+tbl <- sim.out.long %>%
+  filter(param == 2) %>% 
+  group_by(n, q, specify.x.gamma, specify.c.gamma, method) %>% 
+  summarise(bias = 100*mean(estimate - B.true, na.rm = T),
+            emp.se = 100*sd(estimate, na.rm = T),
+            mse = 100*mean((estimate - B.true) ^ 2, na.rm = T)) %>% 
+  gather(key, value, bias:mse) %>% 
+  unite(Group, specify.x.gamma, key) %>% 
+  spread(Group, value)
+
+setNames(tbl, sub(".+_", "", names(tbl))) %>% 
+  kable(digits = 2) %>%
+  kable_styling("striped") %>%
+  add_header_above(c(" " = 4,
+                     "X Inorrect" = 3,
+                     "X Correct" = 3))
+
+```
+
+
+
+

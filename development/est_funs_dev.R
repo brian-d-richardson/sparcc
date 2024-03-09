@@ -24,13 +24,13 @@ load_all()
 # define parameters -------------------------------------------------------
 
 set.seed(1)
-B <- c(1, 2)              # outcome model parameters
-s2 <- 1.1                 # Var(Y|X,Z)
+B <- c(1, 0.5)            # outcome model parameters
+s2 <- 0.25                # Var(Y|X,Z)
 q <- 0.8                  # censoring proportion
 n <- 10000                # sample size
-x.mean <- 0.5
-x.shape <- 1.2
-c.shape <- 1.2
+x.mean <- 1
+x.shape <- 1.1
+c.shape <- 1.1
 x.rate <- x.shape / x.mean # rate parameter for gamma distribution of X
 c.rate <- get.c.rate(      # rate parameter for gamma distribution of C
   q = q,
@@ -72,33 +72,32 @@ dat0 <- dat.list$dat0          # oracle data
 dat <- dat.list$dat            # observed data
 datcc <- dat.list$datcc        # complete case data
 
+plot(datf$X, datf$Y)
+plot(datcc$W, datcc$Y)
+max(dat$W[dat$Delta == 1]); max(datf$X)
+
 # estimate nuisance distributions -----------------------------------------
 
 # estimate distribution of X
 if (specify.x.gamma) {
-  x.param.hat <- gammaMLE(yi = dat$W,                      # gamma parameters
-                          si = dat$Delta,
-                          scale = F)$estimate
-  eta1 <- function(x) dgamma(x = x,                        # gamma density
-                             shape = x.param.hat["shape"],
-                             rate = x.param.hat["rate"])
+  x.param.hat <- gammaMLE(yi = dat$W, si = dat$Delta, scale = F)$estimate
+  eta1 <- function(x)
+    dgamma(x = x, shape = x.param.hat["shape"], rate = x.param.hat["rate"])
 } else {
-  x.rate.hat <- mean(dat$Delta) / mean(dat$W)      # exponential rate parameter
-  eta1 <- function(x) dexp(x, rate = x.rate.hat)   # exponential density
+  x.rate.hat <- mean(dat$Delta) / mean(dat$W)
+  eta1 <- function(x) dexp(x, rate = x.rate.hat)
 }
 
 # estimate distribution of C
 if (specify.c.gamma) {
-  c.param.hat <- gammaMLE(yi = dat$W,                      # gamma parameters
-                          si = 1 - dat$Delta,
-                          scale = F)$estimate
-  eta2 <- function(x) dgamma(x = x,                        # gamma density
-                             shape = c.param.hat["shape"],
-                             rate = c.param.hat["rate"])
+  c.param.hat <- gammaMLE(yi = dat$W, si = 1 - dat$Delta, scale = F)$estimate
+  eta2 <- function(x)
+    dgamma(x = x, shape = c.param.hat["shape"], rate = c.param.hat["rate"])
 } else {
-  c.rate.hat <- mean(1 - dat$Delta) / mean(dat$W)  # exponential rate parameter
-  eta2 <- function(x) dexp(x, rate = c.rate.hat)   # exponential density
+  c.rate.hat <- mean(1 - dat$Delta) / mean(dat$W)
+  eta2 <- function(x) dexp(x, rate = c.rate.hat)
 }
+
 
 # create quadrature rules -------------------------------------------------
 

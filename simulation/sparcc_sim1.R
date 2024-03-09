@@ -31,17 +31,17 @@ base.seed <- 10^6 * as.integer(args)
 n.sim <- 1
 
 # output size
-len.out <- 20
+len.out <- 25
 
-# fixed parameters
-x.shape <- 1.2
-c.shape <- 1.2
-x.mean <- 0.5
-s2 <- 1.1
-
-# varied parameters
+# parameters
 n <- 10000
-q <- c(0.4, 0.8)
+q <- c(0.65, 0.7, 0.75)
+B2 <- 0.2
+s2 <- 0.09
+shape <- c(1.1, 1.15, 1.2)
+#x.shape <- 1.1
+#c.shape <- 1.1
+x.mean <- 0.5
 specify.x.gamma <- c(T, F)
 specify.c.gamma <- c(T, F)
 
@@ -50,6 +50,12 @@ specify.c.gamma <- c(T, F)
 # create simulation input
 sim.in <- expand.grid(n = n,
                       q = q,
+                      B2 = B2,
+                      s2 = s2,
+                      shape = shape,
+                      #x.shape = x.shape,
+                      #c.shape = c.shape,
+                      x.mean = x.mean,
                       specify.x.gamma = specify.x.gamma,
                       specify.c.gamma = specify.c.gamma,
                       sim.id = 1:n.sim + base.seed)
@@ -61,10 +67,11 @@ sim.out <- pbapply::pbvapply(
 
     sim1(n = sim.in$n[ii],
          q = sim.in$q[ii],
-         x.mean = x.mean,
-         s2 = s2,
-         x.shape = x.shape,
-         c.shape = x.shape,
+         B2 = sim.in$B2[ii],
+         s2 = sim.in$s2[ii],
+         x.mean = sim.in$x.mean[ii],
+         x.shape = sim.in$shape[ii],
+         c.shape = sim.in$shape[ii],
          specify.x.gamma = sim.in$specify.x.gamma[ii],
          specify.c.gamma = sim.in$specify.c.gamma[ii],
          mx = 100,
@@ -75,6 +82,7 @@ sim.out <- pbapply::pbvapply(
   },
   FUN.VALUE = numeric(len.out)) |>
   t()
+
 
 # save sim results
 write.csv(sim.out, row.names = F,

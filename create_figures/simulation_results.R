@@ -27,36 +27,42 @@ load_all()
 # load data ---------------------------------------------------------------
 
 # true (beta, log s2)
-B <- c(1, 2, log(0.81))
+B <- c(1, 0.2, log(0.09))
 
 # load simulation results from each of 10 clusters
 sim.out.list <- lapply(
   X = 0:9,
   FUN = function(clust) {
     cbind(clust,
-          read.csv(paste0("simulation/sim_data/sim1/unownvar_knownetas/sd",
+          read.csv(paste0("simulation/sim_data/sim1/fine_search_1/sd",
                           clust, ".csv")))
   })
 
 
 # combine simulation results into 1 data frame
 sim.out <- bind_rows(sim.out.list)
+colnames(sim.out) <- gsub(".B", "", colnames(sim.out))
 
 # make long data frame
 sim.out.long <- sim.out %>%
+  select(!B2) %>%
   pivot_longer(cols = starts_with("B"),
                names_to = "method.param",
                values_to = "estimate") %>%
   mutate(method = factor(substr(method.param, 2, 3),
                          levels = c("or", "cc", "ml", "sp")),
          param = factor(substr(method.param, 4, 4)),
+         specify.x.gamma = factor(specify.x.gamma,
+                                  levels = c(1, 0)),
+         specify.c.gamma = factor(specify.c.gamma,
+                                  levels = c(1, 0)),
          B.true = B[param])
 
 # extract simulation parameters
 q <- unique(sim.out$q)
 n <- unique(sim.out$n)
-x.shape <- unique(sim.out$x.shape)
-c.shape <- unique(sim.out$c.shape)
+specify.x.gamma <- unique(sim.out$specify.x.gamma)
+specify.c.gamma <- unique(sim.out$specify.c.gamma)
 mx <- unique(sim.out$mx)
 mc <- unique(sim.out$mc)
 my <- unique(sim.out$my)
@@ -77,11 +83,11 @@ names(q.labs) <- q
 n.labs <- paste0("n = ", n)
 names(n.labs) <- n
 
-shapex.labs <- c("X Correct", "X Incorrect")
-names(shapex.labs) <- x.shape
+specx.labs <- c("X Correct", "X Incorrect")
+names(specx.labs) <- specify.x.gamma
 
-shapec.labs <- c("C Correct", "C Incorrect")
-names(shapec.labs) <- c.shape
+specc.labs <- c("C Correct", "C Incorrect")
+names(specc.labs) <- specify.c.gamma
 
 mx.labs <- paste0("mx = ", mx)
 names(mx.labs) <- mx
@@ -95,8 +101,8 @@ names(my.labs) <- my
 y.range <- sim.out.long %>%
   filter(param == 2,
          q == 0.8,
-         x.shape == 1,
-         c.shape == 1,
+         specify.x.gamma == 1,
+         specify.c.gamma == 1,
          method == "cc") %>%
   reframe(r = range(estimate)) %>%
   c()
@@ -122,8 +128,8 @@ plot1 <- ggplot(
   filter(sim.out.long,
          param == 2,
          q == 0.8,
-         x.shape == 1,
-         c.shape == 1,
+         specify.x.gamma == 1,
+         specify.c.gamma == 1,
          method %in% c("or", "cc")),
   aes(y = estimate,
       color = method,
@@ -153,8 +159,8 @@ plot2 <- ggplot(
   filter(sim.out.long,
          param == 2,
          q == 0.8,
-         x.shape == 1,
-         c.shape == 1,
+         specify.x.gamma == 1,
+         specify.c.gamma == 1,
          method %in% c("or", "cc", "ml")),
   aes(y = estimate,
       color = method,
@@ -184,7 +190,7 @@ plot3 <- ggplot(
   filter(sim.out.long,
          param == 2,
          q == 0.8,
-         c.shape == 1,
+         specify.c.gamma == 1,
          method %in% c("or", "cc", "ml")),
   aes(y = estimate,
       color = method,
@@ -194,11 +200,11 @@ plot3 <- ggplot(
              linetype = "dashed",
              linewidth = 0.6,
              color = pal_light[4]) +
-  facet_grid(~ x.shape,
-             scales = "free",
-             labeller = labeller(q = q.labs,
-                                 x.shape = shapex.labs,
-                                 c.shape = shapec.labs)) +
+  facet_nested(~ specify.x.gamma,
+               scales = "free",
+               labeller = labeller(n = n.labs,
+                                   specify.x.gamma = specx.labs,
+                                   specify.c.gamma = specc.labs)) +
   labs(y = "",
        fill = "",
        color = "") +
@@ -220,7 +226,7 @@ plot4 <- ggplot(
   filter(sim.out.long,
          param == 2,
          q == 0.8,
-         c.shape == 1),
+         specify.c.gamma == 1),
   aes(y = estimate,
       color = method,
       fill = method)) +
@@ -229,11 +235,11 @@ plot4 <- ggplot(
              linetype = "dashed",
              linewidth = 0.6,
              color = pal_light[4]) +
-  facet_grid(~ x.shape,
-             scales = "free",
-             labeller = labeller(q = q.labs,
-                                 x.shape = shapex.labs,
-                                 c.shape = shapec.labs)) +
+  facet_nested(~ specify.x.gamma,
+               scales = "free",
+               labeller = labeller(n = n.labs,
+                                   specify.x.gamma = specx.labs,
+                                   specify.c.gamma = specc.labs)) +
   labs(y = "",
        fill = "",
        color = "") +
@@ -263,11 +269,11 @@ plot5 <- ggplot(
              linetype = "dashed",
              linewidth = 0.6,
              color = pal_light[4]) +
-  facet_nested(~ x.shape + c.shape,
+  facet_nested(~ specify.x.gamma + specify.c.gamma,
                scales = "free",
-               labeller = labeller(q = q.labs,
-                                   x.shape = shapex.labs,
-                                   c.shape = shapec.labs)) +
+               labeller = labeller(n = n.labs,
+                                   specify.x.gamma = specx.labs,
+                                   specify.c.gamma = specc.labs)) +
   labs(y = "",
        fill = "",
        color = "") +

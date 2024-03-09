@@ -13,7 +13,8 @@ assess.ee(ee, digits = 2)
 default is 2}
 }
 \value{
-individual or summation estimating function values
+A list with means and t-statistics testing if the estimating function
+values have mean zero.
 }
 \description{
 Assess estimating equation

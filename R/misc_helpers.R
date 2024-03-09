@@ -4,7 +4,8 @@
 #' @param digits a non-negative integer, number of digits to round results,
 #' default is 2
 #'
-#' @return individual or summation estimating function values
+#' @return A list with means and t-statistics testing if the estimating function
+#' values have mean zero.
 #'
 #' @export
 assess.ee <- function(ee, digits = 2) {
@@ -57,31 +58,26 @@ assess.dat <- function(n, q, B, s2, x.mean, x.shape, c.shape,
 
   # estimate distribution of X
   if (specify.x.gamma) {
-    x.param.hat <- gammaMLE(yi = dat$W,                      # gamma parameters
-                            si = dat$Delta,
-                            scale = F)$estimate
-    eta1 <- function(x) dgamma(x = x,                        # gamma density
-                               shape = x.param.hat["shape"],
-                               rate = x.param.hat["rate"])
+    x.param.hat <- gammaMLE(yi = dat$W, si = dat$Delta, scale = F)$estimate
+    eta1 <- function(x)
+      dgamma(x = x, shape = x.param.hat["shape"], rate = x.param.hat["rate"])
   } else {
-    x.rate.hat <- mean(dat$Delta) / mean(dat$W)      # exponential rate parameter
-    eta1 <- function(x) dexp(x, rate = x.rate.hat)   # exponential density
+    x.rate.hat <- mean(dat$Delta) / mean(dat$W)
+    eta1 <- function(x) dexp(x, rate = x.rate.hat)
   }
 
   # estimate distribution of C
   if (specify.c.gamma) {
-    c.param.hat <- gammaMLE(yi = dat$W,                      # gamma parameters
-                            si = 1 - dat$Delta,
-                            scale = F)$estimate
-    eta2 <- function(x) dgamma(x = x,                        # gamma density
-                               shape = c.param.hat["shape"],
-                               rate = c.param.hat["rate"])
+    c.param.hat <- gammaMLE(yi = dat$W, si = 1 - dat$Delta, scale = F)$estimate
+    eta2 <- function(x)
+      dgamma(x = x, shape = c.param.hat["shape"], rate = c.param.hat["rate"])
   } else {
-    c.rate.hat <- mean(1 - dat$Delta) / mean(dat$W)  # exponential rate parameter
-    eta2 <- function(x) dexp(x, rate = c.rate.hat)   # exponential density
+    c.rate.hat <- mean(1 - dat$Delta) / mean(dat$W)
+    eta2 <- function(x) dexp(x, rate = c.rate.hat)
   }
 
-  x.grid <- seq(0, max(c(datf$X, datf$C)), 0.01)   # grid to plot X density
+  # grid to plot X density
+  x.grid <- seq(0, max(c(datf$X, datf$C)), 0.01)
 
   # plot data
   ggplot() +
@@ -114,8 +110,13 @@ assess.dat <- function(n, q, B, s2, x.mean, x.shape, c.shape,
 #'
 #' @param x.mean a positive number, the mean of X
 #' @param n.rep a positive integer, the number of simulated replicates
+#' @param specify.x.gamma logical, an indicator of whether X should be estimated
+#' as gamma (`T`) or exponential (`F`)
+#' @param specify.c.gamma logical, an indicator of whether C should be estimated
+#' as gamma (`T`) or exponential (`F`)
 #'
-#' @return empirical distribution of estimated parameters for eta1 and eta2
+#' @return plot of empirical distribution of estimated parameters for eta1 and
+#' eta2
 #'
 #' @export
 assess.eta.est <- function(n.rep, n, q, B, s2, x.mean, x.shape, c.shape,
