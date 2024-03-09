@@ -85,7 +85,7 @@ sim.out.list <- lapply(
   FUN = function(clust) {
     cbind(clust,
           read.csv(paste0(
-            "sim_data/sim1/fine_search_2/sd",
+            "sim_data/sim1/fine_search_3/sd",
             clust, ".csv")))
   })
 
@@ -193,9 +193,9 @@ make.est.plot <- function(param., q.) {
                linetype = "dashed",
                linewidth = 0.6,
                color = pal_light[4]) +
-    facet_nested(x.shape ~ specify.x.gamma + specify.c.gamma,
+    facet_nested(n ~ specify.x.gamma + specify.c.gamma,
                  scales = "free",
-                 labeller = labeller(#n = n.labs,
+                 labeller = labeller(n = n.labs,
                                      specify.x.gamma = specx.labs,
                                      specify.c.gamma = specc.labs)) +
     labs(y = "Parameter Estimate",
@@ -223,31 +223,6 @@ make.est.plot <- function(param., q.) {
 make.est.plot(param. = 1, q. = q[1])
 make.est.plot(param. = 2, q. = q[1])
 make.est.plot(param. = 3, q. = q[1])
-
-```
-
-```{r message = F}
-
-make.est.plot(param. = 1, q. = q[2])
-make.est.plot(param. = 2, q. = q[2])
-make.est.plot(param. = 3, q. = q[2])
-
-```
-
-```{r message = F}
-
-make.est.plot(param. = 1, q. = q[3])
-make.est.plot(param. = 2, q. = q[3])
-make.est.plot(param. = 3, q. = q[3])
-
-```
-
-```{r message = F, eval = F}
-
-# filter out MLE outliers
-make.est.plot(param. = 1, q. = q[2]) + ylim(0.95, 1.05)
-make.est.plot(param. = 2, q. = q[2]) + ylim(0, 0.4)
-make.est.plot(param. = 3, q. = q[2]) + ylim(-2.5, -2.3)
 
 ```
 

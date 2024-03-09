@@ -34,7 +34,7 @@ sim.out.list <- lapply(
   X = 0:9,
   FUN = function(clust) {
     cbind(clust,
-          read.csv(paste0("simulation/sim_data/sim1/fine_search_1/sd",
+          read.csv(paste0("simulation/sim_data/sim1/fine_search_3/sd",
                           clust, ".csv")))
   })
 
@@ -100,7 +100,7 @@ names(my.labs) <- my
 
 y.range <- sim.out.long %>%
   filter(param == 2,
-         q == 0.8,
+         q == 0.75,
          specify.x.gamma == 1,
          specify.c.gamma == 1,
          method == "cc") %>%
@@ -127,7 +127,7 @@ font.size <- 18
 plot1 <- ggplot(
   filter(sim.out.long,
          param == 2,
-         q == 0.8,
+         q == 0.75,
          specify.x.gamma == 1,
          specify.c.gamma == 1,
          method %in% c("or", "cc")),
@@ -137,7 +137,7 @@ plot1 <- ggplot(
   geom_boxplot() +
   geom_hline(aes(yintercept = B.true),
              linetype = "dashed",
-             linewidth = 0.6,
+             linewidth = 1,
              color = pal_light[4]) +
   labs(y = "",
        fill = "",
@@ -158,7 +158,7 @@ plot1
 plot2 <- ggplot(
   filter(sim.out.long,
          param == 2,
-         q == 0.8,
+         q == 0.75,
          specify.x.gamma == 1,
          specify.c.gamma == 1,
          method %in% c("or", "cc", "ml")),
@@ -168,7 +168,7 @@ plot2 <- ggplot(
   geom_boxplot() +
   geom_hline(aes(yintercept = B.true),
              linetype = "dashed",
-             linewidth = 0.6,
+             linewidth = 1,
              color = pal_light[4]) +
   labs(y = "",
        fill = "",
@@ -189,7 +189,7 @@ plot2
 plot3 <- ggplot(
   filter(sim.out.long,
          param == 2,
-         q == 0.8,
+         q == 0.75,
          specify.c.gamma == 1,
          method %in% c("or", "cc", "ml")),
   aes(y = estimate,
@@ -198,7 +198,7 @@ plot3 <- ggplot(
   geom_boxplot() +
   geom_hline(aes(yintercept = B.true),
              linetype = "dashed",
-             linewidth = 0.6,
+             linewidth = 1,
              color = pal_light[4]) +
   facet_nested(~ specify.x.gamma,
                scales = "free",
@@ -225,7 +225,7 @@ plot3
 plot4 <- ggplot(
   filter(sim.out.long,
          param == 2,
-         q == 0.8,
+         q == 0.75,
          specify.c.gamma == 1),
   aes(y = estimate,
       color = method,
@@ -233,7 +233,7 @@ plot4 <- ggplot(
   geom_boxplot() +
   geom_hline(aes(yintercept = B.true),
              linetype = "dashed",
-             linewidth = 0.6,
+             linewidth = 1,
              color = pal_light[4]) +
   facet_nested(~ specify.x.gamma,
                scales = "free",
@@ -260,14 +260,14 @@ plot4
 plot5 <- ggplot(
   filter(sim.out.long,
          param == 2,
-         q == 0.8),
+         q == 0.75),
   aes(y = estimate,
       color = method,
       fill = method)) +
   geom_boxplot() +
   geom_hline(aes(yintercept = B.true),
              linetype = "dashed",
-             linewidth = 0.6,
+             linewidth = 0.75,
              color = pal_light[4]) +
   facet_nested(~ specify.x.gamma + specify.c.gamma,
                scales = "free",
