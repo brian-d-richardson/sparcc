@@ -120,28 +120,6 @@ sim0 <- function(n, q, B2, s2, x.mean, x.shape, c.shape,
 
 }
 
-
-# mean function mu(X, B) = E(Y | X)
-mu <- function(x, B) {
-  B[1] + B[2]*x
-}
-
-# gradient of mu w.r.t. B
-d.mu <- function(x, B) {
-  cbind(1, x)
-}
-
-# Y density
-fy <- function(y, x, B, s2) dnorm(x = y, mean = mu(x, B), sd = sqrt(s2))
-
-# full data score vector
-SF <- function(y, x, B, s2) {
-  cbind((y - mu(x, B)) * d.mu(x, B),
-        (y - mu(x, B)) ^ 2 - s2)
-}
-
-
-
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #' simulation setup 1
 #'

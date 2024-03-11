@@ -85,7 +85,7 @@ sim.out.list <- lapply(
   FUN = function(clust) {
     cbind(clust,
           read.csv(paste0(
-            "sim_data/sim1/fine_search_3/sd",
+            "sim_data/sim1/fine_search_4/sd",
             clust, ".csv")))
   })
 
@@ -180,11 +180,12 @@ pal_dark <- c('#991122', '#114419', '#223b55', '#6b611d', '#117799', '#55193b', 
 ```{r}
 
 # boxplot of simulated estimates
-make.est.plot <- function(param., q.) {
+make.est.plot <- function(param., q., est_cutoff = Inf) {
   
   sim.out.long %>% 
     filter(param == param.,
-           q == q.) %>%  
+           q == q.,
+           abs(estimate - B.true) < est_cutoff) %>%  
     ggplot(aes(y = estimate,
                color = method,
                fill = method)) +
@@ -223,6 +224,14 @@ make.est.plot <- function(param., q.) {
 make.est.plot(param. = 1, q. = q[1])
 make.est.plot(param. = 2, q. = q[1])
 make.est.plot(param. = 3, q. = q[1])
+
+```
+
+```{r message = F}
+
+make.est.plot(param. = 1, q. = q[1], est_cutoff = 0.6)
+make.est.plot(param. = 2, q. = q[1], est_cutoff = 1)
+make.est.plot(param. = 3, q. = q[1], est_cutoff = 1.5)
 
 ```
 

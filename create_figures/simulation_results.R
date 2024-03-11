@@ -34,7 +34,7 @@ sim.out.list <- lapply(
   X = 0:9,
   FUN = function(clust) {
     cbind(clust,
-          read.csv(paste0("simulation/sim_data/sim1/fine_search_3/sd",
+          read.csv(paste0("simulation/sim_data/sim1/fine_search_4/sd",
                           clust, ".csv")))
   })
 
@@ -100,7 +100,7 @@ names(my.labs) <- my
 
 y.range <- sim.out.long %>%
   filter(param == 2,
-         q == 0.75,
+         q == 0.7,
          specify.x.gamma == 1,
          specify.c.gamma == 1,
          method == "cc") %>%
@@ -108,6 +108,21 @@ y.range <- sim.out.long %>%
   c()
 
 param.labs <- c("\u03B20", "\u03B21", "log\u03C3\u00B2")
+
+
+# summary data for annotation ---------------------------------------------
+
+sum.dat <- sim.out.long %>%
+  filter(method != "ml" |                 # filter extreme MLE observations
+         abs(estimate - B.true) < 1) %>%
+  group_by(n, q, specify.x.gamma, specify.c.gamma, method, param) %>%
+  summarize(var = round(1000*var(estimate), 2)) %>%
+  mutate(lab = paste("Var = ", var),
+         ht = ifelse(method %in% c("or", "ml"), 0.3, 0.1)) %>%
+  select(n, q, specify.x.gamma, specify.c.gamma, method, param, lab, ht)
+
+plot.dat <- inner_join(sim.out.long, sum.dat,
+                       by = NULL)
 
 # color palettes ----------------------------------------------------------
 
@@ -125,74 +140,14 @@ font.size <- 18
 
 ## oracle and complete case only
 plot1 <- ggplot(
-  filter(sim.out.long,
+  filter(plot.dat,
          param == 2,
-         q == 0.75,
+         q == 0.7,
          specify.x.gamma == 1,
          specify.c.gamma == 1,
          method %in% c("or", "cc")),
   aes(y = estimate,
-      color = method,
-      fill = method)) +
-  geom_boxplot() +
-  geom_hline(aes(yintercept = B.true),
-             linetype = "dashed",
-             linewidth = 1,
-             color = pal_light[4]) +
-  labs(y = "",
-       fill = "",
-       color = "") +
-  theme_bw() +
-  theme(axis.ticks.x = element_blank(),
-        axis.text.x = element_blank(),
-        legend.text = element_text(size = font.size),
-        legend.position = "bottom") +
-  scale_fill_manual(values = pal_light[c(1, 2, 3, 6)],
-                    labels = method.labs) +
-  scale_color_manual(values = pal_dark[c(1, 2, 3, 6)],
-                     labels = method.labs) +
-  ylim(y.range$r)
-plot1
-
-## oracle, complete case, and MLE
-plot2 <- ggplot(
-  filter(sim.out.long,
-         param == 2,
-         q == 0.75,
-         specify.x.gamma == 1,
-         specify.c.gamma == 1,
-         method %in% c("or", "cc", "ml")),
-  aes(y = estimate,
-      color = method,
-      fill = method)) +
-  geom_boxplot() +
-  geom_hline(aes(yintercept = B.true),
-             linetype = "dashed",
-             linewidth = 1,
-             color = pal_light[4]) +
-  labs(y = "",
-       fill = "",
-       color = "") +
-  theme_bw() +
-  theme(axis.ticks.x = element_blank(),
-        axis.text.x = element_blank(),
-        legend.text = element_text(size = font.size),
-        legend.position = "bottom") +
-  scale_fill_manual(values = pal_light[c(1, 2, 3, 6)],
-                    labels = method.labs) +
-  scale_color_manual(values = pal_dark[c(1, 2, 3, 6)],
-                     labels = method.labs) +
-  ylim(y.range$r)
-plot2
-
-## oracle, complete case, and MLE with misspecified X
-plot3 <- ggplot(
-  filter(sim.out.long,
-         param == 2,
-         q == 0.75,
-         specify.c.gamma == 1,
-         method %in% c("or", "cc", "ml")),
-  aes(y = estimate,
+      x = method,
       color = method,
       fill = method)) +
   geom_boxplot() +
@@ -205,9 +160,91 @@ plot3 <- ggplot(
                labeller = labeller(n = n.labs,
                                    specify.x.gamma = specx.labs,
                                    specify.c.gamma = specc.labs)) +
-  labs(y = "",
+  labs(x = "",
+       y = "",
        fill = "",
        color = "") +
+  geom_text(aes(x = method, label = lab, y = ht)) +
+  theme_bw() +
+  theme(axis.ticks.x = element_blank(),
+        axis.text.x = element_blank(),
+        legend.text = element_text(size = font.size),
+        legend.position = "bottom",
+        strip.text.x = element_text(size = font.size)) +
+  scale_fill_manual(values = pal_light[c(1, 2, 3, 6)],
+                    labels = method.labs) +
+  scale_color_manual(values = pal_dark[c(1, 2, 3, 6)],
+                     labels = method.labs) +
+  ylim(y.range$r)
+plot1
+
+## oracle, complete case, and MLE
+plot2 <- ggplot(
+  filter(plot.dat,
+         param == 2,
+         q == 0.7,
+         specify.x.gamma == 1,
+         specify.c.gamma == 1,
+         method %in% c("or", "cc", "ml")),
+  aes(y = estimate,
+      x = method,
+      color = method,
+      fill = method)) +
+  geom_boxplot() +
+  geom_hline(aes(yintercept = B.true),
+             linetype = "dashed",
+             linewidth = 1,
+             color = pal_light[4]) +
+  facet_nested(~ specify.x.gamma,
+               scales = "free",
+               labeller = labeller(n = n.labs,
+                                   specify.x.gamma = specx.labs,
+                                   specify.c.gamma = specc.labs)) +
+  labs(x = "",
+       y = "",
+       fill = "",
+       color = "") +
+  geom_text(aes(x = method, label = lab,
+                y = ht)) +
+  theme_bw() +
+  theme(axis.ticks.x = element_blank(),
+        axis.text.x = element_blank(),
+        legend.text = element_text(size = font.size),
+        legend.position = "bottom",
+        strip.text.x = element_text(size = font.size)) +
+  scale_fill_manual(values = pal_light[c(1, 2, 3, 6)],
+                    labels = method.labs) +
+  scale_color_manual(values = pal_dark[c(1, 2, 3, 6)],
+                     labels = method.labs) +
+  ylim(y.range$r)
+plot2
+
+## oracle, complete case, and MLE with misspecified X
+plot3 <- ggplot(
+  filter(plot.dat,
+         param == 2,
+         q == 0.7,
+         specify.c.gamma == 1,
+         method %in% c("or", "cc", "ml")),
+  aes(y = estimate,
+      x = method,
+      color = method,
+      fill = method)) +
+  geom_boxplot() +
+  geom_hline(aes(yintercept = B.true),
+             linetype = "dashed",
+             linewidth = 1,
+             color = pal_light[4]) +
+  facet_nested(~ specify.x.gamma,
+               scales = "free",
+               labeller = labeller(n = n.labs,
+                                   specify.x.gamma = specx.labs,
+                                   specify.c.gamma = specc.labs)) +
+  labs(x = "",
+       y = "",
+       fill = "",
+       color = "") +
+  geom_text(aes(x = method, label = lab, y = ht)) +
   theme_bw() +
   theme(axis.ticks.x = element_blank(),
         axis.text.x = element_blank(),
@@ -223,11 +260,12 @@ plot3
 
 ## oracle, complete case, MLE, and SP with misspecified X
 plot4 <- ggplot(
-  filter(sim.out.long,
+  filter(plot.dat,
          param == 2,
-         q == 0.75,
+         q == 0.7,
          specify.c.gamma == 1),
   aes(y = estimate,
+      x = method,
       color = method,
       fill = method)) +
   geom_boxplot() +
@@ -240,9 +278,11 @@ plot4 <- ggplot(
                labeller = labeller(n = n.labs,
                                    specify.x.gamma = specx.labs,
                                    specify.c.gamma = specc.labs)) +
-  labs(y = "",
+  labs(x = "",
+       y = "",
        fill = "",
        color = "") +
+  geom_text(aes(x = method, label = lab, y = ht)) +
   theme_bw() +
   theme(axis.ticks.x = element_blank(),
         axis.text.x = element_blank(),
@@ -258,9 +298,9 @@ plot4
 
 ## oracle, complete case, MLE, and SP with misspecified X, C
 plot5 <- ggplot(
-  filter(sim.out.long,
+  filter(plot.dat,
          param == 2,
-         q == 0.75),
+         q == 0.7),
   aes(y = estimate,
       color = method,
       fill = method)) +

@@ -24,13 +24,13 @@ load_all()
 # define parameters -------------------------------------------------------
 
 set.seed(1)
-B <- c(1, 0.5)            # outcome model parameters
-s2 <- 0.25                # Var(Y|X,Z)
-q <- 0.8                  # censoring proportion
-n <- 10000                # sample size
-x.mean <- 1
-x.shape <- 1.1
-c.shape <- 1.1
+B <- c(1, 0.2)            # outcome model parameters
+s2 <- 0.09                # Var(Y|X,Z)
+q <- 0.70                 # censoring proportion
+n <- 4000                 # sample size
+x.mean <- 0.5
+x.shape <- 1.2
+c.shape <- 1.2
 x.rate <- x.shape / x.mean # rate parameter for gamma distribution of X
 c.rate <- get.c.rate(      # rate parameter for gamma distribution of C
   q = q,
@@ -40,7 +40,7 @@ c.rate <- get.c.rate(      # rate parameter for gamma distribution of C
 mx <- 100                  # nodes in quadrature grid for X
 mc <- 15                   # nodes in quadrature grid for C
 my <- 3                    # nodes in quadrature grid for Y
-specify.x.gamma <- T       # indicator for estimating X as gamma
+specify.x.gamma <- F       # indicator for estimating X as gamma
 specify.c.gamma <- T       # indicator for estimating C as gamma
 
 # mean function mu(X, B) = E(Y | X)
@@ -163,8 +163,8 @@ Bcc <- get.root(dat = dat, score = get.Scc,
 Bcc
 
 # oracle
-B0 <- get.root.notrycatch(dat = dat0, score = get.Scc,
-                          start = Bcc)
+B0 <- get.root(dat = dat0, score = get.Scc,
+               start = Bcc)
 B0
 
 # MLE
