@@ -85,7 +85,7 @@ sim.out.list <- lapply(
   FUN = function(clust) {
     cbind(clust,
           read.csv(paste0(
-            "sim_data/sim1/fine_search_4/sd",
+            "sim_data/sim1/fine_search_5/sd",
             clust, ".csv")))
   })
 
@@ -229,11 +229,20 @@ make.est.plot(param. = 3, q. = q[1])
 
 ```{r message = F}
 
-make.est.plot(param. = 1, q. = q[1], est_cutoff = 0.6)
-make.est.plot(param. = 2, q. = q[1], est_cutoff = 1)
-make.est.plot(param. = 3, q. = q[1], est_cutoff = 1.5)
+make.est.plot(param. = 1, q. = q[2])
+make.est.plot(param. = 2, q. = q[2])
+make.est.plot(param. = 3, q. = q[2])
 
 ```
+
+```{r message = F}
+
+make.est.plot(param. = 1, q. = q[2], est_cutoff = 0.15)
+make.est.plot(param. = 2, q. = q[2], est_cutoff = 0.5)
+make.est.plot(param. = 3, q. = q[2], est_cutoff = 0.5)
+
+```
+
 
 ```{r}
 
