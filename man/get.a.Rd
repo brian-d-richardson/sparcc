@@ -4,7 +4,7 @@
 \alias{get.a}
 \title{compute a function at nodes}
 \usage{
-get.a(B, s2, mu, d.mu, fy, SF, x.nds, x.wts, c.nds, c.wts, y.wts, y.nds)
+get.a(B, s2, mu, d.mu, fy, SF, zs, x.nds, x.wts, c.nds, c.wts, y.wts, y.nds)
 }
 \arguments{
 \item{B}{a numeric vector, parameters in the outcome model}

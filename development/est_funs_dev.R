@@ -19,103 +19,173 @@ rm(list = ls())
 library(statmod)
 library(devtools)
 library(conf)
+library(ggplot2)
 load_all()
 
 # define parameters -------------------------------------------------------
 
-set.seed(1)
-B <- c(1, 0.2)            # outcome model parameters
-s2 <- 0.09                # Var(Y|X,Z)
-q <- 0.70                 # censoring proportion
-n <- 4000                 # sample size
-x.mean <- 0.5
-x.shape <- 1.2
-c.shape <- 1.2
-x.rate <- x.shape / x.mean # rate parameter for gamma distribution of X
-c.rate <- get.c.rate(      # rate parameter for gamma distribution of C
-  q = q,
-  x.rate = x.rate,
-  x.shape = x.shape,
-  c.shape = c.shape)
-mx <- 100                  # nodes in quadrature grid for X
-mc <- 15                   # nodes in quadrature grid for C
-my <- 3                    # nodes in quadrature grid for Y
+set.seed(2)
+n <- 10000                 # sample size
+s2 <- 0.16                 # variance of Y|X,Z
+q <- .5                    # censoring proportion
+B <- c(1, 2, -1)           # outcome model parameters
+x.means <- c(0.5, 1)       # mean of X at levels of Z
+x.shape <- 4               # shape parameter for X
+c.shape <- 4               # shape parameter for C
+mx <- 90                   # number of nodes for X
+mc <- 20                   # number of nodes for C
+my <- 5                    # number of nodes for Y
 specify.x.gamma <- F       # indicator for estimating X as gamma
 specify.c.gamma <- T       # indicator for estimating C as gamma
 
-# mean function mu(X, B) = E(Y | X)
-mu <- function(x, B) {
-  B[1] + B[2]*x
+x.rates <- x.shape / x.means  # rate parameters for gamma distribution of X|Z
+c.rates <- vapply(
+  X = x.rates,                # rate parameters for gamma distribution of C|Z
+  FUN.VALUE = 0,
+  FUN = function(xr)
+    get.c.rate(q = q, x.rate = xr,
+               x.shape = x.shape,
+               c.shape = c.shape))
+
+# mean function mu(X, Z, B) = E(Y | X, Z)
+mu <- function(x, z, B) {
+  B[1] + B[2]*x + B[3]*z
 }
 
 # gradient of mu w.r.t. B
-d.mu <- function(x, B) {
-  cbind(1, x)
+d.mu <- function(x, z, B) {
+  cbind(1, x, z)
 }
 
-# Y density
-fy <- function(y, x, B, s2) dnorm(x = y, mean = mu(x, B), sd = sqrt(s2))
+# Y|X, Z density
+fy <- function(y, x, z, B, s2) dnorm(x = y, mean = mu(x, z, B), sd = sqrt(s2))
 
 # full data score vector
-SF <- function(y, x, B, s2) {
-  cbind((y - mu(x, B)) * d.mu(x, B),
-        (y - mu(x, B)) ^ 2 - s2)
+SF <- function(y, x, z, B, s2) {
+  cbind((y - mu(x, z, B)) * d.mu(x, z, B),
+        (y - mu(x, z, B)) ^ 2 - s2)
 }
 
 # generate data -----------------------------------------------------------
 
 dat.list <- gen.data(n = n, q = q, B = B, s2 = s2,
-                     x.rate = x.rate, x.shape = x.shape,
-                     c.rate = c.rate, c.shape = c.shape)
+                     x.means = x.means,
+                     x.shape = x.shape, c.shape = c.shape)
 datf <- dat.list$datf          # full data
 dat0 <- dat.list$dat0          # oracle data
 dat <- dat.list$dat            # observed data
 datcc <- dat.list$datcc        # complete case data
+zs <- sort(unique(dat$Z))      # unique z values
 
-plot(datf$X, datf$Y)
-plot(datcc$W, datcc$Y)
-max(dat$W[dat$Delta == 1]); max(datf$X)
+# plot generated data
+ggplot(datf,
+       aes(x = X,
+           y = Y,
+           color = factor(Z))) +
+  geom_point() +
+  labs(color = "Z")
 
 # estimate nuisance distributions -----------------------------------------
 
-# estimate distribution of X
+# estimate distribution of X|Z
 if (specify.x.gamma) {
-  x.param.hat <- gammaMLE(yi = dat$W, si = dat$Delta, scale = F)$estimate
-  eta1 <- function(x)
-    dgamma(x = x, shape = x.param.hat["shape"], rate = x.param.hat["rate"])
+
+  # estimate gamma parameters at each level of Z
+  x.params.hat <- t(vapply(
+    X = 0:1,
+    FUN.VALUE = numeric(2),
+    FUN = function(z) {
+      z.ind <- dat$Z == z
+      gammaMLE(yi = dat$W[z.ind],
+               si = dat$Delta[z.ind],
+               scale = F)$estimate
+    }))
+
+  # define estimated X|Z density
+  eta1 <- function(x, z) {
+    dgamma(x = x,
+           shape = x.params.hat[z + 1, "shape"],
+           rate = x.params.hat[z + 1, "rate"])
+  }
+
 } else {
-  x.rate.hat <- mean(dat$Delta) / mean(dat$W)
-  eta1 <- function(x) dexp(x, rate = x.rate.hat)
+
+  # estimate exponential parameter at each level of Z
+  x.rates.hat <- vapply(
+    X = 0:1,
+    FUN.VALUE = 0,
+    FUN = function(z) {
+      z.ind <- dat$Z == z
+      mean(dat$Delta[z.ind]) / mean(dat$W[z.ind])
+    })
+
+  # define estimated X|Z density
+  eta1 <- function(x, z) {
+    dexp(x, rate = x.rates.hat[z + 1])
+  }
 }
 
-# estimate distribution of C
+# estimate distribution of C|Z
 if (specify.c.gamma) {
-  c.param.hat <- gammaMLE(yi = dat$W, si = 1 - dat$Delta, scale = F)$estimate
-  eta2 <- function(x)
-    dgamma(x = x, shape = c.param.hat["shape"], rate = c.param.hat["rate"])
-} else {
-  c.rate.hat <- mean(1 - dat$Delta) / mean(dat$W)
-  eta2 <- function(x) dexp(x, rate = c.rate.hat)
-}
 
+  # estimate gamma parameters at each level of Z
+  c.params.hat <- t(vapply(
+    X = 0:1,
+    FUN.VALUE = numeric(2),
+    FUN = function(z) {
+      z.ind <- dat$Z == z
+      gammaMLE(yi = dat$W[z.ind],
+               si = 1 - dat$Delta[z.ind],
+               scale = F)$estimate
+    }))
+
+  # define estimated C|Z density
+  eta2 <- function(c, z) {
+    dgamma(x = c,
+           shape = c.params.hat[z + 1, "shape"],
+           rate = c.params.hat[z + 1, "rate"])
+  }
+
+} else {
+
+  # estimate exponential parameter at each level of Z
+  c.rates.hat <- vapply(
+    X = 0:1,
+    FUN.VALUE = 0,
+    FUN = function(z) {
+      z.ind <- dat$Z == z
+      mean(1 - dat$Delta[z.ind]) / mean(dat$W[z.ind])
+    })
+
+  # define estimated C|Z density
+  eta2 <- function(c, z) {
+    dexp(x = c, rate = c.rates.hat[z + 1])
+  }
+}
 
 # create quadrature rules -------------------------------------------------
 
-x.upper <- max(datf$X)  # oracle max
-c.upper <- max(datf$C)
+# X|Z quadrature
+x.nds <- vapply(
+  X = zs,
+  FUN.VALUE = numeric(mx),
+  FUN = function(z) seq(10^-6, max(datf$X[datf$Z == z]), length = mx))
 
-#x.upper <- sum(1/(1:n)) / x.rate.hat # estimated expected max
-#c.upper <- sum(1/(1:n)) / c.rate.hat
-#x.upper <- qexp((n-1)/n, rate = x.rate.hat)  # estimated (n-1)/n quantile
-#c.upper <- qexp((n-1)/n, rate = c.rate.hat)
+x.wts <- vapply(
+  X = 1:length(zs),
+  FUN.VALUE = numeric(mx),
+  FUN = function(i) eta1(x.nds[,i], zs[i]) / sum(eta1(x.nds[,i], zs[i])))
 
-# X quadrature
-x.nds <- seq(10^-5, x.upper, length = mx)
-x.wts <- eta1(x.nds) / sum(eta1(x.nds))
+# C|Z quadrature
+c.nds <- vapply(
+  X = zs,
+  FUN.VALUE = numeric(mc),
+  FUN = function(z) seq(10^-6, max(datf$C[datf$Z == z]), length = mc))
 
-# C quadrature
-c.nds <- seq(10^-5, c.upper, length = mc)
-c.wts <- eta2(c.nds) / sum(eta2(c.nds))
+c.wts <- vapply(
+  X = 1:length(zs),
+  FUN.VALUE = numeric(mc),
+  FUN = function(i) eta2(c.nds[,i], zs[i]) / sum(eta2(c.nds[,i], zs[i])))
 
 # Y quadrature
 gq <- gauss.quad(n = my, kind = "hermite")
@@ -155,7 +225,7 @@ assess.ee(Seff)
 # estimate beta -----------------------------------------------------------
 
 # complete case lm to get starting value
-naive.lm <- lm(Y ~ W, data = datcc)
+naive.lm <- lm(Y ~ W + Z, data = datcc)
 
 # complete case
 Bcc <- get.root(dat = dat, score = get.Scc,
@@ -186,7 +256,7 @@ Beff
 rbind(c(B, log(s2)), B0, Bcc, Bmle, Beff)
 
 
-
+round(1E7 * (cbind(B0, Bcc, Bmle, Beff) - c(B, log(s2))) ^ 2)
 
 
 

@@ -4,7 +4,7 @@
 \alias{get.b}
 \title{compute b matrix in integral equation}
 \usage{
-get.b(B, s2, mu, d.mu, fy, SF, x.nds, x.wts, c.nds, c.wts, y.nds, y.wts)
+get.b(B, s2, mu, d.mu, fy, SF, z, x.nds, x.wts, c.nds, c.wts, y.nds, y.wts)
 }
 \arguments{
 \item{B}{a numeric vector, parameters in the outcome model}

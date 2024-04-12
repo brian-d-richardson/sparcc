@@ -21,6 +21,7 @@ get.Scc <- function(dat, B, s2, args, return.sums = T) {
   Scc <- SF(
     y = dat$Y[dat$Delta == 1],
     x = dat$W[dat$Delta == 1],
+    z = dat$Z[dat$Delta == 1],
     B = B, s2 = s2)
 
   if (return.sums) {
@@ -44,6 +45,9 @@ get.Sml <- function(dat, B, s2, args, return.sums = T) {
   # unpack arguments
   list2env(args, envir = environment())
 
+  # unique levels of z
+  zs <- sort(unique(dat$Z))
+
   # initiate score vector
   Sml <- matrix(nrow = nrow(dat), ncol = length(B) + 1)
 
@@ -51,19 +55,26 @@ get.Sml <- function(dat, B, s2, args, return.sums = T) {
   Sml[dat$Delta == 1, ] <- SF(
     y = dat$Y[dat$Delta == 1],
     x = dat$W[dat$Delta == 1],
+    z = dat$Z[dat$Delta == 1],
     B = B, s2 = s2)
 
   # expected score for censored observations
   for (i in which(dat$Delta == 0)) {
 
+    # index for Z
+    zi <- which(dat$Z[i] == zs)
+
     # x node indices greater than observed W = C
-    xi <- x.nds > dat$W[i]
+    xi <- x.nds[,zi] > dat$W[i]
 
     # (proportional to) joint density of Y, X
-    fyx <- fy(y = dat$Y[i], x = x.nds[xi], B = B, s2 = s2) * x.wts[xi]
+    fyx <- fy(y = dat$Y[i], x = x.nds[xi, zi],
+              z = dat$Z[i], B = B, s2 = s2) *
+      x.wts[xi, zi]
 
     # conditional expectation of SF
-    Sml[i,] <- colSums(SF(y = dat$Y[i], x = x.nds[xi], B = B, s2 = s2) * fyx) /
+    Sml[i,] <- colSums(SF(y = dat$Y[i], x = x.nds[xi, zi],
+                          z = dat$Z[i], B = B, s2 = s2) * fyx) /
       sum(fyx)
   }
 
@@ -88,33 +99,49 @@ get.Seff <- function(dat, B, s2, args, return.sums = T) {
   # unpack arguments
   list2env(args, envir = environment())
 
+  # unique levels of z
+  zs <- sort(unique(dat$Z))
+
   # initiate score vector
   Seff <- matrix(nrow = nrow(dat), ncol = length(B) + 1)
 
   # solve integral equation for a() function at x nodes
-  a.vals <- get.a(B = B, s2 = s2, mu = mu, d.mu = d.mu, SF = SF, fy = fy,
+  a.vals <- get.a(B = B, s2 = s2, mu = mu, d.mu = d.mu,
+                  SF = SF, fy = fy, zs = zs,
                   x.nds = x.nds, x.wts = x.wts,
                   c.nds = c.nds, c.wts = c.wts,
                   y.nds = y.nds, y.wts = y.wts)
 
   # full score minus interpolated a() for uncensored observations
-  Seff[dat$Delta == 1, ] <- SF(
-    y = dat$Y[dat$Delta == 1], x = dat$W[dat$Delta == 1], B = B, s2 = s2) -
-    interp.a(a.vals = a.vals, x.nds = x.nds, x.wts = x.wts,
-             x.new = dat$W[dat$Delta == 1], eta1 = eta1)
+  for (z in zs) {
+    zi <- which(z == zs)
+    Seff[dat$Delta == 1 & dat$Z == z] <- SF(
+      y = dat$Y[dat$Delta == 1 & dat$Z == z],
+      x = dat$W[dat$Delta == 1 & dat$Z == z],
+      z = z, B = B, s2 = s2) -
+      interp.a(a.vals = a.vals[[zi]], x.nds = x.nds[,zi], x.wts = x.wts[,zi],
+               x.new = dat$W[dat$Delta == 1 & dat$Z == z],
+               z = z, eta1 = eta1)
+  }
 
   # expected score minus a() for censored observations
   for (i in which(dat$Delta == 0)) {
 
+    # index for Z
+    zi <- which(dat$Z[i] == zs)
+
     # x node indices greater than observed W = C
-    xi <- x.nds > dat$W[i]
+    xi <- x.nds[,zi] > dat$W[i]
 
     # (proportional to) joint density of Y, X
-    fyx <- fy(y = dat$Y[i], x = x.nds[xi], B = B, s2 = s2) * x.wts[xi]
+    fyx <- fy(y = dat$Y[i], x = x.nds[xi, zi],
+              z = dat$Z[i], B = B, s2 = s2) *
+      x.wts[xi, zi]
 
     # conditional expectation of SF
-    Seff[i,] <- colSums(SF(y = dat$Y[i], x = x.nds[xi], B = B, s2 = s2) *
-                          a.vals[xi,] * fyx) /
+    Seff[i,] <- colSums(SF(y = dat$Y[i], x = x.nds[xi, zi],
+                           z = dat$Z[i], B = B, s2 = s2) *
+                          a.vals[[zi]][xi,] * fyx) /
       sum(fyx)
   }
 
@@ -141,13 +168,14 @@ get.Seff <- function(dat, B, s2, args, return.sums = T) {
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 get.root <- function(dat, score, start, args = list()) {
 
-  est <- tryCatch(
-    expr = rootSolve::multiroot(
+  est <- #tryCatch(
+    #expr =
+    rootSolve::multiroot(
       f = function(theta) score(dat = dat, args = args,
                                 B = head(theta, -1), s2 = exp(tail(theta, 1))),
-      start = start)$root,
-    warning = function(w) rep(NA, length(start)),
-    error = function(e) rep(NA, length(start)))
+      start = start)$root#,
+    #warning = function(w) rep(NA, length(start)),
+    #error = function(e) rep(NA, length(start)))
   names(est) <- paste0("B", 1:length(start))
   return(est)
 }

@@ -4,7 +4,7 @@
 \alias{interp.a}
 \title{interpolate a function between nodes}
 \usage{
-interp.a(a.vals, x.nds, x.wts, x.new, eta1)
+interp.a(a.vals, x.nds, x.wts, x.new, z, eta1)
 }
 \arguments{
 \item{a.vals}{a numeric matrix, values of a function at nodes}

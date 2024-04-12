@@ -9,35 +9,43 @@ sim1(
   q,
   B2,
   s2,
-  x.mean,
-  x.shape,
-  c.shape,
-  specify.x.gamma,
-  specify.c.gamma,
-  mx = 100,
+  x.theta.scale,
+  x.gamma,
+  c.gamma,
+  x.correct,
+  c.correct,
+  mx = 50,
+  mc = 15,
+  my = 3,
+  seed
+)
+
+sim1(
+  n,
+  q,
+  B2,
+  s2,
+  x.theta.scale,
+  x.gamma,
+  c.gamma,
+  x.correct,
+  c.correct,
+  mx = 50,
   mc = 15,
   my = 3,
   seed
 )
 }
 \arguments{
-\item{n}{a positive integer, the sample size}
-
-\item{q}{a number in \link{0,1}, the censoring proportion}
-
 \item{B2}{a number, the coefficient for \code{X} in the outcome model}
 
 \item{s2}{a number, the variance in the outcome model}
 
-\item{x.shape}{a positive number, shape parameter for gamma distribution of X}
+\item{x.correct}{logical, an indicator of whether X should be estimated
+as beta (\code{T}) or uniform (\code{F})}
 
-\item{c.shape}{a positive number, shape parameter for gamma distribution of C}
-
-\item{specify.x.gamma}{logical, an indicator of whether X should be estimated
-as gamma (\code{T}) or exponential (\code{F})}
-
-\item{specify.c.gamma}{logical, an indicator of whether C should be estimated
-as gamma (\code{T}) or exponential (\code{F})}
+\item{c.correct}{logical, an indicator of whether C should be estimated
+as beta (\code{T}) or uniform (\code{F})}
 
 \item{mx}{a positive number, the number of nodes in quadrature grid for X}
 
@@ -46,7 +54,15 @@ as gamma (\code{T}) or exponential (\code{F})}
 \item{my}{a positive number, the number of nodes in quadrature grid for Y}
 
 \item{seed}{a positive integer, the seed value for random number generation}
+
+\item{specify.x.gamma}{logical, an indicator of whether X should be estimated
+as gamma (\code{T}) or exponential (\code{F})}
+
+\item{specify.c.gamma}{logical, an indicator of whether C should be estimated
+as gamma (\code{T}) or exponential (\code{F})}
 }
 \description{
 simulation setup 1
+
+simulation setup 2
 }

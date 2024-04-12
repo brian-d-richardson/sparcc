@@ -10,7 +10,7 @@ assess.eta.est(
   q,
   B,
   s2,
-  x.mean,
+  x.means,
   x.shape,
   c.shape,
   specify.x.gamma,
@@ -20,25 +20,13 @@ assess.eta.est(
 \arguments{
 \item{n.rep}{a positive integer, the number of simulated replicates}
 
-\item{n}{a positive integer, the sample size}
-
-\item{q}{a number in \link{0,1}, the censoring proportion}
-
-\item{B}{a vector of numbers, parameters in the outcome model}
-
-\item{s2}{a positive number, variance in the outcome model}
-
-\item{x.mean}{a positive number, the mean of X}
-
-\item{x.shape}{a positive number, shape parameter for gamma distribution of X}
-
-\item{c.shape}{a positive number, shape parameter for gamma distribution of C}
-
 \item{specify.x.gamma}{logical, an indicator of whether X should be estimated
 as gamma (\code{T}) or exponential (\code{F})}
 
 \item{specify.c.gamma}{logical, an indicator of whether C should be estimated
 as gamma (\code{T}) or exponential (\code{F})}
+
+\item{x.mean}{a positive number, the mean of X}
 }
 \value{
 plot of empirical distribution of estimated parameters for eta1 and
