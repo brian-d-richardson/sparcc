@@ -28,14 +28,15 @@ set.seed(2)
 n <- 8000             # sample size
 q <- 0.8              # censoring proportion
 B <- c(1, 10, 2)      # beta
-s2 <- 4               # variance of Y|X,Z
+s2 <- 2               # variance of Y|X,Z
+ls2 <- log(2)
 x.thetas <- c(0.5, -0.5)   # theta parameters for X|Z
 x.gamma <- 1          # gamma parameter for X|Z
 c.gamma <- 2          # gamma parameter for C|Z
-mx <- 60                   # number of nodes for X
-mc <- 20                   # number of nodes for C
+mx <- 40                   # number of nodes for X
+mc <- 40                   # number of nodes for C
 my <- 5                    # number of nodes for Y
-x.correct <- F       # indicator for estimating X as gamma
+x.correct <- T       # indicator for estimating X as gamma
 c.correct <- T       # indicator for estimating C as gamma
 
 # mean function mu(X, Z, B) = E(Y | X, Z)
@@ -52,9 +53,9 @@ d.mu <- function(x, z, B) {
 fy <- function(y, x, z, B, s2) dnorm(x = y, mean = mu(x, z, B), sd = sqrt(s2))
 
 # full data score vector
-SF <- function(y, x, z, B, s2) {
+SF <- function(y, x, z, B, ls2) {
   cbind((y - mu(x, z, B)) * d.mu(x, z, B),
-        (y - mu(x, z, B)) ^ 2 - s2)
+        ((y - mu(x, z, B)) ^ 2 - exp(ls2)) * exp(ls2))
 }
 
 # generate data -----------------------------------------------------------
@@ -205,26 +206,26 @@ y.wts <- gq$weights
 # evaluate estimating functions -------------------------------------------
 
 # oracle
-S0 <- get.Scc(dat = dat0, B = B, s2 = s2,
+S0 <- get.Scc(dat = dat0, B = B, ls2 = ls2,
               args = list(mu = mu, d.mu = d.mu, SF = SF),
               return.sums = F)
 assess.ee(S0)
 
 # complete case
-Scc <- get.Scc(dat = dat, B = B, s2 = s2,
+Scc <- get.Scc(dat = dat, B = B, ls2 = ls2,
                args = list(mu = mu, d.mu = d.mu, SF = SF),
                return.sums = F)
 assess.ee(Scc)
 
 # MLE
-Sml <- get.Sml(dat = dat, B = B, s2 = s2,
+Sml <- get.Sml(dat = dat, B = B, ls2 = ls2,
              args = list(mu = mu, d.mu = d.mu, SF = SF, fy = fy,
                          x.nds = x.nds, x.wts = x.wts),
              return.sums = F)
 assess.ee(Sml)
 
 # semiparametric efficient score
-Seff <- get.Seff(dat = dat, B = B, s2 = s2,
+Seff <- get.Seff(dat = dat, B = B, ls2 = ls2,
                  args = list(mu = mu, d.mu = d.mu, SF = SF, fy = fy, eta1 = eta1,
                              x.nds = x.nds, x.wts = x.wts,
                              c.nds = c.nds, c.wts = c.wts,
@@ -263,7 +264,7 @@ Beff <- get.root(dat = dat, score = get.Seff, start = Bcc,
 Beff
 
 # compare estimates
-rbind(c(B, log(s2)), B0, Bcc, Bmle, Beff)
+rbind(c(B, ls2, B0, Bcc, Bmle, Beff))
 
 round(1E7 * (cbind(B0, Bcc, Bmle, Beff) - c(B, log(s2))) ^ 2)
 

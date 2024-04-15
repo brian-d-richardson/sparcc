@@ -12,7 +12,7 @@
 #'
 #' @export
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-get.Scc <- function(dat, B, s2, args, return.sums = T) {
+get.Scc <- function(dat, B, ls2, args, return.sums = T) {
 
   # unpack arguments
   list2env(args, envir = environment())
@@ -22,7 +22,7 @@ get.Scc <- function(dat, B, s2, args, return.sums = T) {
     y = dat$Y[dat$Delta == 1],
     x = dat$W[dat$Delta == 1],
     z = dat$Z[dat$Delta == 1],
-    B = B, s2 = s2)
+    B = B, ls2 = ls2)
 
   if (return.sums) {
     return(colSums(Scc))
@@ -40,7 +40,7 @@ get.Scc <- function(dat, B, s2, args, return.sums = T) {
 #'
 #' @export
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-get.Sml <- function(dat, B, s2, args, return.sums = T) {
+get.Sml <- function(dat, B, ls2, args, return.sums = T) {
 
   # unpack arguments
   list2env(args, envir = environment())
@@ -56,7 +56,7 @@ get.Sml <- function(dat, B, s2, args, return.sums = T) {
     y = dat$Y[dat$Delta == 1],
     x = dat$W[dat$Delta == 1],
     z = dat$Z[dat$Delta == 1],
-    B = B, s2 = s2)
+    B = B, ls2 = ls2)
 
   # expected score for censored observations
   for (i in which(dat$Delta == 0)) {
@@ -69,12 +69,12 @@ get.Sml <- function(dat, B, s2, args, return.sums = T) {
 
     # (proportional to) joint density of Y, X
     fyx <- fy(y = dat$Y[i], x = x.nds[xi, zi],
-              z = dat$Z[i], B = B, s2 = s2) *
+              z = dat$Z[i], B = B, s2 = exp(ls2)) *
       x.wts[xi, zi]
 
     # conditional expectation of SF
     Sml[i,] <- colSums(SF(y = dat$Y[i], x = x.nds[xi, zi],
-                          z = dat$Z[i], B = B, s2 = s2) * fyx) /
+                          z = dat$Z[i], B = B, ls2 = ls2) * fyx) /
       sum(fyx)
   }
 
@@ -94,7 +94,7 @@ get.Sml <- function(dat, B, s2, args, return.sums = T) {
 #'
 #' @export
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-get.Seff <- function(dat, B, s2, args, return.sums = T) {
+get.Seff <- function(dat, B, ls2, args, return.sums = T) {
 
   # unpack arguments
   list2env(args, envir = environment())
@@ -106,7 +106,7 @@ get.Seff <- function(dat, B, s2, args, return.sums = T) {
   Seff <- matrix(nrow = nrow(dat), ncol = length(B) + 1)
 
   # solve integral equation for a() function at x nodes
-  a.vals <- get.a(B = B, s2 = s2, mu = mu, d.mu = d.mu,
+  a.vals <- get.a(B = B, s2 = exp(ls2), mu = mu, d.mu = d.mu,
                   SF = SF, fy = fy, zs = zs,
                   x.nds = x.nds, x.wts = x.wts,
                   c.nds = c.nds, c.wts = c.wts,
@@ -118,7 +118,7 @@ get.Seff <- function(dat, B, s2, args, return.sums = T) {
     Seff[dat$Delta == 1 & dat$Z == z] <- SF(
       y = dat$Y[dat$Delta == 1 & dat$Z == z],
       x = dat$W[dat$Delta == 1 & dat$Z == z],
-      z = z, B = B, s2 = s2) -
+      z = z, B = B, ls2 = ls2) -
       interp.a(a.vals = a.vals[[zi]], x.nds = x.nds[,zi], x.wts = x.wts[,zi],
                x.new = dat$W[dat$Delta == 1 & dat$Z == z],
                z = z, eta1 = eta1)
@@ -135,12 +135,12 @@ get.Seff <- function(dat, B, s2, args, return.sums = T) {
 
     # (proportional to) joint density of Y, X
     fyx <- fy(y = dat$Y[i], x = x.nds[xi, zi],
-              z = dat$Z[i], B = B, s2 = s2) *
+              z = dat$Z[i], B = B, s2 = exp(ls2)) *
       x.wts[xi, zi]
 
     # conditional expectation of SF
     Seff[i,] <- colSums(SF(y = dat$Y[i], x = x.nds[xi, zi],
-                           z = dat$Z[i], B = B, s2 = s2) *
+                           z = dat$Z[i], B = B, ls2 = ls2) *
                           a.vals[[zi]][xi,] * fyx) /
       sum(fyx)
   }
@@ -172,7 +172,7 @@ get.root <- function(dat, score, start, args = list()) {
     #expr =
     rootSolve::multiroot(
       f = function(theta) score(dat = dat, args = args,
-                                B = head(theta, -1), s2 = exp(tail(theta, 1))),
+                                B = head(theta, -1), ls2 = tail(theta, 1)),
       start = start)$root#,
     #warning = function(w) rep(NA, length(start)),
     #error = function(e) rep(NA, length(start)))

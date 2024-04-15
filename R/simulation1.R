@@ -204,7 +204,7 @@ d.mu <- function(x, z, B) {
 fy <- function(y, x, z, B, s2) dnorm(x = y, mean = mu(x, z, B), sd = sqrt(s2))
 
 # full data score vector
-SF <- function(y, x, z, B, s2) {
+SF <- function(y, x, z, B, ls2) {
   cbind((y - mu(x, z, B)) * d.mu(x, z, B),
-        (y - mu(x, z, B)) ^ 2 - s2)
+        (y - mu(x, z, B)) ^ 2 - exp(ls2))
 }

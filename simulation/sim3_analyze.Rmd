@@ -44,11 +44,11 @@ B <- c(1, 10, 2, log(1))
 
 # load simulation results from each of 10 clusters
 sim.out.list <- lapply(
-  X = c(0:9),
+  X = c(1:9),
   FUN = function(clust) {
     cbind(clust,
           read.csv(paste0(
-            "sim3_data/v1/sd",
+            "sim3_data/v3/sd",
             clust, ".csv")))
   })
 
@@ -152,7 +152,8 @@ ggplot(sim.out.sum,
   labs(x = "Censoring Proportion (q)",
        y = "Empircal Variance of Parameter Estimates",
        color = "Method",
-       shape = "Method") +
+       shape = "Method",
+       fill = "Method") +
   ggtitle("Variance of Parameter Estimators by Censoring Proportion",
           subtitle = paste0(n.rep, " Simulations per Setting"))
 
@@ -175,7 +176,8 @@ ggplot(filter(sim.out.sum, param == 2),
   labs(x = "Censoring Proportion (q)",
        y = "Variance",
        color = "Method",
-       shape = "Method") +
+       shape = "Method",
+       fill = "Method") +
   theme_bw() +
   theme(legend.position = "bottom") +
   scale_color_manual(values = pal_light[c(1, 2, 3, 5)]) #+

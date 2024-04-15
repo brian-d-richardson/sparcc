@@ -153,7 +153,6 @@ datf %>%
        y = "Density") +
   ggtitle("Estimated vs Observed Distributions of X|Z and C|Z")
 
-
 # create quadrature rules -------------------------------------------------
 
 # X|Z quadrature

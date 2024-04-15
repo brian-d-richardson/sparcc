@@ -32,11 +32,12 @@ base.seed <- 10^6 * as.integer(args)
 n.sim <- 1
 
 # output size
-len.out <- 29
+len.out <- 27
 
 # parameters
 n <- 8000
-q <- seq(0.1, 0.9, by = 0.1)
+q <- 0.1#c(0.1, 0.2, 0.3, 0.4, 0.5, 0.6,
+       #0.65, 0.7, 0.75, 0.8, 0.85, 0.9)
 B2 <- 10
 s2 <- 1
 x.theta.scale <- 0.5

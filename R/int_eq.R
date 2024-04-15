@@ -94,7 +94,7 @@ get.b <- function(B, s2, mu, d.mu, fy, SF, z,
           bi <- bi + y.wts[h] * c.wts[l] *
             colSums(fy(y = yih, x = x.nds[xgc], z = z, B = B, s2 = s2) *
                     x.wts[xgc] *
-                    SF(y = yih, x = x.nds[xgc], z = z, B = B, s2 = s2)) /
+                    SF(y = yih, x = x.nds[xgc], z = z, B = B, ls2 = log(s2))) /
             sum(fy(y = yih, x = x.nds[xgc], z = z, B = B, s2 = s2) *
                 x.wts[xgc])
         }
