@@ -27,35 +27,35 @@ n <- 10000            # sample size
 q <- 0.8              # censoring proportion
 B <- c(1, 2, -1)      # beta
 s2 <- 1.1             # variance of Y|X,Z
-x.meana <- c(0.5, 1)  # means of X at Z = 0, 1
+x.means <- c(0.5, 1)  # means of X at Z = 0, 1
 
 # generate data -----------------------------------------------------------
 
 # both correct
-assess.dat(n = n, q = q, B = B, s2 = s2, x.means = x.means,
+assess.dat.gamma(n = n, q = q, B = B, s2 = s2, x.means = x.means,
            x.shape = 2, c.shape = 2,
            specify.x.gamma = T, specify.c.gamma = T)
 
 # X incorrect, C correct
-assess.dat(n = n, q = q, B = B, s2 = s2, x.means = x.means,
-           x.shape = 2, c.shape = 2,
-           specify.x.gamma = F, specify.c.gamma = T)
+assess.dat.gamma(n = n, q = q, B = B, s2 = s2, x.means = x.means,
+                 x.shape = 2, c.shape = 2,
+                 specify.x.gamma = F, specify.c.gamma = T)
 
 # X correct, C incorrect
-assess.dat(n = n, q = q, B = B, s2 = s2, x.means = x.means,
-           x.shape = 2, c.shape = 2,
-           specify.x.gamma = T, specify.c.gamma = F)
+assess.dat.gamma(n = n, q = q, B = B, s2 = s2, x.means = x.means,
+                 x.shape = 2, c.shape = 2,
+                 specify.x.gamma = T, specify.c.gamma = F)
 
 # X both Incorrect
-assess.dat(n = n, q = q, B = B, s2 = s2, x.means = x.means,
-           x.shape = 2, c.shape = 2,
-           specify.x.gamma = F, specify.c.gamma = F)
+assess.dat.gamma(n = n, q = q, B = B, s2 = s2, x.means = x.means,
+                 x.shape = 2, c.shape = 2,
+                 specify.x.gamma = F, specify.c.gamma = F)
 
 # assess estimation of etas -----------------------------------------------
 
 n.rep <- 100
 
-assess.eta.est(n.rep = n.rep, n = n, q = q, B = B, s2 = s2, x.means = x.means,
-               x.shape = 2, c.shape = 2,
-               specify.x.gamma = T, specify.c.gamma = T)
+assess.eta.est.gamma(n.rep = n.rep, n = n, q = q, B = B, s2 = s2,
+                     x.means = x.means, x.shape = 2, c.shape = 2,
+                     specify.x.gamma = T, specify.c.gamma = T)
 

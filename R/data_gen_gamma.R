@@ -5,7 +5,7 @@
 #' @param c.rate a positive number, rate parameter for gamma distribution of C
 #' @param c.shape a positive number, shape parameter for gamma distribution of C
 #'
-#' @return censoring proportion q
+#' @return a number in [0,1], the censoring proportion q
 #'
 #' @export
 get.q.gamma <- function(x.rate, x.shape, c.rate, c.shape) {
@@ -23,7 +23,7 @@ get.q.gamma <- function(x.rate, x.shape, c.rate, c.shape) {
 
 #' get rate parameter for C given desired censoring proportion
 #'
-#' @inheritParams get.q
+#' @inheritParams get.q.gamma
 #' @param q a number in [0,1], the censoring proportion
 #'
 #' @return rate parameter for gamma distribution of C
@@ -31,8 +31,8 @@ get.q.gamma <- function(x.rate, x.shape, c.rate, c.shape) {
 #' @export
 get.c.rate <- function(q, x.rate, x.shape, c.shape) {
 
-  uniroot(f = function(cr) q - get.q(x.rate = x.rate, x.shape = x.shape,
-                                     c.rate = cr, c.shape = c.shape),
+  uniroot(f = function(cr) q - get.q.gamma(x.rate = x.rate, x.shape = x.shape,
+                                           c.rate = cr, c.shape = c.shape),
           interval = c(1e-3, x.rate),
           extendInt = "downX")$root
 }
@@ -40,23 +40,30 @@ get.c.rate <- function(q, x.rate, x.shape, c.shape) {
 
 #' generate data with X and C having gamma distributions
 #'
-#' @inheritParams get.q
+#' @inheritParams get.q.gamma
 #' @param n a positive integer, the sample size
 #' @param q a number in [0,1], the censoring proportion
 #' @param B a vector of numbers, parameters in the outcome model
 #' @param s2 a positive number, variance in the outcome model
 #'
-#' @return a data frame
+#' @return a list of the following data frames:
+#' \itemize{
+#' \item{`datf`: the full data set with Y, X, C, Z}
+#' \item{`dat0`: the oracle data Y, W, Delta, Z (with no censoring)}
+#' \item{`datcc`: the observed data Y, W, Delta, Z}
+#' \item{`dat`: the complete cases from the observed data}
+#' }
 #'
 #' @export
-gen.data.1 <- function(n, q, B, s2, x.means, x.shape, c.shape) {
+gen.data.gamma <- function(n, q, B, s2, x.means, x.shape, c.shape) {
 
   # for troubleshooting
-  #n <- 5000; q <- 0.8; B <- c(1, -1, 2); s2 <- 0.81; x.means <- c(0.5, 1); x.shape <- 2; c.shape <- 2;
+  #n <- 5000; q <- 0.8; B <- c(1, -1, 2); s2 <- 0.81; x.means <- c(0.5, 1);
+  #x.shape <- 2; c.shape <- 2;
 
   x.rates <- x.shape / x.means  # rate parameters for gamma distribution of X|Z
-  c.rates <- vapply(
-    X = x.rates,                # rate parameters for gamma distribution of C|Z
+  c.rates <- vapply(            # rate parameters for gamma distribution of C|Z
+    X = x.rates,
     FUN.VALUE = 0,
     FUN = function(xr)
       get.c.rate(q = q, x.rate = xr,

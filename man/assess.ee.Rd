@@ -13,8 +13,11 @@ assess.ee(ee, digits = 2)
 default is 2}
 }
 \value{
-A list with means and t-statistics testing if the estimating function
-values have mean zero.
+A list with:
+#' \itemize{
+\item{\code{means}: the mean estimatin equation values}
+\item{\code{t.stats}: t-statistics testing the null of mean zero}
+}
 }
 \description{
 Assess estimating equation

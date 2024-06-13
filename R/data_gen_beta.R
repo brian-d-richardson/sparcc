@@ -7,12 +7,14 @@
 #'
 #' @importFrom zipfR Ibeta
 #'
-#' @return censoring proportion q
+#' @return a number in [0,1], the censoring proportion q
 #'
 #' @export
 get.q.beta <- function(x.theta, x.gamma, c.theta, c.gamma) {
 
+  # for troubleshooting
   #x.theta <- 1; x.gamma <- 4; c.theta <- 1; c.gamma <- 4
+
   integrate(
     f = function(x) dbeta(x, 1 + x.gamma - x.theta, 1 + x.gamma + x.theta) *
       zipfR::Ibeta(x = x,
@@ -25,20 +27,13 @@ get.q.beta <- function(x.theta, x.gamma, c.theta, c.gamma) {
      beta(1 + c.gamma - c.theta, 1 + c.gamma + c.theta)
 }
 
-#cc <- seq(-3.99, 3.99, by = 0.01)
-#qq <- vapply(X = cc, FUN.VALUE = 0,
-#             FUN = function(ti) get.q.beta(x.theta = x.theta, x.gamma = x.gamma, c.theta = ti, c.gamma = c.gamma))
-#plot(cc, qq)
 
-#xx <- rbeta(10000, 1 + x.gamma - x.theta, 1 + x.gamma + x.theta)
-#hist(xx)
-
-#' get rate theta for C given desired censoring proportion
+#' get beta parameters for C given desired censoring proportion
 #'
-#' @inheritParams get.q
+#' @inheritParams get.q.beta
 #' @param q a number in [0,1], the censoring proportion
 #'
-#' @return theta parameter for C
+#' @return a positive number, the theta parameter for C
 #'
 #' @export
 get.c.param.beta <- function(q, x.theta, x.gamma, c.gamma) {
@@ -51,26 +46,33 @@ get.c.param.beta <- function(q, x.theta, x.gamma, c.gamma) {
           extendInt = "downX")$root
 }
 
-#get.c.param.beta(q = 0.5, x.theta = x.theta, x.gamma = x.gamma, c.gamma = c.gamma)
 
 #' generate data with X and C having beta distributions
 #'
-#' @inheritParams get.q
+#' @inheritParams get.q.beta
 #' @param n a positive integer, the sample size
 #' @param q a number in [0,1], the censoring proportion
 #' @param B a vector of numbers, parameters in the outcome model
 #' @param s2 a positive number, variance in the outcome model
 #'
-#' @return a data frame
+#' @return a list of the following data frames:
+#' \itemize{
+#' \item{`datf`: the full data set with Y, X, C, Z}
+#' \item{`dat0`: the oracle data Y, W, Delta, Z (with no censoring)}
+#' \item{`datcc`: the observed data Y, W, Delta, Z}
+#' \item{`dat`: the complete cases from the observed data}
+#' }
 #'
 #' @export
 gen.data.beta <- function(n, q, B, s2, x.thetas, x.gamma, c.gamma) {
 
   # for troubleshooting
-  #n <- 5000; q <- 0.8; B <- c(1, -1, 2); s2 <- 0.16; x.thetas <- c(0.5, 1); x.gamma <- 4; c.gamma <- 4
+  #n <- 5000; q <- 0.8; B <- c(1, -1, 2); s2 <- 0.16; x.thetas <- c(0.5, 1);
+  #x.gamma <- 4; c.gamma <- 4
 
+  # theta parameters for beta distribution of C|Z
   c.thetas <- vapply(
-    X = x.thetas,                # theta parameters for beta distribution of C|Z
+    X = x.thetas,
     FUN.VALUE = 0,
     FUN = function(xt)
       get.c.param.beta(q = q, x.theta = xt,

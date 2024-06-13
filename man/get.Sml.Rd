@@ -4,14 +4,12 @@
 \alias{get.Sml}
 \title{MLE score function}
 \usage{
-get.Sml(dat, B, s2, args, return.sums = T)
+get.Sml(dat, B, ls2, args, return.sums = T)
 }
 \arguments{
 \item{dat}{a data frame including columns Y, W, Delta, Z}
 
 \item{B}{a numeric vector, parameters in the outcome model}
-
-\item{s2}{a positive number, variance in the outcome model}
 
 \item{args}{list of additional arguments}
 
@@ -19,7 +17,7 @@ get.Sml(dat, B, s2, args, return.sums = T)
 to individual scores, default is TRUE}
 }
 \value{
-maximum likelihood score function values
+individual or summed maximum likelihood score function values
 }
 \description{
 MLE score function

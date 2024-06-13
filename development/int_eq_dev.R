@@ -21,63 +21,24 @@ load_all()
 
 # define parameters -------------------------------------------------------
 
-n <- 1000                  # sample size
-s2 <- 0.81                 # variance of Y|X,Z
-q <- .8                    # censoring proportion
-B <- c(1, 2, -1)           # outcome model parameters
-x.means <- c(0.5, 1)       # mean of X at levels of Z
-x.shape <- 2               # shape parameter for X
-c.shape <- 2               # shape parameter for C
-mx <- 30                   # number of nodes for X
-mc <- 15                   # number of nodes for C
-my <- 5                    # number of nodes for Y
-
-x.rates <- x.shape / x.means  # rate parameters for gamma distribution of X|Z
-c.rates <- vapply(
-  X = x.rates,                # rate parameters for gamma distribution of C|Z
-  FUN.VALUE = 0,
-  FUN = function(xr)
-    get.c.rate(q = q, x.rate = xr,
-               x.shape = x.shape,
-               c.shape = c.shape))
-
-# X|Z density
-eta1 <- function(x, z) {
-  dgamma(x = x,
-         shape = x.shape,
-         rate = x.rates[z + 1])
-}
-
-# C|Z density
-eta2 <- function(c, z) {
-  dgamma(x = c,
-         shape = c.shape,
-         rate = c.rates[z + 1])
-}
-
-# mean function mu(X, Z, B) = E(Y | X, Z)
-mu <- function(x, z, B) {
-  B[1] + B[2]*x + B[3]*z
-}
-
-# gradient of mu w.r.t. B
-d.mu <- function(x, z, B) {
-  cbind(1, x, z)
-}
-
-# Y|X, Z density
-fy <- function(y, x, z, B, s2) dnorm(x = y, mean = mu(x, z, B), sd = sqrt(s2))
-
-# full data score vector
-SF <- function(y, x, z, B, s2) {
-  cbind((y - mu(x, z, B)) * d.mu(x, z, B),
-        (y - mu(x, z, B)) ^ 2 - s2)
-}
+seed <- 1
+n <- 8000
+q <- 0.8
+B <- c(1, 10, 2)
+s2 <- 1
+x.thetas <- 0.5 * c(-1, 1)
+x.gamma <- 1
+c.gamma <- 2
+mx <- 40
+mc <- 40
+my <- 5
 
 # generate data -----------------------------------------------------------
 
-dat.list <- gen.data(n = n, q = q, B = B, s2 = s2,
-                     x.means = x.means, x.shape = x.shape, c.shape = c.shape)
+set.seed(seed)
+dat.list <- gen.data.beta(
+  n = n, q = q, B = B, s2 = s2,
+  x.thetas = x.thetas, x.gamma = x.gamma, c.gamma = c.gamma)
 
 datf <- dat.list$datf          # full data
 dat0 <- dat.list$dat0          # oracle data
@@ -85,31 +46,56 @@ dat <- dat.list$dat            # observed data
 datcc <- dat.list$datcc        # complete case data
 zs <- sort(unique(dat$Z))      # unique z values
 
-# create quadrature rules -------------------------------------------------
+# estimate nuisance distributions -----------------------------------------
 
-# X|Z quadrature
+## X|Z quadrature nodes
 x.nds <- vapply(
   X = zs,
   FUN.VALUE = numeric(mx),
-  FUN = function(z) seq(10^-6, max(datf$X[datf$Z == z]), length = mx))
+  FUN = function(z) seq(1E-6, 1-1E-6, length = mx))
 
+## true distribution of X|Z
+eta1 <- function(x, z) {
+  dbeta(x = x,
+        shape1 = 1 + x.gamma - x.thetas[z + 1],
+        shape2 = 1 + x.gamma + x.thetas[z + 1])
+}
+
+## quadrature weights for X|Z
 x.wts <- vapply(
   X = 1:length(zs),
   FUN.VALUE = numeric(mx),
-  FUN = function(i) eta1(x.nds[,i], zs[i]) / sum(eta1(x.nds[,i], zs[i])))
+  FUN = function(i) eta1(x.nds[,i], zs[i]) /
+    sum(eta1(x.nds[,i], zs[i])))
 
-# C|Z quadrature
+## theta parameters for beta distribution of C|Z
+c.thetas <- vapply(
+  X = x.thetas,
+  FUN.VALUE = 0,
+  FUN = function(xt)
+    get.c.param.beta(q = q, x.theta = xt,
+                     x.gamma = x.gamma, c.gamma = c.gamma))
+
+## C|Z quadrature nodes
 c.nds <- vapply(
   X = zs,
   FUN.VALUE = numeric(mc),
-  FUN = function(z) seq(10^-6, max(datf$C[datf$Z == z]), length = mc))
+  FUN = function(z) seq(1E-6, 1-1E-6, length = mc))
+
+## true distribution of C|Z
+eta2 <- function(c, z) {
+  dbeta(x = c,
+        shape1 = 1 + c.gamma - c.thetas[z + 1],
+        shape2 = 1 + c.gamma + c.thetas[z + 1])
+}
 
 c.wts <- vapply(
   X = 1:length(zs),
   FUN.VALUE = numeric(mc),
-  FUN = function(i) eta2(c.nds[,i], zs[i]) / sum(eta2(c.nds[,i], zs[i])))
+  FUN = function(i) eta2(c.nds[,i], zs[i]) /
+    sum(eta2(c.nds[,i], zs[i])))
 
-# Y quadrature
+## Y|X,Z quadrature nodes
 gq <- gauss.quad(n = my, kind = "hermite")
 y.nds <- gq$nodes
 y.wts <- gq$weights
@@ -135,9 +121,10 @@ adat <- data.frame(rbind(
   `colnames<-`(c("z", "x",
                  "a1", "a2", "a3", "a4",
                  "a.eta1", "a.eta2", "a.eta3", "a.eta4")) |>
-  pivot_longer(cols = !c(x, z)) |>
-  mutate(comp = gsub("\\D", x = name, replacement = ""),
-         func = gsub("\\d", x = name, replacement = ""))
+  tidyr::pivot_longer(cols = !c(x, z)) |>
+  dplyr::mutate(comp = gsub("\\D", x = name, replacement = ""),
+         func = gsub("\\d", x = name, replacement = ""),
+         Function = ifelse(func == "a", "a", "a * eta1"))
 
 ggplot(adat,
        aes(x = x,
@@ -147,6 +134,9 @@ ggplot(adat,
   geom_line() +
   geom_hline(yintercept = 0,
              linetype = "dashed") +
-  facet_wrap(z ~ func,
+  facet_grid(Function ~ z,
              scales = "free",
-             labeller = label_both)
+             labeller = label_both) +
+  labs(x = "X",
+       y = "Function Value",
+       color = "Component")

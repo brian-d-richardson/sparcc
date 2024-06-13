@@ -4,8 +4,11 @@
 #' @param digits a non-negative integer, number of digits to round results,
 #' default is 2
 #'
-#' @return A list with means and t-statistics testing if the estimating function
-#' values have mean zero.
+#' @return A list with:
+#' #' \itemize{
+#' \item{`means`: the mean estimatin equation values}
+#' \item{`t.stats`: t-statistics testing the null of mean zero}
+#' }
 #'
 #' @export
 assess.ee <- function(ee, digits = 2) {
@@ -24,8 +27,8 @@ assess.ee <- function(ee, digits = 2) {
 
 #' Assess data generation with X|Z and C|Z having gamma distributions
 #'
-#' @inheritParams gen.data
-#' @inheritParams get.q
+#' @inheritParams gen.data.gamma
+#' @inheritParams get.q.gamma
 #'
 #' @param x.mean a positive number, the mean of X
 #'
@@ -35,11 +38,11 @@ assess.ee <- function(ee, digits = 2) {
 #'
 #' @export
 assess.dat.gamma <- function(n, q, B, s2, x.means, x.shape, c.shape,
-                       specify.x.gamma, specify.c.gamma) {
+                             specify.x.gamma, specify.c.gamma) {
 
-  dat.list <- gen.data(n = n, q = q, B = B, s2 = s2,
-                       x.means = x.means,
-                       x.shape = x.shape, c.shape = c.shape)
+  dat.list <- gen.data.gamma(n = n, q = q, B = B, s2 = s2,
+                             x.means = x.means,
+                             x.shape = x.shape, c.shape = c.shape)
 
   datf <- dat.list$datf          # full data
   dat0 <- dat.list$dat0          # oracle data
@@ -156,25 +159,36 @@ assess.dat.gamma <- function(n, q, B, s2, x.means, x.shape, c.shape,
 
 }
 
-
-#' Assess estimation of eta
+#' Assess estimation of eta when X and C have gamma distributions
 #'
-#' @inheritParams gen.data
-#' @inheritParams get.q
+#' @inheritParams gen.data.gamma
+#' @inheritParams get.q.gamma
 #'
 #' @param x.mean a positive number, the mean of X
 #' @param n.rep a positive integer, the number of simulated replicates
-#' @param specify.x.gamma logical, an indicator of whether X should be estimated
-#' as gamma (`T`) or exponential (`F`)
-#' @param specify.c.gamma logical, an indicator of whether C should be estimated
-#' as gamma (`T`) or exponential (`F`)
+#' @param specify.x.gamma logical, an indicator of whether X should be correctly
+#' specified as gamma as opposed to incorrectly specified as exponential
+#' @param specify.c.gamma logical, an indicator of whether C should be correctly
+#' specified as gamma as opposed to incorrectly specified as exponential
 #'
 #' @return plot of empirical distribution of estimated parameters for eta1 and
 #' eta2
 #'
+#' @importFrom tidyr separate_wider_delim
+#' @importFrom ggh4x facet_nested
+#'
 #' @export
-assess.eta.est <- function(n.rep, n, q, B, s2, x.means, x.shape, c.shape,
-                           specify.x.gamma, specify.c.gamma) {
+assess.eta.est.gamma <- function(n.rep, n, q, B, s2, x.means, x.shape, c.shape,
+                                 specify.x.gamma, specify.c.gamma) {
+
+  x.rates <- x.shape / x.means  # rate parameters for gamma distribution of X|Z
+  c.rates <- vapply(            # rate parameters for gamma distribution of C|Z
+    X = x.rates,
+    FUN.VALUE = 0,
+    FUN = function(xr)
+      get.c.rate(q = q, x.rate = xr,
+                 x.shape = x.shape,
+                 c.shape = c.shape))
 
   param.hat <- t(pbapply::pbvapply(
     X = 1:n.rep,
@@ -182,9 +196,9 @@ assess.eta.est <- function(n.rep, n, q, B, s2, x.means, x.shape, c.shape,
     FUN = function(x) {
 
         # generate data
-        dat <- gen.data(n = n, q = q, B = B, s2 = s2,
-                        x.means = x.means,
-                        x.shape = x.shape, c.shape = c.shape)$dat
+        dat <- gen.data.gamma(n = n, q = q, B = B, s2 = s2,
+                              x.means = x.means,
+                              x.shape = x.shape, c.shape = c.shape)$dat
 
         # estimate distribution of X
         if (specify.x.gamma) {
@@ -248,8 +262,9 @@ assess.eta.est <- function(n.rep, n, q, B, s2, x.means, x.shape, c.shape,
                           param.hat[,c(2,4,6,8)])) %>%
     as.data.frame() %>%
     `colnames<-`(c("z", "x.shape", "x.rate", "c.shape", "c.rate")) %>%
-    pivot_longer(cols = !z, values_to = "est") %>%
-    separate_wider_delim(cols = name, delim = ".", names = c("var", "param")) %>%
+    tidyr::pivot_longer(cols = !z, values_to = "est") %>%
+    tidyr::separate_wider_delim(cols = name, delim = ".",
+                                names = c("var", "param")) %>%
     mutate(truth = ifelse(var == "x",
                           ifelse(param == "rate", x.rates[z + 1], x.shape),
                           ifelse(param == "rate", c.rates[z + 1], c.shape)))
@@ -263,9 +278,9 @@ assess.eta.est <- function(n.rep, n, q, B, s2, x.means, x.shape, c.shape,
                linetype = "dashed",
                color = "orange") +
     scale_fill_manual(values = c("red", "blue")) +
-    facet_nested(param ~ var + z,
-                 scales = "free",
-                 labeller = label_both) +
+    ggh4x::facet_nested(param ~ var + z,
+                        scales = "free",
+                        labeller = label_both) +
     labs(y = "Estimated Parameter") +
     ggtitle("Empirical Distribution of Estimated Nuisance Parameters",
             subtitle = paste0("q = ", q, "; ",
@@ -279,3 +294,147 @@ assess.eta.est <- function(n.rep, n, q, B, s2, x.means, x.shape, c.shape,
 
   return(plot)
 }
+
+#' Assess data generation with X|Z and C|Z having beta distributions
+#'
+#' @inheritParams gen.data.beta
+#' @inheritParams get.q.beta
+#'
+#' @param x.mean a positive number, the mean of X
+#'
+#' @importFrom ggplot2 ggplot geom_histogram labs ggtitle
+#'
+#' @return a plot of generated data
+#'
+#' @export
+assess.dat.beta <- function(n, q, B, s2, x.thetas, x.gamma, c.gamma,
+                            x.correct, c.correct) {
+
+  ## generate data
+  dat.list <- gen.data.beta(n = n, q = q, B = B, s2 = s2,
+                            x.thetas = x.thetas,
+                            x.gamma = x.gamma, c.gamma = c.gamma)
+
+  datf <- dat.list$datf          # full data
+  dat0 <- dat.list$dat0          # oracle data
+  dat <- dat.list$dat            # observed data
+  datcc <- dat.list$datcc        # complete case data
+
+  ## compute empirical values by Z level
+  q.hats <- datf %>% group_by(Z) %>% summarise(qhat = mean(X > C)) # cens prop
+  x.bars <- datf %>% group_by(Z) %>% summarise(xbar = mean(X))     # mean X
+
+  # estimate distribution of X|Z
+  if (x.correct == T) {
+
+    # estimate beta parameters at each level of Z
+    x.params.hat <- t(vapply(
+      X = 0:1,
+      FUN.VALUE = numeric(2),
+      FUN = function(z) {
+        est <- dat %>%
+          filter(Z == z) %>%
+          mutate(left = W,
+                 right = ifelse(Delta == 1, W, NA)) %>%
+          dplyr::select(left, right) %>%
+          fitdistrplus::fitdistcens(distr = "beta")
+        return(est$estimate)
+      }))
+
+    # define estimated X|Z density
+    eta1 <- function(x, z) {
+      dbeta(x = x,
+            shape1 = x.params.hat[z + 1, "shape1"],
+            shape2 = x.params.hat[z + 1, "shape2"])
+    }
+
+  } else {
+
+    # misspecify: estimate marginal beta distribution
+    est <- dat %>%
+      mutate(left = W,
+             right = ifelse(Delta == 1, W, NA)) %>%
+      dplyr::select(left, right) %>%
+      fitdistrplus::fitdistcens(distr = "beta")
+    x.params.hat <- est$estimate
+
+    # define estimated X|Z density
+    eta1 <- function(x, z) {
+      dbeta(x = x,
+            shape1 = x.params.hat["shape1"],
+            shape2 = x.params.hat["shape2"])
+    }
+  }
+
+  # estimate distribution of C|Z
+  if (c.correct) {
+
+    # estimate beta parameters at each level of Z
+    c.params.hat <- t(vapply(
+      X = 0:1,
+      FUN.VALUE = numeric(2),
+      FUN = function(z) {
+        est <- dat %>%
+          filter(Z == z) %>%
+          mutate(left = W,
+                 right = ifelse(Delta == 0, W, NA)) %>%
+          dplyr::select(left, right) %>%
+          fitdistrplus::fitdistcens(distr = "beta")
+        return(est$estimate)
+      }))
+
+    # define estimated C|Z density
+    eta2 <- function(c, z) {
+      dbeta(x = c,
+            shape1 = c.params.hat[z + 1, "shape1"],
+            shape2 = c.params.hat[z + 1, "shape2"])
+    }
+
+  } else {
+
+    # misspecify: estimate marginal beta distribution
+    est <- dat %>%
+      mutate(left = W,
+             right = ifelse(Delta == 0, W, NA)) %>%
+      dplyr::select(left, right) %>%
+      fitdistrplus::fitdistcens(distr = "beta")
+    c.params.hat <- est$estimate
+
+    # define estimated X|Z density
+    eta2 <- function(c, z) {
+      dbeta(x = c,
+            shape1 = c.params.hat["shape1"],
+            shape2 = c.params.hat["shape2"])
+    }
+  }
+
+  # grid to plot X density
+  x.grid <- seq(0, 1, length = 100)
+
+  # plot data
+  datf %>%
+    mutate(e1 = eta1(x = X, z = Z),
+           e2 = eta2(c = C, z = Z)) %>%
+    ggplot() +
+    geom_histogram(aes(x = X,
+                       y = after_stat(density)),
+                   fill = "blue", alpha = 0.5, bins = n/50) +
+    geom_histogram(aes(x = C,
+                       y = after_stat(density)),
+                   fill = "red", alpha = 0.5, bins = n/50) +
+    geom_line(aes(x = X,
+                  y = e1),
+              color = "blue", linewidth = 1) +
+    geom_line(aes(x = C,
+                  y = e2),
+              color = "red", linewidth = 1) +
+    facet_wrap(~ Z,
+               scales = "free", labeller = label_both) +
+    labs(x = "X (blue) or C (red)",
+         y = "Density") +
+    ggtitle("Estimated vs Observed Distributions of X|Z and C|Z",
+            subtitle = paste0("q.hats = ", paste(round(q.hats$qhat, 2), collapse = ", "), "; ",
+                              "x.bars = ", paste(round(x.bars$xbar, 2), collapse = ", ")))
+
+}
+

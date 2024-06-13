@@ -8,7 +8,7 @@
 #' @param return.sums logical indicator for returning sum of scores as opposed
 #' to individual scores, default is TRUE
 #'
-#' @return complete case score function values
+#' @return individual or summed complete case score function values
 #'
 #' @export
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -36,7 +36,7 @@ get.Scc <- function(dat, B, ls2, args, return.sums = T) {
 #'
 #' @inheritParams get.Scc
 #'
-#' @return maximum likelihood score function values
+#' @return individual or summed maximum likelihood score function values
 #'
 #' @export
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -90,7 +90,7 @@ get.Sml <- function(dat, B, ls2, args, return.sums = T) {
 #'
 #' @inheritParams get.Scc
 #'
-#' @return semiparametric efficient score function values
+#' @return individual or summed semiparametric efficient score function values
 #'
 #' @export
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -162,20 +162,20 @@ get.Seff <- function(dat, B, ls2, args, return.sums = T) {
 #'
 #' @importFrom rootSolve multiroot
 #'
-#' @return root of estimating function
+#' @return a numeric vector, the root of the estimating function
 #'
 #' @export
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 get.root <- function(dat, score, start, args = list()) {
 
-  est <- #tryCatch(
-    #expr =
+  est <- tryCatch(
+    expr =
     rootSolve::multiroot(
       f = function(theta) score(dat = dat, args = args,
                                 B = head(theta, -1), ls2 = tail(theta, 1)),
-      start = start)$root#,
-    #warning = function(w) rep(NA, length(start)),
-    #error = function(e) rep(NA, length(start)))
+      start = start)$root,
+    warning = function(w) rep(NA, length(start)),
+    error = function(e) rep(NA, length(start)))
   names(est) <- paste0("B", 1:length(start))
   return(est)
 }

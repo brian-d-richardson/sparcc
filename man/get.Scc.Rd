@@ -4,22 +4,22 @@
 \alias{get.Scc}
 \title{complete case score function}
 \usage{
-get.Scc(dat, B, s2, args, return.sums = T)
+get.Scc(dat, B, ls2, args, return.sums = T)
 }
 \arguments{
 \item{dat}{a data frame including columns Y, W, Delta, Z}
 
 \item{B}{a numeric vector, parameters in the outcome model}
 
-\item{s2}{a positive number, variance in the outcome model}
-
 \item{args}{list of additional arguments}
 
 \item{return.sums}{logical indicator for returning sum of scores as opposed
 to individual scores, default is TRUE}
+
+\item{s2}{a positive number, variance in the outcome model}
 }
 \value{
-complete case score function values
+individual or summed complete case score function values
 }
 \description{
 complete case score function

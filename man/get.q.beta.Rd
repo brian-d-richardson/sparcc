@@ -16,7 +16,7 @@ get.q.beta(x.theta, x.gamma, c.theta, c.gamma)
 \item{c.gamma}{a positive number, gamma parameter for C}
 }
 \value{
-censoring proportion q
+a number in \link{0,1}, the censoring proportion q
 }
 \description{
 get censoring probability q given X and C ~ Beta

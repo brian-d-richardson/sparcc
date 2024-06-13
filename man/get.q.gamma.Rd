@@ -16,7 +16,7 @@ get.q.gamma(x.rate, x.shape, c.rate, c.shape)
 \item{c.shape}{a positive number, shape parameter for gamma distribution of C}
 }
 \value{
-censoring proportion q
+a number in \link{0,1}, the censoring proportion q
 }
 \description{
 get censoring probability q given X and C ~ gamma

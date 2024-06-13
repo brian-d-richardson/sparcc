@@ -29,26 +29,24 @@ The goal of this program is to evaluate the performance of the semiparametric ef
 * $C|Z \sim \textrm{beta}(\gamma_1 + \gamma_2 Z, \gamma_3 + \gamma_4 Z)$,
 * $Y|X,Z \sim N(\beta_0 + \beta_1X + \beta_2Z, \sigma^2)$.
 
-The assumption that $Y|X,Z$ follows a normal distribution allows us to use Gaussian quadrature to efficiently solve integrals with respect to $y$. 
+In these simulations, we vary the censoring probability $q=\textrm{P}(X>C)$ over a fine grid from 0.1 to 0.8 to see how the variance of the different estimators changes with increasing censoring proportion.
 
-In these simulations, we vary the censoring probability $q=\textrm{P}(X>C)$.
-
-We also vary which nuisance distributions are correct by modeling $X|Z$ (or $C|Z$) as beta with estimated parameters $\pmb{\alpha}, \pmb{\gamma}$ (correct) or uniform with no parameters estimated (incorrect).
+For all simulations, both nuisance distributions are correctly specified as beta.
 
 For each simulation, we generate a data set of size $n$ then compute the complete case estimator $\widehat{\pmb{\beta}}_{cc}$, the oracle estimator $\widehat{\pmb{\beta}}_{or}$, the parametric MLE $\widehat{\pmb{\beta}}_{ml}$, and the semiparametric efficient estimator $\widehat{\pmb{\beta}}_{sp}$.
 
 ```{r}
 
-# true (beta0, beta2)
-B.true <- c(1, 10, 2, log(1))
+# true beta
+B <- c(1, 10, 2, log(1))
 
 # load simulation results from each of 10 clusters
 sim.out.list <- lapply(
-  X = 0:9,
+  X = c(1:9),
   FUN = function(clust) {
     cbind(clust,
           read.csv(paste0(
-            "sim2_data/v17/sd",
+            "sim2_data/sd",
             clust, ".csv")))
   })
 
@@ -60,29 +58,17 @@ colnames(sim.out) <- gsub("B2", "trueB2", colnames(sim.out))
 
 # make long data frame
 sim.out.long <- sim.out %>% 
-  pivot_longer(cols = starts_with(c("B", "V")),
+  pivot_longer(cols = starts_with("B"),
                names_to = "method.param",
                values_to = "estimate") %>% 
-  mutate(method = factor(substr(method.param, 2, 3),
-                         levels = c("or", "cc", "ml", "sp")),
-         x.correct = factor(x.correct,
-                            levels = c(1, 0)),
-         c.correct = factor(c.correct,
-                            levels = c(1, 0)),
-         name = factor(substr(method.param, 1, 1)),
-         param = factor(substr(method.param, 4, 4)),
-         B.true = B.true[param]) %>% 
-  dplyr::select(-method.param) %>% 
-  group_by(clust, n, q, method, param, x.correct, c.correct, name) %>% 
-  mutate(id = row_number()) %>% 
-  pivot_wider(names_from = name,
-              values_from = estimate,
-              id_cols = c(clust, n, q, method,
-                          param, x.correct, c.correct,
-                          B.true, id)) %>% 
-  mutate(ci.lower = B - qnorm(0.975) * V,
-         ci.upper = B + qnorm(0.975) * V,
-         ci.cov = B.true >= ci.lower & B.true <= ci.upper)
+    mutate(method = factor(substr(method.param, 2, 3),
+                           levels = c("or", "cc", "ml", "sp"),
+                           labels = c("Oracle",
+                                      "Complete Case",
+                                      "Parametric MLE",
+                                      "Semiparametric")),
+           param = factor(substr(method.param, 4, 4)),
+           B.true = B[param])
              
 ```
 
@@ -97,8 +83,8 @@ We first look at which simulation settings lead to errors.
 # check for simulations with errors
 sim.out.long %>% 
   filter(param == 1) %>% 
-  group_by(q, n, method, x.correct, c.correct) %>% 
-  summarize(prop.error = mean(is.na(B))) %>% 
+  group_by(q, method) %>% 
+  summarize(prop.error = mean(is.na(estimate))) %>% 
   filter(prop.error > 0) %>% 
   kable(digits = 3) %>%
   kable_styling("striped")
@@ -111,34 +97,12 @@ In these simulations, all models converged with no errors.
 
 # extract simulation parameters
 q <- unique(sim.out$q)
-n <- unique(sim.out$n)
-x.correct <- unique(sim.out$x.correct)
-c.correct <- unique(sim.out$c.correct)
 n.rep <- nrow(sim.out) /
-  n_distinct(dplyr::select(sim.out, q, n, x.correct, c.correct,
-                           mx, mc, my, s2, trueB2, c.gamma))
+  n_distinct(dplyr::select(sim.out, q))
 
 # make labels for plots
-method.labs <- c("Oracle",
-                 "Complete Case",
-                 "Parametric MLE",
-                 "Semiparametric")
-
-names(method.labs) <- c("or", "cc", "ml", "sp")
-
-q.labs <- paste0("q = ", q)
-names(q.labs) <- q
-
-n.labs <- paste0("n = ", n)
-names(n.labs) <- n
-
-specx.labs <- c("X|Z Correct", "X|Z Incorrect")
-names(specx.labs) <- x.correct
-
-specc.labs <- c("C|Z Correct", "C|Z Incorrect")
-names(specc.labs) <- c.correct
-
 param.labs <- c("\u03B20", "\u03B21", "\u03B22", "log\u03C3\u00B2")
+names(param.labs) <- 1:4
 
 # colorblind friendly pallette
 #pal_light <- cbbPalette <- c('#BBBBBB', '#228833', '#4477AA', '#AA3377')
@@ -151,152 +115,79 @@ pal_dark <- c('#991122', '#114419', '#223b55', '#6b611d', '#117799', '#55193b', 
 
 ```{r}
 
-# boxplot of simulated estimates
-make.est.plot <- function(param., est_cutoff = Inf,
-                          include.title = T,
-                          q. = q, n. = n) {
-  
-  p <- sim.out.long %>% 
-    filter(param == param.,
-           q %in% q.,
-           n %in% n.,
-           abs(B - B.true) < est_cutoff) %>%  
-    ggplot(aes(y = B,
-               color = method,
-               fill = method)) +
-    geom_boxplot() +
-    geom_hline(aes(yintercept = B.true),
-               linetype = "dashed",
-               linewidth = 0.6,
-               color = pal_light[4]) +
-    facet_nested(n + q ~ x.correct + c.correct,
-                 scales = "free",
-                 labeller = labeller(n = n.labs,
-                                     q = q.labs,
-                                     x.correct = specx.labs,
-                                     c.correct = specc.labs)) +
-    labs(y = "Parameter Estimate",
-         fill = "Method",
-         color = "Method") +
-    theme_bw() +
-    theme(axis.ticks.x = element_blank(),
-          axis.text.x = element_blank(),
-          axis.title.x = element_blank(),
-          legend.position = "bottom") +
-    scale_fill_manual(values = pal_light[c(1, 2, 3, 5, 6)],
-                      labels = method.labs) +
-    scale_color_manual(values = pal_dark[c(1, 2, 3, 5, 6)],
-                      labels = method.labs)
-  
-  if (include.title) {
-    p <- p +
-      ggtitle(paste0("Empirical Distribution of Parameter Estimates for ",
-                   param.labs[param.]),
-              subtitle = paste0(n.rep, " replicates per setting"))
-  }
-  return(p)
-}
+# obtain empirical variances by method, parameter, and q
+sim.out.sum <- sim.out.long %>% 
+  group_by(q, method, param) %>% 
+  filter(!is.na(estimate)) %>% 
+  summarise(var = var(estimate),
+            Var = mean((estimate - B.true) ^ 2),
+            se.Var = sd((estimate - B.true) ^ 2) / sqrt(n.rep),
+            Var.lower = Var - qnorm(0.975) * se.Var ,
+            Var.upper = Var + qnorm(0.975) * se.Var)
 
 ```
 
-#### Primary Simulation Results
+```{r}
 
-The most interesting/important results are for the parameter estimates of the coefficient $\beta_1$ for $X$, and with a high censoring rate of $q = 0.8$. Below are those results, summarized with (i) a boxplot of estimates and (ii) a table with bias, variance, and MSE.
-
-```{r message = F, fig.height = 4}
-
-make.est.plot(param. = 1)
-make.est.plot(param. = 2)
-make.est.plot(param. = 3)
-make.est.plot(param. = 4)
+# plot variance over q
+ggplot(sim.out.sum,
+       aes(x = q,
+           y = Var,
+           ymin = Var.lower,
+           ymax = Var.upper,
+           fill = method,
+           color = method,
+           shape = method)) +
+  geom_point() +
+  #geom_errorbar() +
+  geom_ribbon(alpha = 0.3) +
+  geom_line() +
+  facet_wrap(~ param,
+             scales = "free",
+             labeller = labeller(param = param.labs)) +
+  theme_bw() +
+  theme(legend.position = "bottom") +
+  scale_color_manual(values = pal_light[c(1, 2, 3, 5)]) +
+  labs(x = "Censoring Proportion (q)",
+       y = "Empircal Variance of Parameter Estimates",
+       color = "Method",
+       shape = "Method",
+       fill = "Method") +
+  ggtitle("Variance of Parameter Estimators by Censoring Proportion",
+          subtitle = paste0(n.rep, " Simulations per Setting"))
 
 ```
 
-```{r message = F}
+```{r}
 
-ggsave("sim_plots/sim1_1_boxplot.png",
-       make.est.plot(param. = 2, include.title = F),
+# plot variance over q for beta_1 only
+ggplot(filter(sim.out.sum, param == 2, q <= 0.85),
+       aes(x = q,
+           y = var,
+           ymin = Var.lower,
+           ymax = Var.upper,
+           fill = method,
+           color = method,
+           shape = method)) +
+  geom_point() +
+  geom_line() +
+  geom_ribbon(alpha = 0.3) +
+  labs(x = "Censoring Proportion (q)",
+       y = "Variance",
+       color = "Method",
+       shape = "Method",
+       fill = "Method") +
+  theme_bw() +
+  theme(legend.position = "bottom") +
+  scale_x_continuous(breaks = seq(0.1, 0.9, by = 0.1)) +
+  scale_color_manual(values = pal_light[c(1, 2, 3, 5)]) #+
+  #ggtitle("Variance of \u03B21 Estimator by Censoring Proportion",
+          #subtitle = paste0(n.rep, " Simulations per Setting"))
+
+ggsave("sim_plots/sim1_2_variances.png",
        dpi = 300,
-       height = 3,
-       width = 6)
+       width = 6,
+       height = 4)
 
 ```
 
-In the table, bias, variance, and MSE are all multiplied by a factor of 100. "Neither" means neither nuisance model is correct, "X Only" means only $X|Z$ is correct, etc.
-
-```{r message = F}
-
-# table summarizing for only semiparametric estimator
-tbl1 <- sim.out.long %>%
-  filter(method == "sp") %>% 
-  group_by(n, q, param, x.correct, c.correct, method) %>% 
-  summarise(v1_Bias = 100*mean(B - B.true, na.rm = T),
-            v2_ESE = 100*sd(B, na.rm = T),
-            v3_ASE = 100*mean(V, na.rm = T),
-            v4_MSE = 100*mean((B - B.true) ^ 2, na.rm = T),
-            v5_Cov = 100*mean(ci.cov)) %>% 
-  gather(key, value, v1_Bias:v5_Cov) %>% 
-  unite(Group, c(x.correct, c.correct), key) %>% 
-  spread(Group, value)
-
-setNames(tbl1, sub(".+_", "", names(tbl1))) %>% 
-  kable(digits = 1) %>%
-  kable_styling("striped") %>%
-  add_header_above(c(" " = 4,
-                     "Neither" = 5,
-                     "X Only" = 5,
-                     "C Only" = 5,
-                     "Both" = 5))
-
-```
-
-```{r message = F}
-
-# table summarizing all estimators for beta2
-tbl2 <- sim.out.long %>%
-  filter(param == 2) %>% 
-  group_by(n, q, param, x.correct, c.correct, method) %>% 
-  summarise(v1_Bias = 100*mean(B - B.true, na.rm = T),
-            v2_ESE = 100*sd(B, na.rm = T),
-            v3_ASE = 100*mean(V, na.rm = T),
-            v4_MSE = 100*mean((B - B.true) ^ 2, na.rm = T),
-            v5_Cov = 100*mean(ci.cov)) %>% 
-  gather(key, value, v1_Bias:v5_Cov) %>% 
-  unite(Group, c(x.correct, c.correct), key) %>% 
-  spread(Group, value)
-
-setNames(tbl2, sub(".+_", "", names(tbl2))) %>% 
-  kable(digits = 1) %>%
-  kable_styling("striped") %>%
-  add_header_above(c(" " = 4,
-                     "Neither" = 5,
-                     "X Only" = 5,
-                     "C Only" = 5,
-                     "Both" = 5))
-
-```
-
-```{r message = F}
-
-# table summarizing all estimators
-tbl3 <- sim.out.long %>%
-  group_by(n, q, param, x.correct, c.correct, method) %>% 
-  summarise(v1_Bias = 100*mean(B - B.true, na.rm = T),
-            v2_ESE = 100*sd(B, na.rm = T),
-            v3_ASE = 100*mean(V, na.rm = T),
-            v4_MSE = 100*mean((B - B.true) ^ 2, na.rm = T),
-            v5_Cov = 100*mean(ci.cov)) %>% 
-  gather(key, value, v1_Bias:v5_Cov) %>% 
-  unite(Group, c(x.correct, c.correct), key) %>% 
-  spread(Group, value)
-
-setNames(tbl3, sub(".+_", "", names(tbl3))) %>% 
-  kable(digits = 1) %>%
-  kable_styling("striped") %>%
-  add_header_above(c(" " = 4,
-                     "Neither" = 5,
-                     "X Only" = 5,
-                     "C Only" = 5,
-                     "Both" = 5))
-
-```

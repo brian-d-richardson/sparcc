@@ -13,6 +13,7 @@ rm(list = ls())
 library(dplyr)
 library(tidyverse)
 library(ggplot2)
+library(stringr)
 library(ggh4x)
 library(scales)
 library(ggthemes)
@@ -22,60 +23,24 @@ library(kableExtra)
 
 ## Simulation Setup
 
-The goal of this program is to evaluate the performance of the semiparametric efficient estimator $\widehat{\pmb{\beta}}$ using simulations in the following setting:
+The goal of this program is to evaluate the performance of the semiparametric efficient estimator $\widehat{\pmb{\beta}}_{sp}$ using simulations in the following setting:
 
-* $X|Z \sim \textrm{gamma}(\theta_1, \theta_2)$,
-* $C|Z \sim \textrm{gamma}(\gamma_1, \gamma_2)$,
+* $Z \sim \textrm{Bernoulli}(0.5)$,
+* $X|Z \sim \textrm{beta}(\alpha_1 + \alpha_2 Z, \alpha_3 + \alpha_4 Z)$,
+* $C|Z \sim \textrm{beta}(\gamma_1 + \gamma_2 Z, \gamma_3 + \gamma_4 Z)$,
 * $Y|X,Z \sim N(\beta_0 + \beta_1X + \beta_2Z, \sigma^2)$.
 
-The assumption that $Y|X,Z$ follows a normal distribution allows us to use Gaussian quadrature to efficiently solve integrals with respect to $y$. 
 
 In these simulations, we vary the censoring probability $q=\textrm{P}(X>C)$.
 
-We also vary which nuisance distributions are correct by modeling $X|Z$ (or $C|Z$) as gamma (correct) or exponential (incorrect).
+We also vary which how nuisance distributions are modeled: $X|Z$ (or $C|Z$) correctly specified as beta conditional on $Z$ with estimated parameters $\pmb{\alpha}, \pmb{\gamma}$, $X|Z$ (or $C|Z$) incorrectly specified as marginal beta, or both $X|Z$ and $C|Z$ nonparametrically estimated.
 
-For each simulation, we generate a data set of size $n$ then compute the complete case estimator $\widehat{\pmb{\beta}}_{cc}$, the oracle estimator $\widehat{\pmb{\beta}}_{or}$, the parametric MLE $\widehat{\pmb{\beta}}_{ml}$, and the semiparametric efficient estimator $\widehat{\pmb{\beta}}$.
-
-## Computing the Semiparametric Estimator
-
-Our current approach for computing $S_{eff}$ is as follows.
-
-* Approximate the integral equation in Proposition 3 using quadrature rules for $X$ and $C$. In particular, assign point mass $r_j = \eta_1^*(x_j, \widehat\alpha_1) / \sum_{k=1}^{m_x} \eta_1^*(x_k, \widehat\alpha_1)$ to each of $m_x$ nodes $x_j$ in the support of $X$, and point mass $t_j = \eta_2^{\dagger}(c_j, \widehat\alpha_2) / \sum_{k=1}^{m_c} \eta_2^{\dagger}(c_k, \widehat\alpha_2)$ to each of $m_c$ nodes $c_j$ in the support of $C$.
-
-* Replace all integrals with respect to $x$ or $c$ with finite sums, using the above quadrature rules. For example, in $\textrm{LHS}_j$, we let $\textrm{E}\{\textrm{I}(x_j\leq C\} = \int_{x_j}^\infty\eta_2(c)\approx\sum_{k=1}^{m_c}t_k\textrm{I}(c_k\geq x_j)$.
-
-* Evaluate integrals with respect to $y$ using Gaussian quadrature using $m_y$ nodes. Let $w_h, \phi_h$ be the nodes and weights for the integral approximation $\int g(u)\exp(-u^2)du \approx \sum_{h=1}^{m_y}g(w_h)\phi_h$. Then all integrals with $f_{Y|X}(y,x_i,\pmb{\beta}, \sigma^2)$ or $f_{Y|X}(y,x_i,\pmb{\beta}, \sigma^2)f_{Y|X}(y,x_j,\pmb{\beta}, \sigma^2)$ in the integrand can be approximated using:
-
-$$
-\int g(y)f_{Y|X}(y,x_i,\pmb{\beta}, \sigma^2)dy \\
-= \int g(y)(2\pi\sigma^2)^{-1/2}\exp\left\{-\frac{1}{2\sigma^2}(y-\mu_i)^2\right\}dy \\ 
-= \pi^{-1/2}\int g(\sqrt{2}\sigma u + \mu_i)\exp(-u^2)du \\
-\approx \pi^{-1/2}\sum_{h=1}^{m_y}g(\sqrt{2}\sigma w_h + \mu_i)\phi_h,
-$$
-
-and
-
-$$
-\int g(y)f_{Y|X}(y,x_i,\pmb{\beta}, \sigma^2)f_{Y|X}(y,x_j,\pmb{\beta}, \sigma^2)dy \\
-= \int g(y)(2\pi, \sigma^2)^{-1}\exp\left\{-\frac{1}{4\sigma^2}(\mu_i-\mu_j)^2\right\}\exp\{-\frac{1}{\sigma^2}(y-\bar{\mu}_{ij})^2dy \\ 
-= (2\pi\sigma)^{-1}\exp\left\{-\frac{1}{4\sigma^2}(\mu_i-\mu_j)^2\right\}\int g(\sigma u + \bar{\mu}_{ij})\exp(-u^2)du \\
-\approx (2\pi\sigma)^{-1}\exp\left\{-\frac{1}{4\sigma^2}(\mu_i-\mu_j)^2\right\}\sum_{h=1}^{m_y}g(\sigma w_h + \bar{\mu}_{ij})\phi_h.
-$$
-
-* Solve for $\eta_1^*(x_j, \widehat\alpha_1)\pmb{a}(x_j, \pmb{\beta})$ at each node $x_j$. This involves solving a symmetric system of linear equations, which is done stably and quickly using the Cholesky decomposition. Then use linear interpolation to evaluate $\eta_1^*(x, \widehat\alpha_1)\pmb{a}(x,\pmb{\beta})$ at any observed $x$ value that is not a node in the quadrature rule for $X$.
-
-* Use the obtained $\pmb{a}(x,\pmb{\beta},\sigma^2)$ values and the quadrature rules for $X$ and $C$ to approximate the efficient score vector $S_{eff}$, evaluated at the observed data $(y_i,w_i,\delta_i)$ for each observation $i$.
-
-* In a previous set of simulations, we showed that $m_y=2$ and $m_c=15$ are sufficiently fine grids for approximating $S_{eff}$, and that $m_x$ may need to be as large as $100$. We will use these values for now.
-
-## Simulation Results
-
-We first look at which simulation settings lead to errors.
+For each simulation, we generate a data set of size $n$ then compute the complete case estimator $\widehat{\pmb{\beta}}_{cc}$, the oracle estimator $\widehat{\pmb{\beta}}_{or}$, the parametric MLE $\widehat{\pmb{\beta}}_{ml}$, and the semiparametric efficient estimator $\widehat{\pmb{\beta}}_{sp}$.
 
 ```{r}
 
-# true (beta0, beta2)
-B13 <- c(1, NA, 2, NA)
+# true beta
+B.true <- c(1, 10, 2, log(1))
 
 # load simulation results from each of 10 clusters
 sim.out.list <- lapply(
@@ -83,224 +48,217 @@ sim.out.list <- lapply(
   FUN = function(clust) {
     cbind(clust,
           read.csv(paste0(
-            "sim1_data/v6/sd",
+            "sim1_data/sd",
             clust, ".csv")))
   })
 
 # combine simulation results into 1 data frame
 sim.out <- bind_rows(sim.out.list)
 
-colnames(sim.out) <- gsub(".B", "", colnames(sim.out))
+colnames(sim.out) <- gsub(".B", ".", colnames(sim.out))
 colnames(sim.out) <- gsub("B2", "trueB2", colnames(sim.out))
 
 # make long data frame
 sim.out.long <- sim.out %>% 
-  pivot_longer(cols = starts_with("B"),
+  pivot_longer(cols = starts_with(c("B", "V", "S.")),
                names_to = "method.param",
                values_to = "estimate") %>% 
-    mutate(method = factor(substr(method.param, 2, 3),
-                           levels = c("or", "cc", "ml", "sp")),
-           specify.x.gamma = factor(specify.x.gamma,
-                                    levels = c(1, 0)),
-           specify.c.gamma = factor(specify.c.gamma,
-                                    levels = c(1, 0)),
-           param = factor(substr(method.param, 4, 4)),
-           B.true = ifelse(param == 2, trueB2,
-                    ifelse(param == 4, log(s2),
-                           B13[param])))
+  mutate(estimate = ifelse(abs(estimate) > 100, NA, estimate),
+         name = factor(str_sub(method.param, 1, 1)),
+         method = factor(str_sub(method.param, 3, 4),
+                         levels = c("sp", "ml", "cc", "or"),
+                         labels = c("Semipar", "MLE", "CC", "Oracle")),
+         nuis.x = factor(str_sub(str_sub(
+           gsub("[.]", "", method.param), 4, -2), 1, 1),
+           levels = c("", "1", "0",  "2"),
+           labels = c("-", "T", "F", "Nonpar")),
+         nuis.c = factor(str_sub(str_sub(
+           gsub("[.]", "", method.param), 4, -2), 2, 2),
+           levels = c("", "1", "0",  "2"),
+           labels = c("-", "T", "F", "Nonpar")),
+         param = factor(str_sub(method.param, -1, -1)),
+         B.true = B.true[param]) %>% 
+  dplyr::select(-c(method.param)) %>% 
+  group_by(clust, n, q, name, method, nuis.x, nuis.c, param) %>% 
+  mutate(id = row_number()) %>% 
+  pivot_wider(names_from = name,
+              values_from = estimate,
+              id_cols = c(clust, n, q, method, nuis.x, nuis.c,
+                          param, B.true, id)) %>% 
+  mutate(ci.if.lower = B - qnorm(0.975) * V,
+         ci.if.upper = B + qnorm(0.975) * V,
+         ci.if.cov = B.true >= ci.if.lower & B.true <= ci.if.upper,
+         ci.sand.lower = B - qnorm(0.975) * S,
+         ci.sand.upper = B + qnorm(0.975) * S,
+         ci.sand.cov = B.true >= ci.sand.lower & B.true <= ci.sand.upper)
              
 ```
+
+## Simulation Results
+
+#### Errors in Simulations
+
+We first look at which simulation settings lead to errors.
 
 ```{r message = F}
 
 # check for simulations with errors
 sim.out.long %>% 
   filter(param == 1) %>% 
-  group_by(q, n, specify.x.gamma, specify.c.gamma, method, trueB2, s2) %>% 
-  summarize(prop.error = mean(is.na(estimate))) %>% 
+  group_by(q, n, method, nuis.x, nuis.c) %>% 
+  summarize(n.error = sum(is.na(B)),
+            prop.error = mean(is.na(B))) %>% 
   filter(prop.error > 0) %>% 
   kable(digits = 3) %>%
   kable_styling("striped")
 
 ```
 
-```{r}
+#### Table of Results
 
-# extract simulation parameters
-q <- unique(sim.out$q)
-n <- unique(sim.out$n)
-s2 <- unique(sim.out$s2)
-trueB2 <- unique(sim.out$trueB2)
-specify.x.gamma <- unique(sim.out$specify.x.gamma)
-specify.c.gamma <- unique(sim.out$specify.c.gamma)
-mx <- unique(sim.out$mx)
-mc <- unique(sim.out$mc)
-my <- unique(sim.out$my)
-n.rep <- nrow(sim.out) /
-  n_distinct(dplyr::select(sim.out, q, n, specify.x.gamma, specify.c.gamma, mx, mc, my, s2, trueB2))
+In the table, bias, variance, and MSE are all multiplied by a factor of 100. "Neither" means neither nuisance model is correct, "X Only" means only $X|Z$ is correct, etc.
 
-# make labels for plots
-method.labs <- c("Oracle",
-                 "Complete Case",
-                 "Parametric MLE",
-                 "Semiparametric")
+```{r message = F}
 
-names(method.labs) <- c("or", "cc", "ml", "sp")
-
-q.labs <- paste0("q = ", q)
-names(q.labs) <- q
-
-n.labs <- paste0("n = ", n)
-names(n.labs) <- n
-
-s2.labs <- paste0("s2 = ", s2)
-names(s2.labs) <- s2
-
-trueB2.labs <- paste0("B2 = ", trueB2)
-names(trueB2.labs) <- trueB2
-
-specx.labs <- c("X Correct", "X Incorrect")
-names(specx.labs) <- specify.x.gamma
-
-specc.labs <- c("C Correct", "C Incorrect")
-names(specc.labs) <- specify.c.gamma
-
-mx.labs <- paste0("mx = ", mx)
-names(mx.labs) <- mx
-
-mc.labs <- paste0("mc = ", mc)
-names(mc.labs) <- mc
-
-my.labs <- paste0("my = ", my)
-names(my.labs) <- my
-
-param.labs <- c("\u03B20", "\u03B21", "\u03B22", "log\u03C3\u00B2")
-
-# colorblind friendly pallette
-#pal_light <- cbbPalette <- c('#BBBBBB', '#228833', '#4477AA', '#AA3377')
-#pal_dark <- cbbPalette <- c('#5d5d5d', '#114419', '#223b55', '#55193b')
-pal_light <- c('#EE6677', '#228833', '#4477AA', '#CCBB44', '#66CCEE', '#AA3377', '#BBBBBB')
-pal_dark <- c('#991122', '#114419', '#223b55', '#6b611d', '#117799', '#55193b', '#5d5d5d')
-
-
-```
-
-```{r}
-
-# boxplot of simulated estimates
-make.est.plot <- function(param., q., est_cutoff = Inf) {
+# table with both types of variance estimators
+make.table.bothvar <- function(param., format = "html") {
   
-  sim.out.long %>% 
-    filter(param == param.,
-           q == q.,
-           abs(estimate - B.true) < est_cutoff) %>%  
-    ggplot(aes(y = estimate,
-               color = method,
-               fill = method)) +
-    geom_boxplot() +
-    geom_hline(aes(yintercept = B.true),
-               linetype = "dashed",
-               linewidth = 0.6,
-               color = pal_light[4]) +
-    facet_nested(trueB2 ~ specify.x.gamma + specify.c.gamma,
-                 scales = "free",
-                 labeller = labeller(n = n.labs,
-                                     q = q.labs,
-                                     trueB2 = trueB2.labs,
-                                     #s2 = s2.labs,
-                                     specify.x.gamma = specx.labs,
-                                     specify.c.gamma = specc.labs)) +
-    labs(y = "Parameter Estimate",
-         fill = "Method",
-         color = "Method") +
-    ggtitle(paste0("Empirical Distribution of Parameter Estimates for ",
-                   param.labs[param.]),
-            subtitle = paste0("censoring proportion q = ", q., "; ",
-                              n.rep, " replicates per setting")) +
-    theme_bw() +
-    theme(axis.ticks.x = element_blank(),
-          axis.text.x = element_blank(),
-          axis.title.x = element_blank()) +
-    scale_fill_manual(values = pal_light[c(1, 2, 3, 5, 6)],
-                      labels = method.labs) +
-    scale_color_manual(values = pal_dark[c(1, 2, 3, 5, 6)],
-                      labels = method.labs)
+  tbl1 <- sim.out.long %>%
+    filter(param == param.) %>% 
+    group_by(q, method, nuis.x, nuis.c) %>% 
+    summarise(v1_Bias = 10*mean(B - B.true, na.rm = T),
+              v2_ESE = 10*sd(B, na.rm = T),
+              v3_ASEIF = 10*mean(V, na.rm = T),
+              v4_ASESand = 10*mean(S, na.rm = T),
+              v5_CovIF = 100*mean(ci.if.cov, na.rm = T),
+              v6_CovSand = 100*mean(ci.sand.cov, na.rm = T)) %>% 
+  gather(key, value, v1_Bias:v6_CovSand) %>% 
+  unite(Group, q, key) %>% 
+  spread(Group, value)
+  
+  kbl1 <- setNames(tbl1, c("Method", "X|Z", "C|Z",
+                   sub(".+_", "", tail(names(tbl1), -3)))) %>% 
+    kable(digits = c(0, 0, 0,
+                     2, 2, 2, 2, 1, 1,
+                     2, 2, 2, 2, 1, 1),
+          format = format,
+          align = "lccrrrrrrrrrrrr",
+          booktabs = T) %>%
+    kable_styling("striped") %>%
+    row_spec(row = 0, bold = TRUE)
+    add_header_above(c(" " = 3,
+                       "q = 0.4" = 6,
+                       "q = 0.8" = 6))
+  
+  return(kbl1)
+  
 }
 
 ```
 
 ```{r message = F}
 
-make.est.plot(param. = 1, q. = q[1])
-make.est.plot(param. = 2, q. = q[1])
-make.est.plot(param. = 3, q. = q[1])
-make.est.plot(param. = 4, q. = q[1])
+make.table.bothvar(1)
+make.table.bothvar(2)
+make.table.bothvar(3)
+make.table.bothvar(4)
 
 ```
 
 ```{r message = F}
 
-make.est.plot(param. = 1, q. = q[2])
-make.est.plot(param. = 2, q. = q[2])
-make.est.plot(param. = 3, q. = q[2])
-make.est.plot(param. = 4, q. = q[2])
+# table with sandwich variance only
+make.table <- function(param., format = "html") {
+  
+  tbl1 <- sim.out.long %>%
+    filter(param == param.) %>% 
+    group_by(q, method, nuis.x, nuis.c) %>% 
+    summarise(v1_Bias = 10*mean(B - B.true, na.rm = T),
+              v2_ESE = 10*sd(B, na.rm = T),
+              v3_ASE = 10*mean(V, na.rm = T),
+              v4_Cov = 100*mean(ci.if.cov, na.rm = T)) %>% 
+  gather(key, value, v1_Bias:v4_Cov) %>% 
+  unite(Group, q, key) %>% 
+  spread(Group, value)
+  
+  kbl1 <- setNames(tbl1, c("Method", "X|Z", "C|Z",
+                   sub(".+_", "", tail(names(tbl1), -3)))) %>% 
+    kable(digits = c(0, 0, 0,
+                     2, 2, 2, 1,
+                     2, 2, 2, 1),
+          format = format,
+          align = "cccrrrrrrrr",
+          booktabs = T) %>%
+    kable_styling("striped") %>%
+    row_spec(row = 0, bold = TRUE) %>% 
+    add_header_above(c(" " = 3,
+                       "q = 0.4" = 4,
+                       "q = 0.8" = 4))
+  
+  return(kbl1)
+  
+}
 
 ```
 
 ```{r message = F}
 
-make.est.plot(param. = 1, q. = q[3], est_cutoff = 0.2)
-make.est.plot(param. = 2, q. = q[3], est_cutoff = 2)
-make.est.plot(param. = 3, q. = q[3], est_cutoff = 1)
-make.est.plot(param. = 4, q. = q[3], est_cutoff = 1)
+make.table(1)
+make.table(2)
+make.table(3)
+make.table(4)
 
 ```
 
- 
- 
+```{r message = F}
+
+t2 <- make.table(2, format = "latex")
+
+```
+
+```{r message = F}
+
+# table with all parameters
+make.table.allparam <- function(format = "html") {
+  
+  tbl1 <- sim.out.long %>%
+    mutate(Param = ifelse(param == 1, "$\\beta_1$",
+                   ifelse(param == 2, "$\\beta_2$",
+                   ifelse(param == 3, "$\\beta_3$",
+                   ifelse(param == 4, "$\\log\\sigma^2$"))))) %>% 
+    group_by(q, Param, method, nuis.x, nuis.c) %>% 
+    summarise(v1_Bias = 10*mean(B - B.true, na.rm = T),
+              v2_ESE = 10*sd(B, na.rm = T),
+              v3_ASE = 10*mean(V, na.rm = T),
+              v4_Cov = 100*mean(ci.if.cov, na.rm = T)) %>% 
+  gather(key, value, v1_Bias:v4_Cov) %>% 
+  unite(Group, q, key) %>% 
+  spread(Group, value)
+  
+  kbl1 <- setNames(tbl1, c("Param", "Method", "X|Z", "C|Z",
+                   sub(".+_", "", tail(names(tbl1), -4)))) %>% 
+    kable(digits = c(0, 0, 0, 0,
+                     2, 2, 2, 1,
+                     2, 2, 2, 1),
+          format = format,
+          align = "ccccrrrrrrrr",
+          booktabs = T) %>%
+    kable_styling("striped") %>%
+    row_spec(row = 0, bold = TRUE) %>% 
+    add_header_above(c(" " = 4,
+                       "q = 0.4" = 4,
+                       "q = 0.8" = 4))
+  
+  return(kbl1)
+  
+}
+
+```
+
 ```{r}
 
-tbl <- sim.out.long %>%
-  group_by(n, q, s2, trueB2, specify.x.gamma, specify.c.gamma, method, param) %>% 
-  summarise(bias = 100*mean(estimate - B.true, na.rm = T),
-            emp.se = 100*sd(estimate, na.rm = T),
-            mse = 100*mean((estimate - B.true) ^ 2, na.rm = T)) %>% 
-  gather(key, value, bias:mse) %>% 
-  unite(Group, param, key) %>% 
-  spread(Group, value)
-
-setNames(tbl, sub(".+_", "", names(tbl))) %>% 
-  kable(digits = 2) %>%
-  kable_styling("striped") %>%
-  add_header_above(c(" " = 7,
-                     "beta_0" = 3,
-                     "beta_1" = 3,
-                     "beta_2" = 3,
-                     "log(var)" = 3))
+make.table.allparam()
+t3 <- make.table.allparam(format = "latex")
 
 ```
-
-```{r}
-
-# table summarizing for only beta2
-tbl <- sim.out.long %>%
-  filter(param == 2) %>% 
-  group_by(n, q, specify.x.gamma, specify.c.gamma, method) %>% 
-  summarise(bias = 100*mean(estimate - B.true, na.rm = T),
-            emp.se = 100*sd(estimate, na.rm = T),
-            mse = 100*mean((estimate - B.true) ^ 2, na.rm = T)) %>% 
-  gather(key, value, bias:mse) %>% 
-  unite(Group, specify.x.gamma, key) %>% 
-  spread(Group, value)
-
-setNames(tbl, sub(".+_", "", names(tbl))) %>% 
-  kable(digits = 2) %>%
-  kable_styling("striped") %>%
-  add_header_above(c(" " = 4,
-                     "X Inorrect" = 3,
-                     "X Correct" = 3))
-
-```
-
-
 

@@ -8,6 +8,12 @@ get.c.rate(q, x.rate, x.shape, c.shape)
 }
 \arguments{
 \item{q}{a number in \link{0,1}, the censoring proportion}
+
+\item{x.rate}{a positive number, rate parameter for gamma distribution of X}
+
+\item{x.shape}{a positive number, shape parameter for gamma distribution of X}
+
+\item{c.shape}{a positive number, shape parameter for gamma distribution of C}
 }
 \value{
 rate parameter for gamma distribution of C

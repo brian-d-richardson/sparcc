@@ -7,7 +7,7 @@
 
 # 2024-04-02
 
-# Purpose: tune parameters for efficient score function
+# Purpose: tune parameters for efficient score function when X, C are beta
 
 ###############################################################################
 ###############################################################################
@@ -37,25 +37,6 @@ x.gamma <- 1          # gamma parameter for X|Z
 c.gamma <- 4          # gamma parameter for C|Z
 x.correct <- T       # indicator for estimating X as gamma
 c.correct <- T       # indicator for estimating C as gamma
-
-# mean function mu(X, Z, B) = E(Y | X, Z)
-mu <- function(x, z, B) {
-  B[1] + B[2]*x + B[3]*z
-}
-
-# gradient of mu w.r.t. B
-d.mu <- function(x, z, B) {
-  cbind(1, x, z)
-}
-
-# Y|X, Z density
-fy <- function(y, x, z, B, s2) dnorm(x = y, mean = mu(x, z, B), sd = sqrt(s2))
-
-# full data score vector
-SF <- function(y, x, z, B, s2) {
-  cbind((y - mu(x, z, B)) * d.mu(x, z, B),
-        (y - mu(x, z, B)) ^ 2 - s2)
-}
 
 # generate data -----------------------------------------------------------
 
@@ -157,6 +138,8 @@ if (c.correct) {
 
 # search over grid of mx, mc, my ------------------------------------------
 
+run.search <- T
+
 # grid of possible values for mx and mc
 mx.grid <- seq(15, 55, by = 5)
 mc.grid <- seq(15, 55, by = 5)
@@ -166,63 +149,66 @@ search.in <- expand.grid(mx = mx.grid,
                          my = my.grid)
 
 # store Seff and computation time for each mx, mc, my (takes ~ 4 min to run)
-search.out <- pbvapply(
-  X = 1:nrow(search.in),
-  FUN.VALUE = numeric(8),
-  FUN = function(ii) {
+if (run.search) {
 
-    # X|Z quadrature
-    x.nds <- vapply(
-      X = zs,
-      FUN.VALUE = numeric(search.in$mx[ii]),
-      FUN = function(z) seq(1E-6, 1-1E-6, length = search.in$mx[ii]))
+  search.out <- pbvapply(
+    X = 1:nrow(search.in),
+    FUN.VALUE = numeric(8),
+    FUN = function(ii) {
 
-    x.wts <- vapply(
-      X = 1:length(zs),
-      FUN.VALUE = numeric(search.in$mx[ii]),
-      FUN = function(i) eta1(x.nds[,i], zs[i]) / sum(eta1(x.nds[,i], zs[i])))
+      # X|Z quadrature
+      x.nds <- vapply(
+        X = zs,
+        FUN.VALUE = numeric(search.in$mx[ii]),
+        FUN = function(z) seq(1E-6, 1-1E-6, length = search.in$mx[ii]))
 
-    # C|Z quadrature
-    c.nds <- vapply(
-      X = zs,
-      FUN.VALUE = numeric(search.in$mc[ii]),
-      FUN = function(z) seq(1E-6, 1-1E-6, length = search.in$mc[ii]))
+      x.wts <- vapply(
+        X = 1:length(zs),
+        FUN.VALUE = numeric(search.in$mx[ii]),
+        FUN = function(i) eta1(x.nds[,i], zs[i]) / sum(eta1(x.nds[,i], zs[i])))
 
-    c.wts <- vapply(
-      X = 1:length(zs),
-      FUN.VALUE = numeric(search.in$mc[ii]),
-      FUN = function(i) eta2(c.nds[,i], zs[i]) / sum(eta2(c.nds[,i], zs[i])))
+      # C|Z quadrature
+      c.nds <- vapply(
+        X = zs,
+        FUN.VALUE = numeric(search.in$mc[ii]),
+        FUN = function(z) seq(1E-6, 1-1E-6, length = search.in$mc[ii]))
 
-    # Y quadrature
-    gq <- gauss.quad(n = search.in$my[ii], kind = "hermite")
-    y.nds <- gq$nodes
-    y.wts <- gq$weights
+      c.wts <- vapply(
+        X = 1:length(zs),
+        FUN.VALUE = numeric(search.in$mc[ii]),
+        FUN = function(i) eta2(c.nds[,i], zs[i]) / sum(eta2(c.nds[,i], zs[i])))
 
-    # evaluate efficient score
-    st <- Sys.time()
-    Seff <- get.Seff(dat = dat, B = B, s2 = s2,
-                     args = list(mu = mu, d.mu = d.mu, SF = SF, fy = fy, eta1 = eta1,
-                                 x.nds = x.nds, x.wts = x.wts,
-                                 c.nds = c.nds, c.wts = c.wts,
-                                 y.nds = y.nds, y.wts = y.wts),
-                     return.sums = T)
-    et <- Sys.time()
+      # Y quadrature
+      gq <- gauss.quad(n = search.in$my[ii], kind = "hermite")
+      y.nds <- gq$nodes
+      y.wts <- gq$weights
 
-    return(c(mx = search.in$mx[ii],
-             mc = search.in$mc[ii],
-             my = search.in$my[ii],
-             Seff = Seff,
-             Time = et - st))
-  }) %>%
-  t() %>%
-  as.data.frame()
+      # evaluate efficient score
+      st <- Sys.time()
+      Seff <- get.Seff(dat = dat, B = B, ls2 = log(s2),
+                       args = list(mu = mu, d.mu = d.mu, SF = SF, fy = fy, eta1 = eta1,
+                                   x.nds = x.nds, x.wts = x.wts,
+                                   c.nds = c.nds, c.wts = c.wts,
+                                   y.nds = y.nds, y.wts = y.wts),
+                       return.sums = T)
+      et <- Sys.time()
 
-#write.csv(search.out, "dev_data/m_tuning_beta.csv", row.names = F)
+      return(c(mx = search.in$mx[ii],
+               mc = search.in$mc[ii],
+               my = search.in$my[ii],
+               Seff = Seff,
+               Time = et - st))
+    }) %>%
+    t() %>%
+    as.data.frame()
+
+  write.csv(search.out, "development/dev_data/m_tuning_beta.csv", row.names = F)
+}
 
 # plot results ------------------------------------------------------------
 
 # load results
-#search.out <- read.csv("dev_data/m_tuning_beta.csv")
+search.out <- read.csv("development/dev_data/m_tuning_beta.csv")
 search.out.long <- search.out %>%
   pivot_longer(cols = c(Seff1, Seff2, Time)) %>%
   mutate(mc = factor(mc),

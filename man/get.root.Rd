@@ -17,7 +17,7 @@ to be solved}
 \item{args}{list of additional arguments}
 }
 \value{
-root of estimating function
+a numeric vector, the root of the estimating function
 }
 \description{
 find root of estimating function

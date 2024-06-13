@@ -264,9 +264,7 @@ Beff <- get.root(dat = dat, score = get.Seff, start = Bcc,
 Beff
 
 # compare estimates
-rbind(c(B, ls2, B0, Bcc, Bmle, Beff))
-
-round(1E7 * (cbind(B0, Bcc, Bmle, Beff) - c(B, log(s2))) ^ 2)
+rbind(c(B, ls2), B0, Bcc, Bmle, Beff)
 
 
 

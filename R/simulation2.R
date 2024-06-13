@@ -1,15 +1,11 @@
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#' simulation setup 2
+#' simulation 2: assess methods over sequence of censoring proportion
 #'
-#' @inheritParams get.q
-#' @inheritParams gen.data
+#' @inheritParams get.q.beta
+#' @inheritParams gen.data.beta
 #'
 #' @param B2 a number, the coefficient for `X` in the outcome model
 #' @param s2 a number, the variance in the outcome model
-#' @param x.correct logical, an indicator of whether X should be estimated
-#' as beta (`T`) or uniform (`F`)
-#' @param c.correct logical, an indicator of whether C should be estimated
-#' as beta (`T`) or uniform (`F`)
 #' @param mx a positive number, the number of nodes in quadrature grid for X
 #' @param mc a positive number, the number of nodes in quadrature grid for C
 #' @param my a positive number, the number of nodes in quadrature grid for Y
@@ -22,13 +18,12 @@
 #' @export
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 sim2 <- function(n, q, B2, s2, x.theta.scale, x.gamma, c.gamma,
-                 x.correct, c.correct,
                  mx = 40, mc = 40, my = 4, seed) {
 
   ## for troublehsooting
   #library(devtools); load_all()
   #n = 8000; q = 0.8; B2 <- 10; s2 <- 1; x.theta.scale = 0.5; x.gamma <- 2; c.gamma <- 2;
-  #mx <- 40; mc <- 40; my <- 5; x.correct <- T;  c.correct <- T
+  #mx <- 40; mc <- 40; my <- 5;
 
   set.seed(seed)
 
@@ -48,88 +43,47 @@ sim2 <- function(n, q, B2, s2, x.theta.scale, x.gamma, c.gamma,
 
   ## estimate nuisance distributions
 
-  # estimate distribution of X|Z
-  if (x.correct == T) {
+  # estimate beta parameters at each level of Z
+  x.params.hat <- t(vapply(
+    X = 0:1,
+    FUN.VALUE = numeric(2),
+    FUN = function(z) {
+      est <- dat %>%
+        filter(Z == z) %>%
+        mutate(left = W,
+               right = ifelse(Delta == 1, W, NA)) %>%
+        dplyr::select(left, right) %>%
+        fitdistrplus::fitdistcens(distr = "beta")
+      return(est$estimate)
+    }))
 
-    # estimate beta parameters at each level of Z
-    x.params.hat <- t(vapply(
-      X = 0:1,
-      FUN.VALUE = numeric(2),
-      FUN = function(z) {
-        est <- dat %>%
-          filter(Z == z) %>%
-          mutate(left = W,
-                 right = ifelse(Delta == 1, W, NA)) %>%
-          dplyr::select(left, right) %>%
-          fitdistrplus::fitdistcens(distr = "beta")
-        return(est$estimate)
-      }))
-
-    # define estimated X|Z density
-    eta1 <- function(x, z) {
-      dbeta(x = x,
-            shape1 = x.params.hat[z + 1, "shape1"],
-            shape2 = x.params.hat[z + 1, "shape2"])
-    }
-
-  } else {
-
-    # misspecify: estimate marginal beta distribution
-    est <- dat %>%
-      mutate(left = W,
-             right = ifelse(Delta == 1, W, NA)) %>%
-      dplyr::select(left, right) %>%
-      fitdistrplus::fitdistcens(distr = "beta")
-    x.params.hat <- est$estimate
-
-    # define estimated X|Z density
-    eta1 <- function(x, z) {
-      dbeta(x = x,
-            shape1 = x.params.hat["shape1"],
-            shape2 = x.params.hat["shape2"])
-    }
+  # define estimated X|Z density
+  eta1 <- function(x, z) {
+    dbeta(x = x,
+          shape1 = x.params.hat[z + 1, "shape1"],
+          shape2 = x.params.hat[z + 1, "shape2"])
   }
 
-  # estimate distribution of C|Z
-  if (c.correct) {
 
-    # estimate beta parameters at each level of Z
-    c.params.hat <- t(vapply(
-      X = 0:1,
-      FUN.VALUE = numeric(2),
-      FUN = function(z) {
-        est <- dat %>%
-          filter(Z == z) %>%
-          mutate(left = W,
-                 right = ifelse(Delta == 0, W, NA)) %>%
-          dplyr::select(left, right) %>%
-          fitdistrplus::fitdistcens(distr = "beta")
-        return(est$estimate)
-      }))
+  # estimate beta parameters at each level of Z
+  c.params.hat <- t(vapply(
+    X = 0:1,
+    FUN.VALUE = numeric(2),
+    FUN = function(z) {
+      est <- dat %>%
+        filter(Z == z) %>%
+        mutate(left = W,
+               right = ifelse(Delta == 0, W, NA)) %>%
+        dplyr::select(left, right) %>%
+        fitdistrplus::fitdistcens(distr = "beta")
+      return(est$estimate)
+    }))
 
-    # define estimated C|Z density
-    eta2 <- function(c, z) {
-      dbeta(x = c,
-            shape1 = c.params.hat[z + 1, "shape1"],
-            shape2 = c.params.hat[z + 1, "shape2"])
-    }
-
-  } else {
-
-    # misspecify: estimate marginal beta distribution
-    est <- dat %>%
-      mutate(left = W,
-             right = ifelse(Delta == 0, W, NA)) %>%
-      dplyr::select(left, right) %>%
-      fitdistrplus::fitdistcens(distr = "beta")
-    c.params.hat <- est$estimate
-
-    # define estimated X|Z density
-    eta2 <- function(c, z) {
-      dbeta(x = c,
-            shape1 = c.params.hat["shape1"],
-            shape2 = c.params.hat["shape2"])
-    }
+  # define estimated C|Z density
+  eta2 <- function(c, z) {
+    dbeta(x = c,
+          shape1 = c.params.hat[z + 1, "shape1"],
+          shape2 = c.params.hat[z + 1, "shape2"])
   }
 
   ## create quadrature rules
@@ -169,21 +123,15 @@ sim2 <- function(n, q, B2, s2, x.theta.scale, x.gamma, c.gamma,
   # complete case
   Bcc <- get.root(dat = dat, score = get.Scc,
                   start = c(naive.lm$coef, log(var(naive.lm$resid))))
-  Vcc <- var.est(dat = datcc, theta = Bcc, args = list(),
-                 get.S = get.Scc, return.se = T)
 
   # oracle
   B0 <- get.root(dat = dat0, score = get.Scc, start = Bcc)
-  V0 <- var.est(dat = dat0, theta = B0, args = list(),
-                get.S = get.Scc, return.se = T)
 
   # MLE
   mle.args <- list(mu = mu, d.mu = d.mu, SF = SF, fy = fy,
                    x.nds = x.nds, x.wts = x.wts)
   Bmle <- get.root(dat = dat, score = get.Sml, start = Bcc,
                    args = mle.args)
-  Vmle <- var.est(dat = dat, theta = Bmle, args = mle.args,
-                  get.S = get.Sml, return.se = T)
 
   # semiparametric efficient score
   sp.args <- list(mu = mu, d.mu = d.mu, SF = SF, fy = fy,
@@ -193,39 +141,15 @@ sim2 <- function(n, q, B2, s2, x.theta.scale, x.gamma, c.gamma,
                   y.nds = y.nds, y.wts = y.wts)
   Beff <- get.root(dat = dat, score = get.Seff, start = Bcc,
                    args = sp.args)
-  Veff <- var.est(dat = dat, theta = Beff, args = sp.args,
-                  get.S = get.Seff, return.se = T)
 
   # return setup parameters and estimates
   ret <- c(n = n, q = q, B2 = B2, s2 = s2,
            x.theta.scale = x.theta.scale,
            x.gamma = x.gamma, c.gamma = c.gamma,
-           x.correct = x.correct,
-           c.correct = c.correct,
            mx = mx, mc = mc, my = my, seed = seed,
-           Bor = B0, Bcc = Bcc, Bml = Bmle, Bsp = Beff,
-           Vor = V0, Vcc = Vcc, Vml = Vmle, Vsp = Veff)
+           Bor = B0, Bcc = Bcc, Bml = Bmle, Bsp = Beff)
 
   return(ret)
-}
-
-# mean function mu(X, Z, B) = E(Y | X, Z)
-mu <- function(x, z, B) {
-  B[1] + B[2]*x + B[3]*z
-}
-
-# gradient of mu w.r.t. B
-d.mu <- function(x, z, B) {
-  cbind(1, x, z)
-}
-
-# Y|X, Z density
-fy <- function(y, x, z, B, s2) dnorm(x = y, mean = mu(x, z, B), sd = sqrt(s2))
-
-# full data score vector
-SF <- function(y, x, z, B, ls2) {
-  cbind((y - mu(x, z, B)) * d.mu(x, z, B),
-        (y - mu(x, z, B)) ^ 2 - exp(ls2))
 }
 
 

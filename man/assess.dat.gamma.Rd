@@ -17,6 +17,18 @@ assess.dat.gamma(
 )
 }
 \arguments{
+\item{n}{a positive integer, the sample size}
+
+\item{q}{a number in \link{0,1}, the censoring proportion}
+
+\item{B}{a vector of numbers, parameters in the outcome model}
+
+\item{s2}{a positive number, variance in the outcome model}
+
+\item{x.shape}{a positive number, shape parameter for gamma distribution of X}
+
+\item{c.shape}{a positive number, shape parameter for gamma distribution of C}
+
 \item{x.mean}{a positive number, the mean of X}
 }
 \value{

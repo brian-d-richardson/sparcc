@@ -4,14 +4,12 @@
 \alias{get.Seff}
 \title{semiparametric efficient score function}
 \usage{
-get.Seff(dat, B, s2, args, return.sums = T)
+get.Seff(dat, B, ls2, args, return.sums = T)
 }
 \arguments{
 \item{dat}{a data frame including columns Y, W, Delta, Z}
 
 \item{B}{a numeric vector, parameters in the outcome model}
-
-\item{s2}{a positive number, variance in the outcome model}
 
 \item{args}{list of additional arguments}
 
@@ -19,7 +17,7 @@ get.Seff(dat, B, s2, args, return.sums = T)
 to individual scores, default is TRUE}
 }
 \value{
-semiparametric efficient score function values
+individual or summed semiparametric efficient score function values
 }
 \description{
 semiparametric efficient score function
