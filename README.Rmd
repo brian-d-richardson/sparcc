@@ -28,57 +28,33 @@ devtools::install_github(repo = "brian-d-richardson/sparcc",
 library(sparcc)
 
 # other necessary packages
-library(conf)
+library(dplyr)
 
 ```
 
 The `sparcc` package contains functions to analyze data with a random right censored covariate using a semiparametric method. The methods implemented are introduced in the paper, "Doubly robust estimation under a random right censored covariate," which is currently in progress.
+
+The code implemented in this package is specific to the scenario where $Y|X,Z$ has a normal distribution with mean $\textrm{E}(Y|X,Z)=\beta_0+\beta_1X+\beta_2Z$, where $X$ is a censored covariate and $Z$ is an uncensored covariate.
 
 ## Example
 
 Below is an example of three estimation procedures used on a data set with a censored covariate. We first define parameters for data generation and estimation.
 
 ```{r}
+
 # define parameters -------------------------------------------------------
 
-set.seed(1)                # random number seed for reproducibility
-B <- c(1, 2)               # outcome model parameters
-s2 <- 1.1                  # Var(Y|X,Z)
-q <- 0.6                   # censoring proportion
-n <- 5000                  # sample size
-x.mean <- 0.5              # mean of X
-x.shape <- 1.1             # gamma shape parameter for X
-c.shape <- 1.5             # gamma shape parameter for C
-x.rate <- x.shape / x.mean # rate parameter for gamma distribution of X
-c.rate <- get.c.rate(      # rate parameter for gamma distribution of C
-  q = q,
-  x.rate = x.rate,
-  x.shape = x.shape,
-  c.shape = c.shape)
-mx <- 100                  # nodes in quadrature grid for X
-mc <- 15                   # nodes in quadrature grid for C
-my <- 3                    # nodes in quadrature grid for Y
-specify.x.gamma <- F       # indicator for estimating X as gamma
-specify.c.gamma <- T       # indicator for estimating C as gamma
-
-# mean function mu(X, B) = E(Y | X)
-mu <- function(x, B) {
-  B[1] + B[2]*x
-}
-
-# gradient of mu w.r.t. B
-d.mu <- function(x, B) {
-  cbind(1, x)
-}
-
-# Y density
-fy <- function(y, x, B, s2) dnorm(x = y, mean = mu(x, B), sd = sqrt(s2))
-
-# full data score vector
-SF <- function(y, x, B, s2) {
-  cbind((y - mu(x, B)) * d.mu(x, B),
-        (y - mu(x, B)) ^ 2 - s2)
-}
+set.seed(123)                 # random number seed for reproducibility
+n <- 8000                     # sample size
+q <- 0.8                      # censoring proportion
+B <- c(1, 10, 2)              # outcome model parameters
+s2 <- 1                       # Var(Y|X,Z)
+x.thetas <- 0.5 * c(-1, 1)    # parameters governing X|Z and C|Z
+x.gamma <- 1
+c.gamma <- 2
+mx <- 40                      # number of nodes in quadrature grid for X|Z
+mc <- 40                      # number of nodes in quadrature grid for C|Z
+my <- 5                       # number of nodes in quadrature grid for Y|X,Z
 
 ```
 
@@ -88,69 +64,94 @@ We now generate data using the built in `gen.data` function. This returns a list
 (iii) `dat0`: The oracle data, a version of the observed data where no observations are censored (essentially setting `C` equal to infinity for all observations)
 (iv) `datcc`: The complete case data, or the subset of `dat` with `Delta == 1`.
 
+For this example, $X|Z$ and $C|Z$ follow beta distributions leading to the desired censoring proportion $q=\textrm{P}(X>C)$.
+
 ```{r}
 
-dat.list <- gen.data(n = n, q = q, B = B, s2 = s2,
-                     x.rate = x.rate, x.shape = x.shape,
-                     c.rate = c.rate, c.shape = c.shape)
+dat.list <- gen.data.beta(n = n, q = q, B = B, s2 = s2,
+                          x.thetas = x.thetas, x.gamma = x.gamma, c.gamma)
 datf <- dat.list$datf          # full data
 dat0 <- dat.list$dat0          # oracle data
 dat <- dat.list$dat            # observed data
 datcc <- dat.list$datcc        # complete case data
+zs <- sort(unique(dat$Z))      # unique z values
 
 ```
 
-Using the observed data, we can estimated the nuisance distributions of $X$ and $C$. If the prespecified parameter `specify.x.gamma` is `TRUE`, then we (correctly) model $X$ with a gamma distribution. Else, we (incorrectly) model $X$ with an exponential distribution. The same holds for specifying a model for $C$ via `specify.c.gamma`.
+Using the observed data, we can estimate the nuisance distributions of $X|Z$ and $C|Z$. To illustrate the consequences of model misspecification, we incorrectly model $X|Z$ with marginal beta distribution, while it truly follows a conditional beta distribution. We correctly specify $C|Z$ as conditional beta.
 
-In this example, we incorrectly model $X$ and correctly model $C$.
 
 ```{r}
 
-# estimate distribution of X
-if (specify.x.gamma) {
-  x.param.hat <- gammaMLE(yi = dat$W,                      # gamma parameters
-                          si = dat$Delta,
-                          scale = F)$estimate
-  eta1 <- function(x) dgamma(x = x,                        # gamma density
-                             shape = x.param.hat["shape"],
-                             rate = x.param.hat["rate"])
-} else {
-  x.rate.hat <- mean(dat$Delta) / mean(dat$W)      # exponential rate parameter
-  eta1 <- function(x) dexp(x, rate = x.rate.hat)   # exponential density
+## estimated parameters for X|Z
+x.fit <- dat %>%
+  mutate(left = W,
+           right = ifelse(Delta == 1, W, NA)) %>%
+  dplyr::select(left, right) %>%
+  fitdistrplus::fitdistcens(distr = "beta")
+x.params.hat <- x.fit$estimate
+
+## estimated density of X|Z
+eta1 <- function(x, z) {
+  dbeta(x = x,
+        shape1 = x.params.hat["shape1"],
+        shape2 = x.params.hat["shape2"])
 }
 
-# estimate distribution of C
-if (specify.c.gamma) {
-  c.param.hat <- gammaMLE(yi = dat$W,                      # gamma parameters
-                          si = 1 - dat$Delta,
-                          scale = F)$estimate
-  eta2 <- function(x) dgamma(x = x,                        # gamma density
-                             shape = c.param.hat["shape"],
-                             rate = c.param.hat["rate"])
-} else {
-  c.rate.hat <- mean(1 - dat$Delta) / mean(dat$W)  # exponential rate parameter
-  eta2 <- function(x) dexp(x, rate = c.rate.hat)   # exponential density
+## estimated parameters for C|Z
+c.params.hat <- t(vapply(
+    X = 0:1,
+    FUN.VALUE = numeric(2),
+    FUN = function(z) {
+      est <- dat %>%
+        filter(Z == z) %>%
+        mutate(left = W,
+               right = ifelse(Delta == 0, W, NA)) %>%
+        dplyr::select(left, right) %>%
+        fitdistrplus::fitdistcens(distr = "beta")
+      return(est$estimate)
+    }))
+
+## estimated density of C|Z
+eta2 <- function(c, z) {
+  dbeta(x = c,
+        shape1 = c.params.hat[z + 1, "shape1"],
+        shape2 = c.params.hat[z + 1, "shape2"])
 }
 
 ```
 
-Using the estimated densities, we then create quadrature rules for $X$ and $C$. Additionally, we create a Gauss-Hermite quadrature rule for $Y$.
+Using the estimated densities, we then create quadrature rules for $X|Z$ and $C|Z$. Additionally, we create a Gauss-Hermite quadrature rule for $Y$.
 
 ```{r}
 
+## X|Z quadrature nodes
+x.nds <- vapply(
+  X = zs,
+  FUN.VALUE = numeric(mx),
+  FUN = function(z) seq(1E-6, 1-1E-6, length = mx))
 
-x.upper <- max(datf$X)  # oracle max
-c.upper <- max(datf$C)
+## X|Z quadrature weights
+x.wts <- vapply(
+  X = 1:length(zs),
+  FUN.VALUE = numeric(mx),
+  FUN = function(i) eta1(x.nds[,i], zs[i]) /
+    sum(eta1(x.nds[,i], zs[i])))
 
-# X quadrature
-x.nds <- seq(10^-5, x.upper, length = mx)
-x.wts <- eta1(x.nds) / sum(eta1(x.nds))
+## C|Z quadrature nodes
+c.nds <- vapply(
+  X = zs,
+  FUN.VALUE = numeric(mc),
+  FUN = function(z) seq(1E-6, 1-1E-6, length = mc))
 
-# C quadrature
-c.nds <- seq(10^-5, c.upper, length = mc)
-c.wts <- eta2(c.nds) / sum(eta2(c.nds))
+## X|Z quadrature weights
+c.wts <- vapply(
+  X = 1:length(zs),
+  FUN.VALUE = numeric(mc),
+  FUN = function(i) eta2(c.nds[,i], zs[i]) /
+    sum(eta2(c.nds[,i], zs[i])))
 
-# Y quadrature
+## Y|X,Z quadrature
 gq <- statmod::gauss.quad(n = my, kind = "hermite")
 y.nds <- gq$nodes
 y.wts <- gq$weights
@@ -164,43 +165,83 @@ We can now estimate the parameters of interest in the outcome model using:
 (iii) maximum likelihood estimation
 (iv) semiparametric efficient estimation
 
-Note that, since we misspecified $X$, the MLE is not a consistent estimator. The semiparametric method on the other hand remains consistent since the distribution for $C$ is correctly specified as gamma.
+Note that, since we misspecified $X|Z$, the MLE is not a consistent estimator. The semiparametric method on the other hand remains consistent since the distribution for $C|Z$ is correctly specified as gamma.
 
 ```{r}
 
-# complete case lm to get starting value
-naive.lm <- lm(Y ~ W, data = datcc)
+## complete case linear model to get starting value
+naive.lm <- lm(Y ~ W + Z, data = datcc)
 
-# complete case
-Bcc <- get.root(dat = dat, score = get.Scc,
-                start = c(naive.lm$coef, log(var(naive.lm$resid))))
+## complete case
+B.cc <- get.root(dat = dat, score = get.Scc,
+                 start = c(naive.lm$coef, log(var(naive.lm$resid))))
 
-# oracle
-B0 <- get.root(dat = dat0, score = get.Scc,
-               start = Bcc)
-
-# MLE
-Bmle <- get.root(dat = dat, score = get.Sml, start = Bcc,
-                 args = list(mu = mu, d.mu = d.mu, SF = SF, fy = fy,
-                             x.nds = x.nds, x.wts = x.wts))
-
-# semiparametric efficient score
-Beff <- get.root(dat = dat, score = get.Seff, start = Bcc,
-                 args = list(mu = mu, d.mu = d.mu, SF = SF, fy = fy,
-                             eta1 = eta1,
-                             x.nds = x.nds, x.wts = x.wts,
-                             c.nds = c.nds, c.wts = c.wts,
-                             y.nds = y.nds, y.wts = y.wts))
+round(B.cc, 2)
 
 ```
 
-We then compare estimates. Note that the MLE estimate of the coefficient for $X$ is the furthest from the truth out of the four estimators. This makes sense since the MLE is inconsistent under a misspecified model for $X$. Note also that the complete case is further from the truth than the oracle and the semiparametric.
+```{r}
+
+## oracle
+B.or <- get.root(dat = dat0, score = get.Scc, start = B.cc)
+
+round(B.or, 2)
+
+```
+
+The MLE requires the additional arguments `x.nds` and `x.wts`, corresponding to the nodes and weights in the quadrature rule for $X|Z$. These are passed to the `get.root` function as named items in the `args` list.
+
+```{r}
+
+## MLE
+mle.args <- list(x.nds = x.nds, x.wts = x.wts)
+B.mle <- get.root(dat = dat, score = get.Sml, start = B.cc,
+                  args = mle.args)
+
+round(B.mle, 2)
+
+```
+
+The MLE requires the additional arguments `x.nds`, `x.wts`, `c.nds`, and `c.wts`, corresponding to the nodes and weights in the quadrature rules for $X|Z$ and $C|Z$.
+
+```{r}
+
+## semiparametric efficient estimator
+sp.args <- list(x.nds = x.nds, x.wts = x.wts,
+                c.nds = c.nds, c.wts = c.wts,
+                y.nds = y.nds, y.wts = y.wts)
+B.sp <- get.root(dat = dat, score = get.Seff, start = B.cc,
+                 args = sp.args)
+
+round(B.sp, 2)
+
+```
+
+We then compare estimates. Note that the MLE estimates are far from the truth,. which sense since the MLE is inconsistent under a misspecified model for $X|Z$.
 
 ```{r}
 
 # compare estimates
-rbind(c(B, log(s2)), B0, Bcc, Bmle, Beff)
+round(rbind(c(B, log(s2)), B.or, B.cc, B.mle, B.sp), 2)
 
 ```
 
+Finally, we can compute standard errors for the different estimators based on influence function variance estimators. For the MLE, this type of variance estimation is not valid and so is not included.
 
+```{r}
+
+# complete case
+SE.cc <- var.est(dat = datcc, theta = B.cc, args = list(),
+                 get.S = get.Scc, return.se = T)
+
+## oracle
+SE.or <- var.est(dat = dat0, theta = B.or, args = list(),
+                 get.S = get.Scc, return.se = T)
+
+## semiparametric efficient
+SE.sp <- var.est(dat = dat, theta = B.sp,
+                 args = sp.args, get.S = get.Seff, return.se = T)
+
+round(rbind(SE.or, SE.cc, SE.sp), 3)
+
+```
