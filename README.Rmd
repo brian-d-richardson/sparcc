@@ -230,7 +230,7 @@ Finally, we can compute standard errors for the different estimators using the s
 
 ```{r}
 
-# complete case
+## complete case
 SE.cc <- var.est.sand(dat = datcc, theta = B.cc, args = list(),
                       n = sum(dat$Delta),
                       get.S = get.Scc, return.se = T)
