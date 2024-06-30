@@ -4,7 +4,7 @@
 \alias{SF}
 \title{Full data score function}
 \usage{
-SF(y, x, z, B, ls2)
+SF(y, x, z, B, ls2, xz.interaction)
 }
 \arguments{
 \item{x}{a numeric vector, covariate values}
@@ -14,6 +14,8 @@ SF(y, x, z, B, ls2)
 \item{B}{a numeric vector, parameter value}
 
 \item{ls2}{a number, the log of the variance of Y|X,Z}
+
+\item{xz.interaction}{logical indicator for including X*Z interaction}
 }
 \description{
 Full data score function

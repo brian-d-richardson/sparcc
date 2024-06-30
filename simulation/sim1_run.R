@@ -38,9 +38,9 @@ load_all()
 base.seed <- 10^6 * as.integer(args) # baseline seed (specific to cluster)
 len.out <- 85                        # output size
 
-n.sim <- 1#100                         # number of sims per cluster
+n.sim <- 100                         # number of sims per cluster
 n <- 8000                            # sample size
-q <- 0.4#c(0.4, 0.8)                     # censoring proportion
+q <- c(0.4, 0.8)                     # censoring proportion
 
 # run simulations ---------------------------------------------------------
 
@@ -56,7 +56,7 @@ sim.out <- pbapply::pbvapply(
 
     tryCatch(
       expr =
-        sim1_v2(
+        sim1(
         n = sim.in$n[ii],
         q = sim.in$q[ii],
         seed = sim.in$sim.id[ii]),

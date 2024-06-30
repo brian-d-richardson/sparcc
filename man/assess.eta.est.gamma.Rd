@@ -32,11 +32,11 @@ assess.eta.est.gamma(
 
 \item{c.shape}{a positive number, shape parameter for gamma distribution of C}
 
-\item{specify.x.gamma}{logical, an indicator of whether X should be estimated
-as gamma (\code{T}) or exponential (\code{F})}
+\item{specify.x.gamma}{logical, an indicator of whether X should be correctly
+specified as gamma as opposed to incorrectly specified as exponential}
 
-\item{specify.c.gamma}{logical, an indicator of whether C should be estimated
-as gamma (\code{T}) or exponential (\code{F})}
+\item{specify.c.gamma}{logical, an indicator of whether C should be correctly
+specified as gamma as opposed to incorrectly specified as exponential}
 
 \item{x.mean}{a positive number, the mean of X}
 }

@@ -4,7 +4,20 @@
 \alias{get.M}
 \title{compute M matrix in integral equation}
 \usage{
-get.M(B, s2, mu, fy, z, x.nds, x.wts, c.nds, c.wts, y.nds, y.wts)
+get.M(
+  B,
+  s2,
+  mu,
+  fy,
+  z,
+  x.nds,
+  x.wts,
+  c.nds,
+  c.wts,
+  y.nds,
+  y.wts,
+  xz.interaction
+)
 }
 \arguments{
 \item{B}{a numeric vector, parameters in the outcome model}

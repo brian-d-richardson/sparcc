@@ -2,7 +2,7 @@
 % Please edit documentation in R/misc_helpers.R
 \name{assess.dat.beta}
 \alias{assess.dat.beta}
-\title{Assess estimation of eta when X and C have beta distributions}
+\title{Assess data generation with X|Z and C|Z having beta distributions}
 \usage{
 assess.dat.beta(n, q, B, s2, x.thetas, x.gamma, c.gamma, x.correct, c.correct)
 }
@@ -19,22 +19,11 @@ assess.dat.beta(n, q, B, s2, x.thetas, x.gamma, c.gamma, x.correct, c.correct)
 
 \item{c.gamma}{a positive number, gamma parameter for C}
 
-\item{x.correct}{logical, an indicator of whether X|Z should be correctly
-specified as conditional beta as opposed to incorrectly specified as marginal
-beta}
-
-\item{c.correct}{logical, an indicator of whether C|Z should be correctly
-specified as conditional beta as opposed to incorrectly specified as marginal
-beta}
-
 \item{x.mean}{a positive number, the mean of X}
-
-\item{n.rep}{a positive integer, the number of simulated replicates}
 }
 \value{
-plot of empirical distribution of estimated parameters for eta1 and
-eta2
+a plot of generated data
 }
 \description{
-Assess estimation of eta when X and C have beta distributions
+Assess data generation with X|Z and C|Z having beta distributions
 }

@@ -4,12 +4,14 @@
 \alias{get.Sml}
 \title{MLE score function}
 \usage{
-get.Sml(dat, B, ls2, args, return.sums = T)
+get.Sml(dat, B, ls2, theta = NULL, args, return.sums = T)
 }
 \arguments{
 \item{dat}{a data frame including columns Y, W, Delta, Z}
 
 \item{B}{a numeric vector, parameters in the outcome model}
+
+\item{theta}{an optional numeric vector, c(B, ls2)}
 
 \item{args}{list of additional arguments}
 

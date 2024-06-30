@@ -4,7 +4,7 @@
 \alias{d.mu}
 \title{gradient of linear mean function mu w.r.t. B}
 \usage{
-d.mu(x, z, B)
+d.mu(x, z, B, xz.interaction)
 }
 \arguments{
 \item{x}{a numeric vector, covariate values}
@@ -12,6 +12,8 @@ d.mu(x, z, B)
 \item{z}{a numeric vector, covariate values}
 
 \item{B}{a numeric vector, parameter value}
+
+\item{xz.interaction}{logical indicator for including X*Z interaction}
 }
 \value{
 a numeric matrix, the gradient of mu w.r.t. B

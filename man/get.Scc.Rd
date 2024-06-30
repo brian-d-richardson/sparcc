@@ -4,12 +4,21 @@
 \alias{get.Scc}
 \title{complete case score function}
 \usage{
-get.Scc(dat, B, ls2, args, return.sums = T)
+get.Scc(
+  dat,
+  B,
+  ls2,
+  theta = NULL,
+  args = list(xz.interaction = F),
+  return.sums = T
+)
 }
 \arguments{
 \item{dat}{a data frame including columns Y, W, Delta, Z}
 
 \item{B}{a numeric vector, parameters in the outcome model}
+
+\item{theta}{an optional numeric vector, c(B, ls2)}
 
 \item{args}{list of additional arguments}
 

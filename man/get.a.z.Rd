@@ -4,7 +4,22 @@
 \alias{get.a.z}
 \title{compute a function at nodes for a single level of z}
 \usage{
-get.a.z(B, s2, mu, d.mu, fy, SF, z, x.nds, x.wts, c.nds, c.wts, y.wts, y.nds)
+get.a.z(
+  B,
+  s2,
+  mu,
+  d.mu,
+  fy,
+  SF,
+  z,
+  x.nds,
+  x.wts,
+  c.nds,
+  c.wts,
+  y.wts,
+  y.nds,
+  xz.interaction
+)
 }
 \arguments{
 \item{B}{a numeric vector, parameters in the outcome model}

@@ -4,7 +4,7 @@
 \alias{mu}
 \title{linear mean function mu(X, Z, B) = E(Y | X, Z)}
 \usage{
-mu(x, z, B)
+mu(x, z, B, xz.interaction)
 }
 \arguments{
 \item{x}{a numeric vector, covariate values}
@@ -12,6 +12,8 @@ mu(x, z, B)
 \item{z}{a numeric vector, covariate values}
 
 \item{B}{a numeric vector, parameter value}
+
+\item{xz.interaction}{logical indicator for including X*Z interaction}
 }
 \value{
 a numeric vector, mean values

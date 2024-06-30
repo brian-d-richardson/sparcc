@@ -4,7 +4,7 @@
 \alias{fy}
 \title{normal density for Y|X,Z}
 \usage{
-fy(y, x, z, B, s2)
+fy(y, x, z, B, s2, xz.interaction)
 }
 \arguments{
 \item{y}{a numeric vector, outcome values}
@@ -16,6 +16,8 @@ fy(y, x, z, B, s2)
 \item{B}{a numeric vector, parameter value}
 
 \item{s2}{a positive number, the variance of Y|X,Z}
+
+\item{xz.interaction}{logical indicator for including X*Z interaction}
 }
 \description{
 normal density for Y|X,Z

@@ -2,10 +2,20 @@
 #' Fit spline model with censored outcome data
 #'
 #' @param dat data frame, the observed data
-#' @param m.knots
-#' @param deg
+#' @param m.knots a positive integer, the number of knots for the spline model
+#' @param deg a positive integer, the degree of the spline basis functions
 #'
-#' @return a list
+#' @return a list including
+#' \itemize{
+#' \item{`alpha`: a matrix, unconstrained spline model parameters}
+#' \item{`theta`: a matrix, unconstrained spline model parameters}
+#' \item{`dens`: a function, the estimated density}
+#' \item{`logf`: a function, the log-likelihood}
+#' \item{`glogf`: a function, gradient of the log-likelihood}
+#' \item{`deg`: a positive integer, degree of the spline basis functions}
+#' \item{`knots`: a numeric vector, knots used in the spline model}
+#' \item{`wts`: a numeric vector, weights used in the theta-to-alpha transformation}
+#' }
 #'
 #' @export
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -195,9 +205,10 @@ fit.spline <- function(dat, m.knots, deg) {
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #' Softmax transformation
 #'
-#' @param x
+#' @param x a numeric vector, values to be transformed
+#' @param wts a numeric vector, weights
 #'
-#' @return
+#' @return a numeric vector
 #'
 #' @export
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -208,9 +219,9 @@ softmax <- function(x, wts) {
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #' Inverse softmax transformation
 #'
-#' @param x
+#' @inheritParams softmax
 #'
-#' @return
+#' @return a numeric vector
 #'
 #' @export
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -223,9 +234,9 @@ inv.softmax <- function(x, wts) {
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #' Derivative of softmax transformation
 #'
-#' @param x
+#' @inheritParams softmax
 #'
-#' @return
+#' @return a numeric matrix
 #'
 #' @export
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
