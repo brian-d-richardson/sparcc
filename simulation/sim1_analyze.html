@@ -11,7 +11,7 @@
 
 <meta name="author" content="Brian Richardson" />
 
-<meta name="date" content="2024-06-13" />
+<meta name="date" content="2024-06-30" />
 
 <title>Sparcc Simulation 1</title>
 
@@ -1469,7 +1469,7 @@ display: none;
 
 <h1 class="title toc-ignore">Sparcc Simulation 1</h1>
 <h4 class="author">Brian Richardson</h4>
-<h4 class="date">06/13/2024</h4>
+<h4 class="date">06/30/2024</h4>
 
 </div>
 
@@ -1533,7 +1533,7 @@ colnames(sim.out) &lt;- gsub(&quot;B2&quot;, &quot;trueB2&quot;, colnames(sim.ou
 
 # make long data frame
 sim.out.long &lt;- sim.out %&gt;% 
-  pivot_longer(cols = starts_with(c(&quot;B&quot;, &quot;V&quot;, &quot;S.&quot;)),
+  pivot_longer(cols = starts_with(c(&quot;B&quot;, &quot;V&quot;)),
                names_to = &quot;method.param&quot;,
                values_to = &quot;estimate&quot;) %&gt;% 
   mutate(estimate = ifelse(abs(estimate) &gt; 100, NA, estimate),
@@ -1558,12 +1558,9 @@ sim.out.long &lt;- sim.out %&gt;%
               values_from = estimate,
               id_cols = c(clust, n, q, method, nuis.x, nuis.c,
                           param, B.true, id)) %&gt;% 
-  mutate(ci.if.lower = B - qnorm(0.975) * V,
-         ci.if.upper = B + qnorm(0.975) * V,
-         ci.if.cov = B.true &gt;= ci.if.lower &amp; B.true &lt;= ci.if.upper,
-         ci.sand.lower = B - qnorm(0.975) * S,
-         ci.sand.upper = B + qnorm(0.975) * S,
-         ci.sand.cov = B.true &gt;= ci.sand.lower &amp; B.true &lt;= ci.sand.upper)</code></pre>
+  mutate(ci.lower = B - qnorm(0.975) * V,
+         ci.upper = B + qnorm(0.975) * V,
+         ci.cov = B.true &gt;= ci.lower &amp; B.true &lt;= ci.upper)</code></pre>
 </div>
 <div id="simulation-results" class="section level2">
 <h2>Simulation Results</h2>
@@ -1844,144 +1841,6 @@ Oracle
 8000
 </td>
 <td style="text-align:left;">
-Semipar
-</td>
-<td style="text-align:left;">
-T
-</td>
-<td style="text-align:left;">
-T
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.002
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-0.8
-</td>
-<td style="text-align:right;">
-8000
-</td>
-<td style="text-align:left;">
-Semipar
-</td>
-<td style="text-align:left;">
-T
-</td>
-<td style="text-align:left;">
-F
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.002
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-0.8
-</td>
-<td style="text-align:right;">
-8000
-</td>
-<td style="text-align:left;">
-Semipar
-</td>
-<td style="text-align:left;">
-F
-</td>
-<td style="text-align:left;">
-T
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.002
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-0.8
-</td>
-<td style="text-align:right;">
-8000
-</td>
-<td style="text-align:left;">
-Semipar
-</td>
-<td style="text-align:left;">
-F
-</td>
-<td style="text-align:left;">
-F
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.002
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-0.8
-</td>
-<td style="text-align:right;">
-8000
-</td>
-<td style="text-align:left;">
-Semipar
-</td>
-<td style="text-align:left;">
-Nonpar
-</td>
-<td style="text-align:left;">
-Nonpar
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.002
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-0.8
-</td>
-<td style="text-align:right;">
-8000
-</td>
-<td style="text-align:left;">
-MLE
-</td>
-<td style="text-align:left;">
-T
-</td>
-<td style="text-align:left;">
-<ul>
-<li></td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.002
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-0.8
-</td>
-<td style="text-align:right;">
-8000
-</td>
-<td style="text-align:left;">
 MLE
 </td>
 <td style="text-align:left;">
@@ -1991,89 +1850,14 @@ F
 <ul>
 <li></td>
 <td style="text-align:right;">
-4
+3
 </td>
 <td style="text-align:right;">
-0.004
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-0.8
-</td>
-<td style="text-align:right;">
-8000
-</td>
-<td style="text-align:left;">
-MLE
-</td>
-<td style="text-align:left;">
-Nonpar
-</td>
-<td style="text-align:left;">
-<ul>
-<li></td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.002
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-0.8
-</td>
-<td style="text-align:right;">
-8000
-</td>
-<td style="text-align:left;">
-CC
-</td>
-<td style="text-align:left;">
-<ul>
-<li></td>
-<td style="text-align:left;">
-<ul>
-<li></td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.002
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-0.8
-</td>
-<td style="text-align:right;">
-8000
-</td>
-<td style="text-align:left;">
-Oracle
-</td>
-<td style="text-align:left;">
-<ul>
-<li></td>
-<td style="text-align:left;">
-<ul>
-<li></td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-0.002
+0.003
 </td>
 </tr>
 </tbody>
 </table></li>
-</ul></li>
-</ul></li>
-</ul></li>
-</ul></li>
-</ul></li>
-</ul></li>
 </ul></li>
 </ul></li>
 </ul></li>
@@ -2088,2164 +1872,7 @@ Oracle
 <p>In the table, bias, variance, and MSE are all multiplied by a factor
 of 100. “Neither” means neither nuisance model is correct, “X Only”
 means only <span class="math inline">\(X|Z\)</span> is correct, etc.</p>
-<pre class="r"><code># table with both types of variance estimators
-make.table.bothvar &lt;- function(param., format = &quot;html&quot;) {
-  
-  tbl1 &lt;- sim.out.long %&gt;%
-    filter(param == param.) %&gt;% 
-    group_by(q, method, nuis.x, nuis.c) %&gt;% 
-    summarise(v1_Bias = 10*mean(B - B.true, na.rm = T),
-              v2_ESE = 10*sd(B, na.rm = T),
-              v3_ASEIF = 10*mean(V, na.rm = T),
-              v4_ASESand = 10*mean(S, na.rm = T),
-              v5_CovIF = 100*mean(ci.if.cov, na.rm = T),
-              v6_CovSand = 100*mean(ci.sand.cov, na.rm = T)) %&gt;% 
-  gather(key, value, v1_Bias:v6_CovSand) %&gt;% 
-  unite(Group, q, key) %&gt;% 
-  spread(Group, value)
-  
-  kbl1 &lt;- setNames(tbl1, c(&quot;Method&quot;, &quot;X|Z&quot;, &quot;C|Z&quot;,
-                   sub(&quot;.+_&quot;, &quot;&quot;, tail(names(tbl1), -3)))) %&gt;% 
-    kable(digits = c(0, 0, 0,
-                     2, 2, 2, 2, 1, 1,
-                     2, 2, 2, 2, 1, 1),
-          format = format,
-          align = &quot;lccrrrrrrrrrrrr&quot;,
-          booktabs = T) %&gt;%
-    kable_styling(&quot;striped&quot;) %&gt;%
-    row_spec(row = 0, bold = TRUE)
-    add_header_above(c(&quot; &quot; = 3,
-                       &quot;q = 0.4&quot; = 6,
-                       &quot;q = 0.8&quot; = 6))
-  
-  return(kbl1)
-  
-}</code></pre>
-<pre class="r"><code>make.table.bothvar(1)</code></pre>
-<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:left;font-weight: bold;">
-Method
-</th>
-<th style="text-align:center;font-weight: bold;">
-X|Z
-</th>
-<th style="text-align:center;font-weight: bold;">
-C|Z
-</th>
-<th style="text-align:right;font-weight: bold;">
-Bias
-</th>
-<th style="text-align:right;font-weight: bold;">
-ESE
-</th>
-<th style="text-align:right;font-weight: bold;">
-ASEIF
-</th>
-<th style="text-align:right;font-weight: bold;">
-ASESand
-</th>
-<th style="text-align:right;font-weight: bold;">
-CovIF
-</th>
-<th style="text-align:right;font-weight: bold;">
-CovSand
-</th>
-<th style="text-align:right;font-weight: bold;">
-Bias
-</th>
-<th style="text-align:right;font-weight: bold;">
-ESE
-</th>
-<th style="text-align:right;font-weight: bold;">
-ASEIF
-</th>
-<th style="text-align:right;font-weight: bold;">
-ASESand
-</th>
-<th style="text-align:right;font-weight: bold;">
-CovIF
-</th>
-<th style="text-align:right;font-weight: bold;">
-CovSand
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-Semipar
-</td>
-<td style="text-align:center;">
-T
-</td>
-<td style="text-align:center;">
-T
-</td>
-<td style="text-align:right;">
--0.04
-</td>
-<td style="text-align:right;">
-0.47
-</td>
-<td style="text-align:right;">
-0.47
-</td>
-<td style="text-align:right;">
-0.47
-</td>
-<td style="text-align:right;">
-94.1
-</td>
-<td style="text-align:right;">
-93.9
-</td>
-<td style="text-align:right;">
--0.05
-</td>
-<td style="text-align:right;">
-0.68
-</td>
-<td style="text-align:right;">
-0.75
-</td>
-<td style="text-align:right;">
-0.69
-</td>
-<td style="text-align:right;">
-96.5
-</td>
-<td style="text-align:right;">
-95.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Semipar
-</td>
-<td style="text-align:center;">
-T
-</td>
-<td style="text-align:center;">
-F
-</td>
-<td style="text-align:right;">
--0.04
-</td>
-<td style="text-align:right;">
-0.47
-</td>
-<td style="text-align:right;">
-0.47
-</td>
-<td style="text-align:right;">
-0.47
-</td>
-<td style="text-align:right;">
-94.1
-</td>
-<td style="text-align:right;">
-94.0
-</td>
-<td style="text-align:right;">
--0.05
-</td>
-<td style="text-align:right;">
-0.69
-</td>
-<td style="text-align:right;">
-0.75
-</td>
-<td style="text-align:right;">
-0.69
-</td>
-<td style="text-align:right;">
-96.5
-</td>
-<td style="text-align:right;">
-95.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Semipar
-</td>
-<td style="text-align:center;">
-F
-</td>
-<td style="text-align:center;">
-T
-</td>
-<td style="text-align:right;">
--0.03
-</td>
-<td style="text-align:right;">
-0.47
-</td>
-<td style="text-align:right;">
-0.47
-</td>
-<td style="text-align:right;">
-0.47
-</td>
-<td style="text-align:right;">
-94.3
-</td>
-<td style="text-align:right;">
-94.0
-</td>
-<td style="text-align:right;">
-0.06
-</td>
-<td style="text-align:right;">
-0.73
-</td>
-<td style="text-align:right;">
-0.75
-</td>
-<td style="text-align:right;">
-0.74
-</td>
-<td style="text-align:right;">
-96.2
-</td>
-<td style="text-align:right;">
-95.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Semipar
-</td>
-<td style="text-align:center;">
-F
-</td>
-<td style="text-align:center;">
-F
-</td>
-<td style="text-align:right;">
--0.03
-</td>
-<td style="text-align:right;">
-0.47
-</td>
-<td style="text-align:right;">
-0.47
-</td>
-<td style="text-align:right;">
-0.47
-</td>
-<td style="text-align:right;">
-94.2
-</td>
-<td style="text-align:right;">
-94.1
-</td>
-<td style="text-align:right;">
-0.07
-</td>
-<td style="text-align:right;">
-0.73
-</td>
-<td style="text-align:right;">
-0.75
-</td>
-<td style="text-align:right;">
-0.74
-</td>
-<td style="text-align:right;">
-96.1
-</td>
-<td style="text-align:right;">
-95.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Semipar
-</td>
-<td style="text-align:center;">
-Nonpar
-</td>
-<td style="text-align:center;">
-Nonpar
-</td>
-<td style="text-align:right;">
--0.04
-</td>
-<td style="text-align:right;">
-0.47
-</td>
-<td style="text-align:right;">
-0.47
-</td>
-<td style="text-align:right;">
-0.47
-</td>
-<td style="text-align:right;">
-94.2
-</td>
-<td style="text-align:right;">
-94.0
-</td>
-<td style="text-align:right;">
--0.32
-</td>
-<td style="text-align:right;">
-0.71
-</td>
-<td style="text-align:right;">
-0.75
-</td>
-<td style="text-align:right;">
-0.68
-</td>
-<td style="text-align:right;">
-94.9
-</td>
-<td style="text-align:right;">
-91.5
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-MLE
-</td>
-<td style="text-align:center;">
-T
-</td>
-<td style="text-align:center;">
-<ul>
-<li></td>
-<td style="text-align:right;">
--0.06
-</td>
-<td style="text-align:right;">
-0.40
-</td>
-<td style="text-align:right;">
-0.40
-</td>
-<td style="text-align:right;">
-0.40
-</td>
-<td style="text-align:right;">
-95.1
-</td>
-<td style="text-align:right;">
-95.2
-</td>
-<td style="text-align:right;">
--0.05
-</td>
-<td style="text-align:right;">
-0.68
-</td>
-<td style="text-align:right;">
-0.48
-</td>
-<td style="text-align:right;">
-0.47
-</td>
-<td style="text-align:right;">
-83.3
-</td>
-<td style="text-align:right;">
-83.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-MLE
-</td>
-<td style="text-align:center;">
-F
-</td>
-<td style="text-align:center;">
-<ul>
-<li></td>
-<td style="text-align:right;">
-2.80
-</td>
-<td style="text-align:right;">
-0.40
-</td>
-<td style="text-align:right;">
-0.40
-</td>
-<td style="text-align:right;">
-0.41
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-<td style="text-align:right;">
-9.75
-</td>
-<td style="text-align:right;">
-0.76
-</td>
-<td style="text-align:right;">
-0.47
-</td>
-<td style="text-align:right;">
-0.55
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-MLE
-</td>
-<td style="text-align:center;">
-Nonpar
-</td>
-<td style="text-align:center;">
-<ul>
-<li></td>
-<td style="text-align:right;">
--0.06
-</td>
-<td style="text-align:right;">
-0.46
-</td>
-<td style="text-align:right;">
-0.40
-</td>
-<td style="text-align:right;">
-0.40
-</td>
-<td style="text-align:right;">
-91.7
-</td>
-<td style="text-align:right;">
-91.7
-</td>
-<td style="text-align:right;">
--0.69
-</td>
-<td style="text-align:right;">
-1.32
-</td>
-<td style="text-align:right;">
-0.49
-</td>
-<td style="text-align:right;">
-0.48
-</td>
-<td style="text-align:right;">
-50.2
-</td>
-<td style="text-align:right;">
-49.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CC
-</td>
-<td style="text-align:center;">
-<ul>
-<li></td>
-<td style="text-align:center;">
-<ul>
-<li></td>
-<td style="text-align:right;">
--0.03
-</td>
-<td style="text-align:right;">
-0.47
-</td>
-<td style="text-align:right;">
-0.47
-</td>
-<td style="text-align:right;">
-0.47
-</td>
-<td style="text-align:right;">
-94.2
-</td>
-<td style="text-align:right;">
-94.0
-</td>
-<td style="text-align:right;">
-0.00
-</td>
-<td style="text-align:right;">
-0.75
-</td>
-<td style="text-align:right;">
-0.75
-</td>
-<td style="text-align:right;">
-0.75
-</td>
-<td style="text-align:right;">
-95.3
-</td>
-<td style="text-align:right;">
-95.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Oracle
-</td>
-<td style="text-align:center;">
-<ul>
-<li></td>
-<td style="text-align:center;">
-<ul>
-<li></td>
-<td style="text-align:right;">
--0.02
-</td>
-<td style="text-align:right;">
-0.35
-</td>
-<td style="text-align:right;">
-0.36
-</td>
-<td style="text-align:right;">
-0.36
-</td>
-<td style="text-align:right;">
-95.3
-</td>
-<td style="text-align:right;">
-95.4
-</td>
-<td style="text-align:right;">
-0.01
-</td>
-<td style="text-align:right;">
-0.36
-</td>
-<td style="text-align:right;">
-0.36
-</td>
-<td style="text-align:right;">
-0.36
-</td>
-<td style="text-align:right;">
-95.1
-</td>
-<td style="text-align:right;">
-95.0
-</td>
-</tr>
-</tbody>
-</table></li>
-</ul></li>
-</ul></li>
-</ul></li>
-</ul></li>
-</ul></li>
-</ul></li>
-</ul>
-<pre class="r"><code>make.table.bothvar(2)</code></pre>
-<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:left;font-weight: bold;">
-Method
-</th>
-<th style="text-align:center;font-weight: bold;">
-X|Z
-</th>
-<th style="text-align:center;font-weight: bold;">
-C|Z
-</th>
-<th style="text-align:right;font-weight: bold;">
-Bias
-</th>
-<th style="text-align:right;font-weight: bold;">
-ESE
-</th>
-<th style="text-align:right;font-weight: bold;">
-ASEIF
-</th>
-<th style="text-align:right;font-weight: bold;">
-ASESand
-</th>
-<th style="text-align:right;font-weight: bold;">
-CovIF
-</th>
-<th style="text-align:right;font-weight: bold;">
-CovSand
-</th>
-<th style="text-align:right;font-weight: bold;">
-Bias
-</th>
-<th style="text-align:right;font-weight: bold;">
-ESE
-</th>
-<th style="text-align:right;font-weight: bold;">
-ASEIF
-</th>
-<th style="text-align:right;font-weight: bold;">
-ASESand
-</th>
-<th style="text-align:right;font-weight: bold;">
-CovIF
-</th>
-<th style="text-align:right;font-weight: bold;">
-CovSand
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-Semipar
-</td>
-<td style="text-align:center;">
-T
-</td>
-<td style="text-align:center;">
-T
-</td>
-<td style="text-align:right;">
-0.08
-</td>
-<td style="text-align:right;">
-0.81
-</td>
-<td style="text-align:right;">
-0.82
-</td>
-<td style="text-align:right;">
-0.81
-</td>
-<td style="text-align:right;">
-95.0
-</td>
-<td style="text-align:right;">
-94.6
-</td>
-<td style="text-align:right;">
-0.15
-</td>
-<td style="text-align:right;">
-1.44
-</td>
-<td style="text-align:right;">
-1.75
-</td>
-<td style="text-align:right;">
-1.46
-</td>
-<td style="text-align:right;">
-98.1
-</td>
-<td style="text-align:right;">
-94.9
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Semipar
-</td>
-<td style="text-align:center;">
-T
-</td>
-<td style="text-align:center;">
-F
-</td>
-<td style="text-align:right;">
-0.09
-</td>
-<td style="text-align:right;">
-0.81
-</td>
-<td style="text-align:right;">
-0.82
-</td>
-<td style="text-align:right;">
-0.81
-</td>
-<td style="text-align:right;">
-94.9
-</td>
-<td style="text-align:right;">
-94.6
-</td>
-<td style="text-align:right;">
-0.15
-</td>
-<td style="text-align:right;">
-1.44
-</td>
-<td style="text-align:right;">
-1.75
-</td>
-<td style="text-align:right;">
-1.46
-</td>
-<td style="text-align:right;">
-98.1
-</td>
-<td style="text-align:right;">
-94.8
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Semipar
-</td>
-<td style="text-align:center;">
-F
-</td>
-<td style="text-align:center;">
-T
-</td>
-<td style="text-align:right;">
-0.05
-</td>
-<td style="text-align:right;">
-0.82
-</td>
-<td style="text-align:right;">
-0.82
-</td>
-<td style="text-align:right;">
-0.82
-</td>
-<td style="text-align:right;">
-94.9
-</td>
-<td style="text-align:right;">
-94.8
-</td>
-<td style="text-align:right;">
--0.44
-</td>
-<td style="text-align:right;">
-1.64
-</td>
-<td style="text-align:right;">
-1.75
-</td>
-<td style="text-align:right;">
-1.66
-</td>
-<td style="text-align:right;">
-95.6
-</td>
-<td style="text-align:right;">
-93.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Semipar
-</td>
-<td style="text-align:center;">
-F
-</td>
-<td style="text-align:center;">
-F
-</td>
-<td style="text-align:right;">
-0.06
-</td>
-<td style="text-align:right;">
-0.82
-</td>
-<td style="text-align:right;">
-0.82
-</td>
-<td style="text-align:right;">
-0.82
-</td>
-<td style="text-align:right;">
-94.9
-</td>
-<td style="text-align:right;">
-94.5
-</td>
-<td style="text-align:right;">
--0.46
-</td>
-<td style="text-align:right;">
-1.64
-</td>
-<td style="text-align:right;">
-1.76
-</td>
-<td style="text-align:right;">
-1.66
-</td>
-<td style="text-align:right;">
-95.7
-</td>
-<td style="text-align:right;">
-93.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Semipar
-</td>
-<td style="text-align:center;">
-Nonpar
-</td>
-<td style="text-align:center;">
-Nonpar
-</td>
-<td style="text-align:right;">
-0.08
-</td>
-<td style="text-align:right;">
-0.81
-</td>
-<td style="text-align:right;">
-0.82
-</td>
-<td style="text-align:right;">
-0.81
-</td>
-<td style="text-align:right;">
-95.0
-</td>
-<td style="text-align:right;">
-94.6
-</td>
-<td style="text-align:right;">
-1.09
-</td>
-<td style="text-align:right;">
-1.52
-</td>
-<td style="text-align:right;">
-1.74
-</td>
-<td style="text-align:right;">
-1.41
-</td>
-<td style="text-align:right;">
-93.8
-</td>
-<td style="text-align:right;">
-87.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-MLE
-</td>
-<td style="text-align:center;">
-T
-</td>
-<td style="text-align:center;">
-<ul>
-<li></td>
-<td style="text-align:right;">
-0.17
-</td>
-<td style="text-align:right;">
-0.62
-</td>
-<td style="text-align:right;">
-0.60
-</td>
-<td style="text-align:right;">
-0.60
-</td>
-<td style="text-align:right;">
-93.2
-</td>
-<td style="text-align:right;">
-93.0
-</td>
-<td style="text-align:right;">
-0.21
-</td>
-<td style="text-align:right;">
-1.23
-</td>
-<td style="text-align:right;">
-0.73
-</td>
-<td style="text-align:right;">
-0.73
-</td>
-<td style="text-align:right;">
-76.7
-</td>
-<td style="text-align:right;">
-76.5
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-MLE
-</td>
-<td style="text-align:center;">
-F
-</td>
-<td style="text-align:center;">
-<ul>
-<li></td>
-<td style="text-align:right;">
--4.49
-</td>
-<td style="text-align:right;">
-0.63
-</td>
-<td style="text-align:right;">
-0.60
-</td>
-<td style="text-align:right;">
-0.62
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-<td style="text-align:right;">
--17.84
-</td>
-<td style="text-align:right;">
-1.71
-</td>
-<td style="text-align:right;">
-0.66
-</td>
-<td style="text-align:right;">
-0.79
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-MLE
-</td>
-<td style="text-align:center;">
-Nonpar
-</td>
-<td style="text-align:center;">
-<ul>
-<li></td>
-<td style="text-align:right;">
-0.15
-</td>
-<td style="text-align:right;">
-0.76
-</td>
-<td style="text-align:right;">
-0.60
-</td>
-<td style="text-align:right;">
-0.60
-</td>
-<td style="text-align:right;">
-88.2
-</td>
-<td style="text-align:right;">
-88.6
-</td>
-<td style="text-align:right;">
-2.04
-</td>
-<td style="text-align:right;">
-2.47
-</td>
-<td style="text-align:right;">
-0.75
-</td>
-<td style="text-align:right;">
-0.76
-</td>
-<td style="text-align:right;">
-34.3
-</td>
-<td style="text-align:right;">
-34.5
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CC
-</td>
-<td style="text-align:center;">
-<ul>
-<li></td>
-<td style="text-align:center;">
-<ul>
-<li></td>
-<td style="text-align:right;">
-0.06
-</td>
-<td style="text-align:right;">
-0.83
-</td>
-<td style="text-align:right;">
-0.82
-</td>
-<td style="text-align:right;">
-0.82
-</td>
-<td style="text-align:right;">
-94.7
-</td>
-<td style="text-align:right;">
-94.8
-</td>
-<td style="text-align:right;">
--0.03
-</td>
-<td style="text-align:right;">
-1.74
-</td>
-<td style="text-align:right;">
-1.77
-</td>
-<td style="text-align:right;">
-1.76
-</td>
-<td style="text-align:right;">
-95.1
-</td>
-<td style="text-align:right;">
-95.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Oracle
-</td>
-<td style="text-align:center;">
-<ul>
-<li></td>
-<td style="text-align:center;">
-<ul>
-<li></td>
-<td style="text-align:right;">
-0.03
-</td>
-<td style="text-align:right;">
-0.51
-</td>
-<td style="text-align:right;">
-0.52
-</td>
-<td style="text-align:right;">
-0.52
-</td>
-<td style="text-align:right;">
-95.1
-</td>
-<td style="text-align:right;">
-95.2
-</td>
-<td style="text-align:right;">
-0.00
-</td>
-<td style="text-align:right;">
-0.52
-</td>
-<td style="text-align:right;">
-0.52
-</td>
-<td style="text-align:right;">
-0.52
-</td>
-<td style="text-align:right;">
-94.6
-</td>
-<td style="text-align:right;">
-94.6
-</td>
-</tr>
-</tbody>
-</table></li>
-</ul></li>
-</ul></li>
-</ul></li>
-</ul></li>
-</ul></li>
-</ul></li>
-</ul>
-<pre class="r"><code>make.table.bothvar(3)</code></pre>
-<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:left;font-weight: bold;">
-Method
-</th>
-<th style="text-align:center;font-weight: bold;">
-X|Z
-</th>
-<th style="text-align:center;font-weight: bold;">
-C|Z
-</th>
-<th style="text-align:right;font-weight: bold;">
-Bias
-</th>
-<th style="text-align:right;font-weight: bold;">
-ESE
-</th>
-<th style="text-align:right;font-weight: bold;">
-ASEIF
-</th>
-<th style="text-align:right;font-weight: bold;">
-ASESand
-</th>
-<th style="text-align:right;font-weight: bold;">
-CovIF
-</th>
-<th style="text-align:right;font-weight: bold;">
-CovSand
-</th>
-<th style="text-align:right;font-weight: bold;">
-Bias
-</th>
-<th style="text-align:right;font-weight: bold;">
-ESE
-</th>
-<th style="text-align:right;font-weight: bold;">
-ASEIF
-</th>
-<th style="text-align:right;font-weight: bold;">
-ASESand
-</th>
-<th style="text-align:right;font-weight: bold;">
-CovIF
-</th>
-<th style="text-align:right;font-weight: bold;">
-CovSand
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-Semipar
-</td>
-<td style="text-align:center;">
-T
-</td>
-<td style="text-align:center;">
-T
-</td>
-<td style="text-align:right;">
-0.03
-</td>
-<td style="text-align:right;">
-0.36
-</td>
-<td style="text-align:right;">
-0.36
-</td>
-<td style="text-align:right;">
-0.36
-</td>
-<td style="text-align:right;">
-95.1
-</td>
-<td style="text-align:right;">
-95.2
-</td>
-<td style="text-align:right;">
-0.04
-</td>
-<td style="text-align:right;">
-0.61
-</td>
-<td style="text-align:right;">
-0.62
-</td>
-<td style="text-align:right;">
-0.60
-</td>
-<td style="text-align:right;">
-95.1
-</td>
-<td style="text-align:right;">
-94.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Semipar
-</td>
-<td style="text-align:center;">
-T
-</td>
-<td style="text-align:center;">
-F
-</td>
-<td style="text-align:right;">
-0.03
-</td>
-<td style="text-align:right;">
-0.36
-</td>
-<td style="text-align:right;">
-0.36
-</td>
-<td style="text-align:right;">
-0.36
-</td>
-<td style="text-align:right;">
-95.0
-</td>
-<td style="text-align:right;">
-95.3
-</td>
-<td style="text-align:right;">
-0.04
-</td>
-<td style="text-align:right;">
-0.61
-</td>
-<td style="text-align:right;">
-0.62
-</td>
-<td style="text-align:right;">
-0.60
-</td>
-<td style="text-align:right;">
-95.3
-</td>
-<td style="text-align:right;">
-94.5
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Semipar
-</td>
-<td style="text-align:center;">
-F
-</td>
-<td style="text-align:center;">
-T
-</td>
-<td style="text-align:right;">
-0.02
-</td>
-<td style="text-align:right;">
-0.36
-</td>
-<td style="text-align:right;">
-0.36
-</td>
-<td style="text-align:right;">
-0.36
-</td>
-<td style="text-align:right;">
-94.9
-</td>
-<td style="text-align:right;">
-95.2
-</td>
-<td style="text-align:right;">
-0.04
-</td>
-<td style="text-align:right;">
-0.63
-</td>
-<td style="text-align:right;">
-0.62
-</td>
-<td style="text-align:right;">
-0.63
-</td>
-<td style="text-align:right;">
-94.6
-</td>
-<td style="text-align:right;">
-94.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Semipar
-</td>
-<td style="text-align:center;">
-F
-</td>
-<td style="text-align:center;">
-F
-</td>
-<td style="text-align:right;">
-0.02
-</td>
-<td style="text-align:right;">
-0.36
-</td>
-<td style="text-align:right;">
-0.36
-</td>
-<td style="text-align:right;">
-0.36
-</td>
-<td style="text-align:right;">
-94.9
-</td>
-<td style="text-align:right;">
-95.1
-</td>
-<td style="text-align:right;">
-0.04
-</td>
-<td style="text-align:right;">
-0.63
-</td>
-<td style="text-align:right;">
-0.62
-</td>
-<td style="text-align:right;">
-0.63
-</td>
-<td style="text-align:right;">
-94.6
-</td>
-<td style="text-align:right;">
-94.8
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Semipar
-</td>
-<td style="text-align:center;">
-Nonpar
-</td>
-<td style="text-align:center;">
-Nonpar
-</td>
-<td style="text-align:right;">
-0.03
-</td>
-<td style="text-align:right;">
-0.36
-</td>
-<td style="text-align:right;">
-0.36
-</td>
-<td style="text-align:right;">
-0.36
-</td>
-<td style="text-align:right;">
-94.9
-</td>
-<td style="text-align:right;">
-95.1
-</td>
-<td style="text-align:right;">
-0.19
-</td>
-<td style="text-align:right;">
-0.63
-</td>
-<td style="text-align:right;">
-0.62
-</td>
-<td style="text-align:right;">
-0.60
-</td>
-<td style="text-align:right;">
-93.3
-</td>
-<td style="text-align:right;">
-92.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-MLE
-</td>
-<td style="text-align:center;">
-T
-</td>
-<td style="text-align:center;">
-<ul>
-<li></td>
-<td style="text-align:right;">
-0.01
-</td>
-<td style="text-align:right;">
-0.32
-</td>
-<td style="text-align:right;">
-0.30
-</td>
-<td style="text-align:right;">
-0.30
-</td>
-<td style="text-align:right;">
-94.3
-</td>
-<td style="text-align:right;">
-93.7
-</td>
-<td style="text-align:right;">
--0.01
-</td>
-<td style="text-align:right;">
-0.70
-</td>
-<td style="text-align:right;">
-0.40
-</td>
-<td style="text-align:right;">
-0.40
-</td>
-<td style="text-align:right;">
-73.7
-</td>
-<td style="text-align:right;">
-73.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-MLE
-</td>
-<td style="text-align:center;">
-F
-</td>
-<td style="text-align:center;">
-<ul>
-<li></td>
-<td style="text-align:right;">
--2.64
-</td>
-<td style="text-align:right;">
-0.31
-</td>
-<td style="text-align:right;">
-0.31
-</td>
-<td style="text-align:right;">
-0.31
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-<td style="text-align:right;">
--10.88
-</td>
-<td style="text-align:right;">
-0.60
-</td>
-<td style="text-align:right;">
-0.41
-</td>
-<td style="text-align:right;">
-0.47
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-MLE
-</td>
-<td style="text-align:center;">
-Nonpar
-</td>
-<td style="text-align:center;">
-<ul>
-<li></td>
-<td style="text-align:right;">
-0.01
-</td>
-<td style="text-align:right;">
-0.36
-</td>
-<td style="text-align:right;">
-0.30
-</td>
-<td style="text-align:right;">
-0.30
-</td>
-<td style="text-align:right;">
-91.1
-</td>
-<td style="text-align:right;">
-91.1
-</td>
-<td style="text-align:right;">
-0.31
-</td>
-<td style="text-align:right;">
-1.24
-</td>
-<td style="text-align:right;">
-0.41
-</td>
-<td style="text-align:right;">
-0.41
-</td>
-<td style="text-align:right;">
-50.2
-</td>
-<td style="text-align:right;">
-49.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CC
-</td>
-<td style="text-align:center;">
-<ul>
-<li></td>
-<td style="text-align:center;">
-<ul>
-<li></td>
-<td style="text-align:right;">
-0.02
-</td>
-<td style="text-align:right;">
-0.36
-</td>
-<td style="text-align:right;">
-0.36
-</td>
-<td style="text-align:right;">
-0.36
-</td>
-<td style="text-align:right;">
-95.0
-</td>
-<td style="text-align:right;">
-95.4
-</td>
-<td style="text-align:right;">
-0.02
-</td>
-<td style="text-align:right;">
-0.63
-</td>
-<td style="text-align:right;">
-0.63
-</td>
-<td style="text-align:right;">
-0.62
-</td>
-<td style="text-align:right;">
-94.8
-</td>
-<td style="text-align:right;">
-94.6
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Oracle
-</td>
-<td style="text-align:center;">
-<ul>
-<li></td>
-<td style="text-align:center;">
-<ul>
-<li></td>
-<td style="text-align:right;">
-0.01
-</td>
-<td style="text-align:right;">
-0.27
-</td>
-<td style="text-align:right;">
-0.26
-</td>
-<td style="text-align:right;">
-0.26
-</td>
-<td style="text-align:right;">
-94.7
-</td>
-<td style="text-align:right;">
-94.7
-</td>
-<td style="text-align:right;">
-0.00
-</td>
-<td style="text-align:right;">
-0.25
-</td>
-<td style="text-align:right;">
-0.26
-</td>
-<td style="text-align:right;">
-0.26
-</td>
-<td style="text-align:right;">
-95.6
-</td>
-<td style="text-align:right;">
-95.5
-</td>
-</tr>
-</tbody>
-</table></li>
-</ul></li>
-</ul></li>
-</ul></li>
-</ul></li>
-</ul></li>
-</ul></li>
-</ul>
-<pre class="r"><code>make.table.bothvar(4)</code></pre>
-<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:left;font-weight: bold;">
-Method
-</th>
-<th style="text-align:center;font-weight: bold;">
-X|Z
-</th>
-<th style="text-align:center;font-weight: bold;">
-C|Z
-</th>
-<th style="text-align:right;font-weight: bold;">
-Bias
-</th>
-<th style="text-align:right;font-weight: bold;">
-ESE
-</th>
-<th style="text-align:right;font-weight: bold;">
-ASEIF
-</th>
-<th style="text-align:right;font-weight: bold;">
-ASESand
-</th>
-<th style="text-align:right;font-weight: bold;">
-CovIF
-</th>
-<th style="text-align:right;font-weight: bold;">
-CovSand
-</th>
-<th style="text-align:right;font-weight: bold;">
-Bias
-</th>
-<th style="text-align:right;font-weight: bold;">
-ESE
-</th>
-<th style="text-align:right;font-weight: bold;">
-ASEIF
-</th>
-<th style="text-align:right;font-weight: bold;">
-ASESand
-</th>
-<th style="text-align:right;font-weight: bold;">
-CovIF
-</th>
-<th style="text-align:right;font-weight: bold;">
-CovSand
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-Semipar
-</td>
-<td style="text-align:center;">
-T
-</td>
-<td style="text-align:center;">
-T
-</td>
-<td style="text-align:right;">
--0.02
-</td>
-<td style="text-align:right;">
-0.20
-</td>
-<td style="text-align:right;">
-0.20
-</td>
-<td style="text-align:right;">
-0.20
-</td>
-<td style="text-align:right;">
-96.0
-</td>
-<td style="text-align:right;">
-95.5
-</td>
-<td style="text-align:right;">
--0.03
-</td>
-<td style="text-align:right;">
-0.37
-</td>
-<td style="text-align:right;">
-0.35
-</td>
-<td style="text-align:right;">
-0.35
-</td>
-<td style="text-align:right;">
-93.9
-</td>
-<td style="text-align:right;">
-94.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Semipar
-</td>
-<td style="text-align:center;">
-T
-</td>
-<td style="text-align:center;">
-F
-</td>
-<td style="text-align:right;">
--0.02
-</td>
-<td style="text-align:right;">
-0.20
-</td>
-<td style="text-align:right;">
-0.20
-</td>
-<td style="text-align:right;">
-0.20
-</td>
-<td style="text-align:right;">
-96.0
-</td>
-<td style="text-align:right;">
-95.5
-</td>
-<td style="text-align:right;">
--0.03
-</td>
-<td style="text-align:right;">
-0.37
-</td>
-<td style="text-align:right;">
-0.36
-</td>
-<td style="text-align:right;">
-0.35
-</td>
-<td style="text-align:right;">
-93.9
-</td>
-<td style="text-align:right;">
-94.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Semipar
-</td>
-<td style="text-align:center;">
-F
-</td>
-<td style="text-align:center;">
-T
-</td>
-<td style="text-align:right;">
--0.02
-</td>
-<td style="text-align:right;">
-0.20
-</td>
-<td style="text-align:right;">
-0.20
-</td>
-<td style="text-align:right;">
-0.20
-</td>
-<td style="text-align:right;">
-96.0
-</td>
-<td style="text-align:right;">
-95.5
-</td>
-<td style="text-align:right;">
--0.03
-</td>
-<td style="text-align:right;">
-0.37
-</td>
-<td style="text-align:right;">
-0.36
-</td>
-<td style="text-align:right;">
-0.35
-</td>
-<td style="text-align:right;">
-93.9
-</td>
-<td style="text-align:right;">
-94.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Semipar
-</td>
-<td style="text-align:center;">
-F
-</td>
-<td style="text-align:center;">
-F
-</td>
-<td style="text-align:right;">
--0.02
-</td>
-<td style="text-align:right;">
-0.20
-</td>
-<td style="text-align:right;">
-0.20
-</td>
-<td style="text-align:right;">
-0.20
-</td>
-<td style="text-align:right;">
-96.0
-</td>
-<td style="text-align:right;">
-95.5
-</td>
-<td style="text-align:right;">
--0.03
-</td>
-<td style="text-align:right;">
-0.37
-</td>
-<td style="text-align:right;">
-0.36
-</td>
-<td style="text-align:right;">
-0.35
-</td>
-<td style="text-align:right;">
-93.9
-</td>
-<td style="text-align:right;">
-94.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Semipar
-</td>
-<td style="text-align:center;">
-Nonpar
-</td>
-<td style="text-align:center;">
-Nonpar
-</td>
-<td style="text-align:right;">
--0.02
-</td>
-<td style="text-align:right;">
-0.20
-</td>
-<td style="text-align:right;">
-0.20
-</td>
-<td style="text-align:right;">
-0.20
-</td>
-<td style="text-align:right;">
-96.1
-</td>
-<td style="text-align:right;">
-95.5
-</td>
-<td style="text-align:right;">
--0.03
-</td>
-<td style="text-align:right;">
-0.37
-</td>
-<td style="text-align:right;">
-0.36
-</td>
-<td style="text-align:right;">
-0.35
-</td>
-<td style="text-align:right;">
-94.1
-</td>
-<td style="text-align:right;">
-94.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-MLE
-</td>
-<td style="text-align:center;">
-T
-</td>
-<td style="text-align:center;">
-<ul>
-<li></td>
-<td style="text-align:right;">
-0.01
-</td>
-<td style="text-align:right;">
-0.18
-</td>
-<td style="text-align:right;">
-0.19
-</td>
-<td style="text-align:right;">
-0.19
-</td>
-<td style="text-align:right;">
-95.5
-</td>
-<td style="text-align:right;">
-95.7
-</td>
-<td style="text-align:right;">
-0.05
-</td>
-<td style="text-align:right;">
-0.30
-</td>
-<td style="text-align:right;">
-0.29
-</td>
-<td style="text-align:right;">
-0.29
-</td>
-<td style="text-align:right;">
-93.9
-</td>
-<td style="text-align:right;">
-94.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-MLE
-</td>
-<td style="text-align:center;">
-F
-</td>
-<td style="text-align:center;">
-<ul>
-<li></td>
-<td style="text-align:right;">
-0.10
-</td>
-<td style="text-align:right;">
-0.18
-</td>
-<td style="text-align:right;">
-0.19
-</td>
-<td style="text-align:right;">
-0.19
-</td>
-<td style="text-align:right;">
-93.5
-</td>
-<td style="text-align:right;">
-93.2
-</td>
-<td style="text-align:right;">
-2.21
-</td>
-<td style="text-align:right;">
-0.37
-</td>
-<td style="text-align:right;">
-0.31
-</td>
-<td style="text-align:right;">
-0.31
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-<td style="text-align:right;">
-0.0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-MLE
-</td>
-<td style="text-align:center;">
-Nonpar
-</td>
-<td style="text-align:center;">
-<ul>
-<li></td>
-<td style="text-align:right;">
-0.02
-</td>
-<td style="text-align:right;">
-0.19
-</td>
-<td style="text-align:right;">
-0.19
-</td>
-<td style="text-align:right;">
-0.19
-</td>
-<td style="text-align:right;">
-94.3
-</td>
-<td style="text-align:right;">
-94.1
-</td>
-<td style="text-align:right;">
-0.43
-</td>
-<td style="text-align:right;">
-0.42
-</td>
-<td style="text-align:right;">
-0.30
-</td>
-<td style="text-align:right;">
-0.29
-</td>
-<td style="text-align:right;">
-67.9
-</td>
-<td style="text-align:right;">
-67.5
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CC
-</td>
-<td style="text-align:center;">
-<ul>
-<li></td>
-<td style="text-align:center;">
-<ul>
-<li></td>
-<td style="text-align:right;">
--0.02
-</td>
-<td style="text-align:right;">
-0.20
-</td>
-<td style="text-align:right;">
-0.20
-</td>
-<td style="text-align:right;">
-0.20
-</td>
-<td style="text-align:right;">
-96.0
-</td>
-<td style="text-align:right;">
-95.5
-</td>
-<td style="text-align:right;">
--0.03
-</td>
-<td style="text-align:right;">
-0.37
-</td>
-<td style="text-align:right;">
-0.36
-</td>
-<td style="text-align:right;">
-0.35
-</td>
-<td style="text-align:right;">
-93.9
-</td>
-<td style="text-align:right;">
-94.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Oracle
-</td>
-<td style="text-align:center;">
-<ul>
-<li></td>
-<td style="text-align:center;">
-<ul>
-<li></td>
-<td style="text-align:right;">
--0.01
-</td>
-<td style="text-align:right;">
-0.15
-</td>
-<td style="text-align:right;">
-0.16
-</td>
-<td style="text-align:right;">
-0.16
-</td>
-<td style="text-align:right;">
-95.2
-</td>
-<td style="text-align:right;">
-95.3
-</td>
-<td style="text-align:right;">
--0.01
-</td>
-<td style="text-align:right;">
-0.16
-</td>
-<td style="text-align:right;">
-0.16
-</td>
-<td style="text-align:right;">
-0.16
-</td>
-<td style="text-align:right;">
-95.7
-</td>
-<td style="text-align:right;">
-95.4
-</td>
-</tr>
-</tbody>
-</table></li>
-</ul></li>
-</ul></li>
-</ul></li>
-</ul></li>
-</ul></li>
-</ul></li>
-</ul>
-<pre class="r"><code># table with sandwich variance only
+<pre class="r"><code># table with simulation results
 make.table &lt;- function(param., format = &quot;html&quot;) {
   
   tbl1 &lt;- sim.out.long %&gt;%
@@ -4254,7 +1881,7 @@ make.table &lt;- function(param., format = &quot;html&quot;) {
     summarise(v1_Bias = 10*mean(B - B.true, na.rm = T),
               v2_ESE = 10*sd(B, na.rm = T),
               v3_ASE = 10*mean(V, na.rm = T),
-              v4_Cov = 100*mean(ci.if.cov, na.rm = T)) %&gt;% 
+              v4_Cov = 100*mean(ci.cov, na.rm = T)) %&gt;% 
   gather(key, value, v1_Bias:v4_Cov) %&gt;% 
   unite(Group, q, key) %&gt;% 
   spread(Group, value)
@@ -4265,10 +1892,10 @@ make.table &lt;- function(param., format = &quot;html&quot;) {
                      2, 2, 2, 1,
                      2, 2, 2, 1),
           format = format,
-          align = &quot;cccrrrrrrrr&quot;,
+          align = &quot;lccrrrrrrrr&quot;,
           booktabs = T) %&gt;%
     kable_styling(&quot;striped&quot;) %&gt;%
-    row_spec(row = 0, bold = TRUE) %&gt;% 
+    row_spec(row = 0, bold = TRUE)
     add_header_above(c(&quot; &quot; = 3,
                        &quot;q = 0.4&quot; = 4,
                        &quot;q = 0.8&quot; = 4))
@@ -4280,21 +1907,7 @@ make.table &lt;- function(param., format = &quot;html&quot;) {
 <table class="table table-striped" style="margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
-<th style="empty-cells: hide;border-bottom:hidden;" colspan="3">
-</th>
-<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="4">
-<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
-q = 0.4
-</div>
-</th>
-<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="4">
-<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
-q = 0.8
-</div>
-</th>
-</tr>
-<tr>
-<th style="text-align:center;font-weight: bold;">
+<th style="text-align:left;font-weight: bold;">
 Method
 </th>
 <th style="text-align:center;font-weight: bold;">
@@ -4331,7 +1944,7 @@ Cov
 </thead>
 <tbody>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 Semipar
 </td>
 <td style="text-align:center;">
@@ -4350,7 +1963,7 @@ T
 0.47
 </td>
 <td style="text-align:right;">
-94.1
+93.9
 </td>
 <td style="text-align:right;">
 -0.05
@@ -4359,14 +1972,14 @@ T
 0.68
 </td>
 <td style="text-align:right;">
-0.75
+0.69
 </td>
 <td style="text-align:right;">
-96.5
+95.4
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 Semipar
 </td>
 <td style="text-align:center;">
@@ -4377,6 +1990,76 @@ F
 </td>
 <td style="text-align:right;">
 -0.04
+</td>
+<td style="text-align:right;">
+0.47
+</td>
+<td style="text-align:right;">
+0.47
+</td>
+<td style="text-align:right;">
+94.0
+</td>
+<td style="text-align:right;">
+-0.05
+</td>
+<td style="text-align:right;">
+0.68
+</td>
+<td style="text-align:right;">
+0.69
+</td>
+<td style="text-align:right;">
+95.3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Semipar
+</td>
+<td style="text-align:center;">
+F
+</td>
+<td style="text-align:center;">
+T
+</td>
+<td style="text-align:right;">
+-0.03
+</td>
+<td style="text-align:right;">
+0.47
+</td>
+<td style="text-align:right;">
+0.47
+</td>
+<td style="text-align:right;">
+94.0
+</td>
+<td style="text-align:right;">
+0.07
+</td>
+<td style="text-align:right;">
+0.73
+</td>
+<td style="text-align:right;">
+0.74
+</td>
+<td style="text-align:right;">
+95.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Semipar
+</td>
+<td style="text-align:center;">
+F
+</td>
+<td style="text-align:center;">
+F
+</td>
+<td style="text-align:right;">
+-0.03
 </td>
 <td style="text-align:right;">
 0.47
@@ -4388,90 +2071,20 @@ F
 94.1
 </td>
 <td style="text-align:right;">
--0.05
-</td>
-<td style="text-align:right;">
-0.69
-</td>
-<td style="text-align:right;">
-0.75
-</td>
-<td style="text-align:right;">
-96.5
-</td>
-</tr>
-<tr>
-<td style="text-align:center;">
-Semipar
-</td>
-<td style="text-align:center;">
-F
-</td>
-<td style="text-align:center;">
-T
-</td>
-<td style="text-align:right;">
--0.03
-</td>
-<td style="text-align:right;">
-0.47
-</td>
-<td style="text-align:right;">
-0.47
-</td>
-<td style="text-align:right;">
-94.3
-</td>
-<td style="text-align:right;">
-0.06
-</td>
-<td style="text-align:right;">
-0.73
-</td>
-<td style="text-align:right;">
-0.75
-</td>
-<td style="text-align:right;">
-96.2
-</td>
-</tr>
-<tr>
-<td style="text-align:center;">
-Semipar
-</td>
-<td style="text-align:center;">
-F
-</td>
-<td style="text-align:center;">
-F
-</td>
-<td style="text-align:right;">
--0.03
-</td>
-<td style="text-align:right;">
-0.47
-</td>
-<td style="text-align:right;">
-0.47
-</td>
-<td style="text-align:right;">
-94.2
-</td>
-<td style="text-align:right;">
 0.07
 </td>
 <td style="text-align:right;">
 0.73
 </td>
 <td style="text-align:right;">
-0.75
+0.74
 </td>
 <td style="text-align:right;">
-96.1
+95.0
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 Semipar
 </td>
 <td style="text-align:center;">
@@ -4481,7 +2094,7 @@ Nonpar
 Nonpar
 </td>
 <td style="text-align:right;">
--0.04
+-0.03
 </td>
 <td style="text-align:right;">
 0.47
@@ -4490,23 +2103,23 @@ Nonpar
 0.47
 </td>
 <td style="text-align:right;">
-94.2
+93.9
 </td>
 <td style="text-align:right;">
--0.32
+0.13
 </td>
 <td style="text-align:right;">
 0.71
 </td>
 <td style="text-align:right;">
-0.75
+0.70
 </td>
 <td style="text-align:right;">
-94.9
+94.0
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 MLE
 </td>
 <td style="text-align:center;">
@@ -4522,10 +2135,10 @@ T
 0.40
 </td>
 <td style="text-align:right;">
-0.40
+0.41
 </td>
 <td style="text-align:right;">
-95.1
+95.8
 </td>
 <td style="text-align:right;">
 -0.05
@@ -4534,14 +2147,14 @@ T
 0.68
 </td>
 <td style="text-align:right;">
-0.48
+0.65
 </td>
 <td style="text-align:right;">
-83.3
+94.1
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 MLE
 </td>
 <td style="text-align:center;">
@@ -4557,7 +2170,7 @@ F
 0.40
 </td>
 <td style="text-align:right;">
-0.40
+0.42
 </td>
 <td style="text-align:right;">
 0.0
@@ -4569,14 +2182,14 @@ F
 0.76
 </td>
 <td style="text-align:right;">
-0.47
+0.78
 </td>
 <td style="text-align:right;">
 0.0
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 MLE
 </td>
 <td style="text-align:center;">
@@ -4586,32 +2199,32 @@ Nonpar
 <ul>
 <li></td>
 <td style="text-align:right;">
--0.06
-</td>
-<td style="text-align:right;">
-0.46
-</td>
-<td style="text-align:right;">
-0.40
-</td>
-<td style="text-align:right;">
-91.7
-</td>
-<td style="text-align:right;">
--0.69
-</td>
-<td style="text-align:right;">
-1.32
+0.18
 </td>
 <td style="text-align:right;">
 0.49
 </td>
 <td style="text-align:right;">
-50.2
+0.64
+</td>
+<td style="text-align:right;">
+95.0
+</td>
+<td style="text-align:right;">
+0.94
+</td>
+<td style="text-align:right;">
+1.41
+</td>
+<td style="text-align:right;">
+2.14
+</td>
+<td style="text-align:right;">
+89.1
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 CC
 </td>
 <td style="text-align:center;">
@@ -4630,7 +2243,7 @@ CC
 0.47
 </td>
 <td style="text-align:right;">
-94.2
+94.0
 </td>
 <td style="text-align:right;">
 0.00
@@ -4642,11 +2255,11 @@ CC
 0.75
 </td>
 <td style="text-align:right;">
-95.3
+95.1
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 Oracle
 </td>
 <td style="text-align:center;">
@@ -4665,7 +2278,7 @@ Oracle
 0.36
 </td>
 <td style="text-align:right;">
-95.3
+95.4
 </td>
 <td style="text-align:right;">
 0.01
@@ -4677,7 +2290,7 @@ Oracle
 0.36
 </td>
 <td style="text-align:right;">
-95.1
+95.0
 </td>
 </tr>
 </tbody>
@@ -4693,21 +2306,7 @@ Oracle
 <table class="table table-striped" style="margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
-<th style="empty-cells: hide;border-bottom:hidden;" colspan="3">
-</th>
-<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="4">
-<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
-q = 0.4
-</div>
-</th>
-<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="4">
-<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
-q = 0.8
-</div>
-</th>
-</tr>
-<tr>
-<th style="text-align:center;font-weight: bold;">
+<th style="text-align:left;font-weight: bold;">
 Method
 </th>
 <th style="text-align:center;font-weight: bold;">
@@ -4744,7 +2343,7 @@ Cov
 </thead>
 <tbody>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 Semipar
 </td>
 <td style="text-align:center;">
@@ -4760,10 +2359,10 @@ T
 0.81
 </td>
 <td style="text-align:right;">
-0.82
+0.81
 </td>
 <td style="text-align:right;">
-95.0
+94.6
 </td>
 <td style="text-align:right;">
 0.15
@@ -4772,14 +2371,14 @@ T
 1.44
 </td>
 <td style="text-align:right;">
-1.75
+1.46
 </td>
 <td style="text-align:right;">
-98.1
+94.9
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 Semipar
 </td>
 <td style="text-align:center;">
@@ -4795,10 +2394,10 @@ F
 0.81
 </td>
 <td style="text-align:right;">
-0.82
+0.81
 </td>
 <td style="text-align:right;">
-94.9
+94.6
 </td>
 <td style="text-align:right;">
 0.15
@@ -4807,14 +2406,14 @@ F
 1.44
 </td>
 <td style="text-align:right;">
-1.75
+1.46
 </td>
 <td style="text-align:right;">
-98.1
+94.8
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 Semipar
 </td>
 <td style="text-align:center;">
@@ -4833,7 +2432,7 @@ T
 0.82
 </td>
 <td style="text-align:right;">
-94.9
+94.8
 </td>
 <td style="text-align:right;">
 -0.44
@@ -4842,14 +2441,14 @@ T
 1.64
 </td>
 <td style="text-align:right;">
-1.75
+1.66
 </td>
 <td style="text-align:right;">
-95.6
+93.7
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 Semipar
 </td>
 <td style="text-align:center;">
@@ -4868,7 +2467,7 @@ F
 0.82
 </td>
 <td style="text-align:right;">
-94.9
+94.5
 </td>
 <td style="text-align:right;">
 -0.46
@@ -4877,14 +2476,14 @@ F
 1.64
 </td>
 <td style="text-align:right;">
-1.76
+1.66
 </td>
 <td style="text-align:right;">
-95.7
+93.7
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 Semipar
 </td>
 <td style="text-align:center;">
@@ -4894,32 +2493,32 @@ Nonpar
 Nonpar
 </td>
 <td style="text-align:right;">
-0.08
-</td>
-<td style="text-align:right;">
-0.81
+0.05
 </td>
 <td style="text-align:right;">
 0.82
 </td>
 <td style="text-align:right;">
-95.0
+0.81
 </td>
 <td style="text-align:right;">
-1.09
+94.9
+</td>
+<td style="text-align:right;">
+-0.45
+</td>
+<td style="text-align:right;">
+1.58
 </td>
 <td style="text-align:right;">
 1.52
 </td>
 <td style="text-align:right;">
-1.74
-</td>
-<td style="text-align:right;">
-93.8
+92.8
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 MLE
 </td>
 <td style="text-align:center;">
@@ -4935,26 +2534,26 @@ T
 0.62
 </td>
 <td style="text-align:right;">
-0.60
+0.64
 </td>
 <td style="text-align:right;">
-93.2
+94.8
 </td>
 <td style="text-align:right;">
 0.21
 </td>
 <td style="text-align:right;">
-1.23
+1.24
 </td>
 <td style="text-align:right;">
-0.73
+1.21
 </td>
 <td style="text-align:right;">
-76.7
+93.6
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 MLE
 </td>
 <td style="text-align:center;">
@@ -4970,7 +2569,7 @@ F
 0.63
 </td>
 <td style="text-align:right;">
-0.60
+0.66
 </td>
 <td style="text-align:right;">
 0.0
@@ -4982,14 +2581,14 @@ F
 1.71
 </td>
 <td style="text-align:right;">
-0.66
+1.76
 </td>
 <td style="text-align:right;">
 0.0
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 MLE
 </td>
 <td style="text-align:center;">
@@ -4999,32 +2598,32 @@ Nonpar
 <ul>
 <li></td>
 <td style="text-align:right;">
-0.15
+-0.40
 </td>
 <td style="text-align:right;">
-0.76
+0.84
 </td>
 <td style="text-align:right;">
-0.60
+1.06
 </td>
 <td style="text-align:right;">
-88.2
+93.2
 </td>
 <td style="text-align:right;">
-2.04
+-2.21
 </td>
 <td style="text-align:right;">
-2.47
+2.79
 </td>
 <td style="text-align:right;">
-0.75
+4.14
 </td>
 <td style="text-align:right;">
-34.3
+88.8
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 CC
 </td>
 <td style="text-align:center;">
@@ -5043,7 +2642,7 @@ CC
 0.82
 </td>
 <td style="text-align:right;">
-94.7
+94.8
 </td>
 <td style="text-align:right;">
 -0.03
@@ -5052,14 +2651,14 @@ CC
 1.74
 </td>
 <td style="text-align:right;">
-1.77
+1.76
 </td>
 <td style="text-align:right;">
 95.1
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 Oracle
 </td>
 <td style="text-align:center;">
@@ -5078,7 +2677,7 @@ Oracle
 0.52
 </td>
 <td style="text-align:right;">
-95.1
+95.2
 </td>
 <td style="text-align:right;">
 0.00
@@ -5106,21 +2705,7 @@ Oracle
 <table class="table table-striped" style="margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
-<th style="empty-cells: hide;border-bottom:hidden;" colspan="3">
-</th>
-<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="4">
-<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
-q = 0.4
-</div>
-</th>
-<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="4">
-<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
-q = 0.8
-</div>
-</th>
-</tr>
-<tr>
-<th style="text-align:center;font-weight: bold;">
+<th style="text-align:left;font-weight: bold;">
 Method
 </th>
 <th style="text-align:center;font-weight: bold;">
@@ -5157,7 +2742,7 @@ Cov
 </thead>
 <tbody>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 Semipar
 </td>
 <td style="text-align:center;">
@@ -5176,7 +2761,7 @@ T
 0.36
 </td>
 <td style="text-align:right;">
-95.1
+95.2
 </td>
 <td style="text-align:right;">
 0.04
@@ -5185,14 +2770,14 @@ T
 0.61
 </td>
 <td style="text-align:right;">
-0.62
+0.60
 </td>
 <td style="text-align:right;">
-95.1
+94.4
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 Semipar
 </td>
 <td style="text-align:center;">
@@ -5209,25 +2794,25 @@ F
 </td>
 <td style="text-align:right;">
 0.36
-</td>
-<td style="text-align:right;">
-95.0
-</td>
-<td style="text-align:right;">
-0.04
-</td>
-<td style="text-align:right;">
-0.61
-</td>
-<td style="text-align:right;">
-0.62
 </td>
 <td style="text-align:right;">
 95.3
 </td>
+<td style="text-align:right;">
+0.04
+</td>
+<td style="text-align:right;">
+0.61
+</td>
+<td style="text-align:right;">
+0.61
+</td>
+<td style="text-align:right;">
+94.5
+</td>
 </tr>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 Semipar
 </td>
 <td style="text-align:center;">
@@ -5246,7 +2831,7 @@ T
 0.36
 </td>
 <td style="text-align:right;">
-94.9
+95.2
 </td>
 <td style="text-align:right;">
 0.04
@@ -5255,14 +2840,14 @@ T
 0.63
 </td>
 <td style="text-align:right;">
-0.62
+0.63
 </td>
 <td style="text-align:right;">
-94.6
+94.7
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 Semipar
 </td>
 <td style="text-align:center;">
@@ -5281,7 +2866,7 @@ F
 0.36
 </td>
 <td style="text-align:right;">
-94.9
+95.1
 </td>
 <td style="text-align:right;">
 0.04
@@ -5290,14 +2875,14 @@ F
 0.63
 </td>
 <td style="text-align:right;">
-0.62
+0.63
 </td>
 <td style="text-align:right;">
-94.6
+94.8
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 Semipar
 </td>
 <td style="text-align:center;">
@@ -5307,7 +2892,7 @@ Nonpar
 Nonpar
 </td>
 <td style="text-align:right;">
-0.03
+0.02
 </td>
 <td style="text-align:right;">
 0.36
@@ -5316,23 +2901,23 @@ Nonpar
 0.36
 </td>
 <td style="text-align:right;">
-94.9
+95.1
 </td>
 <td style="text-align:right;">
-0.19
-</td>
-<td style="text-align:right;">
-0.63
+-0.04
 </td>
 <td style="text-align:right;">
 0.62
 </td>
 <td style="text-align:right;">
-93.3
+0.61
+</td>
+<td style="text-align:right;">
+94.2
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 MLE
 </td>
 <td style="text-align:center;">
@@ -5348,10 +2933,10 @@ T
 0.32
 </td>
 <td style="text-align:right;">
-0.30
+0.32
 </td>
 <td style="text-align:right;">
-94.3
+95.6
 </td>
 <td style="text-align:right;">
 -0.01
@@ -5360,14 +2945,14 @@ T
 0.70
 </td>
 <td style="text-align:right;">
-0.40
+0.67
 </td>
 <td style="text-align:right;">
-73.7
+94.4
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 MLE
 </td>
 <td style="text-align:center;">
@@ -5383,7 +2968,7 @@ F
 0.31
 </td>
 <td style="text-align:right;">
-0.31
+0.32
 </td>
 <td style="text-align:right;">
 0.0
@@ -5395,14 +2980,14 @@ F
 0.60
 </td>
 <td style="text-align:right;">
-0.41
+0.61
 </td>
 <td style="text-align:right;">
 0.0
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 MLE
 </td>
 <td style="text-align:center;">
@@ -5412,32 +2997,32 @@ Nonpar
 <ul>
 <li></td>
 <td style="text-align:right;">
-0.01
+-0.09
 </td>
 <td style="text-align:right;">
-0.36
+0.37
 </td>
 <td style="text-align:right;">
-0.30
+0.47
 </td>
 <td style="text-align:right;">
-91.1
+95.6
 </td>
 <td style="text-align:right;">
-0.31
+-0.54
 </td>
 <td style="text-align:right;">
-1.24
+1.22
 </td>
 <td style="text-align:right;">
-0.41
+1.84
 </td>
 <td style="text-align:right;">
-50.2
+89.1
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 CC
 </td>
 <td style="text-align:center;">
@@ -5456,7 +3041,7 @@ CC
 0.36
 </td>
 <td style="text-align:right;">
-95.0
+95.4
 </td>
 <td style="text-align:right;">
 0.02
@@ -5465,14 +3050,14 @@ CC
 0.63
 </td>
 <td style="text-align:right;">
-0.63
+0.62
 </td>
 <td style="text-align:right;">
-94.8
+94.6
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 Oracle
 </td>
 <td style="text-align:center;">
@@ -5503,7 +3088,7 @@ Oracle
 0.26
 </td>
 <td style="text-align:right;">
-95.6
+95.5
 </td>
 </tr>
 </tbody>
@@ -5519,21 +3104,7 @@ Oracle
 <table class="table table-striped" style="margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
-<th style="empty-cells: hide;border-bottom:hidden;" colspan="3">
-</th>
-<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="4">
-<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
-q = 0.4
-</div>
-</th>
-<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="4">
-<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
-q = 0.8
-</div>
-</th>
-</tr>
-<tr>
-<th style="text-align:center;font-weight: bold;">
+<th style="text-align:left;font-weight: bold;">
 Method
 </th>
 <th style="text-align:center;font-weight: bold;">
@@ -5570,7 +3141,7 @@ Cov
 </thead>
 <tbody>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 Semipar
 </td>
 <td style="text-align:center;">
@@ -5589,7 +3160,7 @@ T
 0.20
 </td>
 <td style="text-align:right;">
-96.0
+95.5
 </td>
 <td style="text-align:right;">
 -0.03
@@ -5601,11 +3172,11 @@ T
 0.35
 </td>
 <td style="text-align:right;">
-93.9
+94.3
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 Semipar
 </td>
 <td style="text-align:center;">
@@ -5624,7 +3195,7 @@ F
 0.20
 </td>
 <td style="text-align:right;">
-96.0
+95.5
 </td>
 <td style="text-align:right;">
 -0.03
@@ -5633,14 +3204,14 @@ F
 0.37
 </td>
 <td style="text-align:right;">
-0.36
+0.35
 </td>
 <td style="text-align:right;">
-93.9
+94.3
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 Semipar
 </td>
 <td style="text-align:center;">
@@ -5659,7 +3230,7 @@ T
 0.20
 </td>
 <td style="text-align:right;">
-96.0
+95.5
 </td>
 <td style="text-align:right;">
 -0.03
@@ -5668,14 +3239,14 @@ T
 0.37
 </td>
 <td style="text-align:right;">
-0.36
+0.35
 </td>
 <td style="text-align:right;">
-93.9
+94.3
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 Semipar
 </td>
 <td style="text-align:center;">
@@ -5694,7 +3265,7 @@ F
 0.20
 </td>
 <td style="text-align:right;">
-96.0
+95.5
 </td>
 <td style="text-align:right;">
 -0.03
@@ -5703,14 +3274,14 @@ F
 0.37
 </td>
 <td style="text-align:right;">
-0.36
+0.35
 </td>
 <td style="text-align:right;">
-93.9
+94.3
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 Semipar
 </td>
 <td style="text-align:center;">
@@ -5729,7 +3300,7 @@ Nonpar
 0.20
 </td>
 <td style="text-align:right;">
-96.1
+95.5
 </td>
 <td style="text-align:right;">
 -0.03
@@ -5738,14 +3309,14 @@ Nonpar
 0.37
 </td>
 <td style="text-align:right;">
-0.36
+0.35
 </td>
 <td style="text-align:right;">
-94.1
+94.3
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 MLE
 </td>
 <td style="text-align:center;">
@@ -5764,7 +3335,7 @@ T
 0.19
 </td>
 <td style="text-align:right;">
-95.5
+95.7
 </td>
 <td style="text-align:right;">
 0.05
@@ -5776,11 +3347,11 @@ T
 0.29
 </td>
 <td style="text-align:right;">
-93.9
+94.3
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 MLE
 </td>
 <td style="text-align:center;">
@@ -5799,7 +3370,7 @@ F
 0.19
 </td>
 <td style="text-align:right;">
-93.5
+93.3
 </td>
 <td style="text-align:right;">
 2.21
@@ -5808,14 +3379,14 @@ F
 0.37
 </td>
 <td style="text-align:right;">
-0.31
+0.36
 </td>
 <td style="text-align:right;">
 0.0
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 MLE
 </td>
 <td style="text-align:center;">
@@ -5825,32 +3396,32 @@ Nonpar
 <ul>
 <li></td>
 <td style="text-align:right;">
-0.02
+-0.03
 </td>
 <td style="text-align:right;">
 0.19
 </td>
 <td style="text-align:right;">
-0.19
+0.21
 </td>
 <td style="text-align:right;">
-94.3
+94.6
 </td>
 <td style="text-align:right;">
-0.43
+0.01
 </td>
 <td style="text-align:right;">
-0.42
+0.34
 </td>
 <td style="text-align:right;">
-0.30
+0.46
 </td>
 <td style="text-align:right;">
-67.9
+95.7
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 CC
 </td>
 <td style="text-align:center;">
@@ -5869,7 +3440,7 @@ CC
 0.20
 </td>
 <td style="text-align:right;">
-96.0
+95.5
 </td>
 <td style="text-align:right;">
 -0.03
@@ -5878,14 +3449,14 @@ CC
 0.37
 </td>
 <td style="text-align:right;">
-0.36
+0.35
 </td>
 <td style="text-align:right;">
-93.9
+94.3
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
+<td style="text-align:left;">
 Oracle
 </td>
 <td style="text-align:center;">
@@ -5904,7 +3475,7 @@ Oracle
 0.16
 </td>
 <td style="text-align:right;">
-95.2
+95.3
 </td>
 <td style="text-align:right;">
 -0.01
@@ -5916,7 +3487,7 @@ Oracle
 0.16
 </td>
 <td style="text-align:right;">
-95.7
+95.4
 </td>
 </tr>
 </tbody>
@@ -5936,12 +3507,12 @@ make.table.allparam &lt;- function(format = &quot;html&quot;) {
     mutate(Param = ifelse(param == 1, &quot;$\\beta_1$&quot;,
                    ifelse(param == 2, &quot;$\\beta_2$&quot;,
                    ifelse(param == 3, &quot;$\\beta_3$&quot;,
-                   ifelse(param == 4, &quot;$\\log\\sigma^2$&quot;))))) %&gt;% 
+                          &quot;$\\log\\sigma^2$&quot;)))) %&gt;% 
     group_by(q, Param, method, nuis.x, nuis.c) %&gt;% 
     summarise(v1_Bias = 10*mean(B - B.true, na.rm = T),
               v2_ESE = 10*sd(B, na.rm = T),
               v3_ASE = 10*mean(V, na.rm = T),
-              v4_Cov = 100*mean(ci.if.cov, na.rm = T)) %&gt;% 
+              v4_Cov = 100*mean(ci.cov, na.rm = T)) %&gt;% 
   gather(key, value, v1_Bias:v4_Cov) %&gt;% 
   unite(Group, q, key) %&gt;% 
   spread(Group, value)
@@ -6045,7 +3616,7 @@ T
 0.47
 </td>
 <td style="text-align:right;">
-94.1
+93.9
 </td>
 <td style="text-align:right;">
 -0.05
@@ -6054,10 +3625,10 @@ T
 0.68
 </td>
 <td style="text-align:right;">
-0.75
+0.69
 </td>
 <td style="text-align:right;">
-96.5
+95.4
 </td>
 </tr>
 <tr>
@@ -6075,6 +3646,82 @@ F
 </td>
 <td style="text-align:right;">
 -0.04
+</td>
+<td style="text-align:right;">
+0.47
+</td>
+<td style="text-align:right;">
+0.47
+</td>
+<td style="text-align:right;">
+94.0
+</td>
+<td style="text-align:right;">
+-0.05
+</td>
+<td style="text-align:right;">
+0.68
+</td>
+<td style="text-align:right;">
+0.69
+</td>
+<td style="text-align:right;">
+95.3
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+<span class="math inline">\(\beta_1\)</span>
+</td>
+<td style="text-align:center;">
+Semipar
+</td>
+<td style="text-align:center;">
+F
+</td>
+<td style="text-align:center;">
+T
+</td>
+<td style="text-align:right;">
+-0.03
+</td>
+<td style="text-align:right;">
+0.47
+</td>
+<td style="text-align:right;">
+0.47
+</td>
+<td style="text-align:right;">
+94.0
+</td>
+<td style="text-align:right;">
+0.07
+</td>
+<td style="text-align:right;">
+0.73
+</td>
+<td style="text-align:right;">
+0.74
+</td>
+<td style="text-align:right;">
+95.0
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+<span class="math inline">\(\beta_1\)</span>
+</td>
+<td style="text-align:center;">
+Semipar
+</td>
+<td style="text-align:center;">
+F
+</td>
+<td style="text-align:center;">
+F
+</td>
+<td style="text-align:right;">
+-0.03
 </td>
 <td style="text-align:right;">
 0.47
@@ -6086,92 +3733,16 @@ F
 94.1
 </td>
 <td style="text-align:right;">
--0.05
-</td>
-<td style="text-align:right;">
-0.69
-</td>
-<td style="text-align:right;">
-0.75
-</td>
-<td style="text-align:right;">
-96.5
-</td>
-</tr>
-<tr>
-<td style="text-align:center;">
-<span class="math inline">\(\beta_1\)</span>
-</td>
-<td style="text-align:center;">
-Semipar
-</td>
-<td style="text-align:center;">
-F
-</td>
-<td style="text-align:center;">
-T
-</td>
-<td style="text-align:right;">
--0.03
-</td>
-<td style="text-align:right;">
-0.47
-</td>
-<td style="text-align:right;">
-0.47
-</td>
-<td style="text-align:right;">
-94.3
-</td>
-<td style="text-align:right;">
-0.06
-</td>
-<td style="text-align:right;">
-0.73
-</td>
-<td style="text-align:right;">
-0.75
-</td>
-<td style="text-align:right;">
-96.2
-</td>
-</tr>
-<tr>
-<td style="text-align:center;">
-<span class="math inline">\(\beta_1\)</span>
-</td>
-<td style="text-align:center;">
-Semipar
-</td>
-<td style="text-align:center;">
-F
-</td>
-<td style="text-align:center;">
-F
-</td>
-<td style="text-align:right;">
--0.03
-</td>
-<td style="text-align:right;">
-0.47
-</td>
-<td style="text-align:right;">
-0.47
-</td>
-<td style="text-align:right;">
-94.2
-</td>
-<td style="text-align:right;">
 0.07
 </td>
 <td style="text-align:right;">
 0.73
 </td>
 <td style="text-align:right;">
-0.75
+0.74
 </td>
 <td style="text-align:right;">
-96.1
+95.0
 </td>
 </tr>
 <tr>
@@ -6188,7 +3759,7 @@ Nonpar
 Nonpar
 </td>
 <td style="text-align:right;">
--0.04
+-0.03
 </td>
 <td style="text-align:right;">
 0.47
@@ -6197,19 +3768,19 @@ Nonpar
 0.47
 </td>
 <td style="text-align:right;">
-94.2
+93.9
 </td>
 <td style="text-align:right;">
--0.32
+0.13
 </td>
 <td style="text-align:right;">
 0.71
 </td>
 <td style="text-align:right;">
-0.75
+0.70
 </td>
 <td style="text-align:right;">
-94.9
+94.0
 </td>
 </tr>
 <tr>
@@ -6232,10 +3803,10 @@ T
 0.40
 </td>
 <td style="text-align:right;">
-0.40
+0.41
 </td>
 <td style="text-align:right;">
-95.1
+95.8
 </td>
 <td style="text-align:right;">
 -0.05
@@ -6244,10 +3815,10 @@ T
 0.68
 </td>
 <td style="text-align:right;">
-0.48
+0.65
 </td>
 <td style="text-align:right;">
-83.3
+94.1
 </td>
 </tr>
 <tr>
@@ -6270,7 +3841,7 @@ F
 0.40
 </td>
 <td style="text-align:right;">
-0.40
+0.42
 </td>
 <td style="text-align:right;">
 0.0
@@ -6282,7 +3853,7 @@ F
 0.76
 </td>
 <td style="text-align:right;">
-0.47
+0.78
 </td>
 <td style="text-align:right;">
 0.0
@@ -6302,28 +3873,28 @@ Nonpar
 <ul>
 <li></td>
 <td style="text-align:right;">
--0.06
-</td>
-<td style="text-align:right;">
-0.46
-</td>
-<td style="text-align:right;">
-0.40
-</td>
-<td style="text-align:right;">
-91.7
-</td>
-<td style="text-align:right;">
--0.69
-</td>
-<td style="text-align:right;">
-1.32
+0.18
 </td>
 <td style="text-align:right;">
 0.49
 </td>
 <td style="text-align:right;">
-50.2
+0.64
+</td>
+<td style="text-align:right;">
+95.0
+</td>
+<td style="text-align:right;">
+0.94
+</td>
+<td style="text-align:right;">
+1.41
+</td>
+<td style="text-align:right;">
+2.14
+</td>
+<td style="text-align:right;">
+89.1
 </td>
 </tr>
 <tr>
@@ -6349,7 +3920,7 @@ CC
 0.47
 </td>
 <td style="text-align:right;">
-94.2
+94.0
 </td>
 <td style="text-align:right;">
 0.00
@@ -6361,7 +3932,7 @@ CC
 0.75
 </td>
 <td style="text-align:right;">
-95.3
+95.1
 </td>
 </tr>
 <tr>
@@ -6387,7 +3958,7 @@ Oracle
 0.36
 </td>
 <td style="text-align:right;">
-95.3
+95.4
 </td>
 <td style="text-align:right;">
 0.01
@@ -6399,7 +3970,7 @@ Oracle
 0.36
 </td>
 <td style="text-align:right;">
-95.1
+95.0
 </td>
 </tr>
 <tr>
@@ -6422,10 +3993,10 @@ T
 0.81
 </td>
 <td style="text-align:right;">
-0.82
+0.81
 </td>
 <td style="text-align:right;">
-95.0
+94.6
 </td>
 <td style="text-align:right;">
 0.15
@@ -6434,10 +4005,10 @@ T
 1.44
 </td>
 <td style="text-align:right;">
-1.75
+1.46
 </td>
 <td style="text-align:right;">
-98.1
+94.9
 </td>
 </tr>
 <tr>
@@ -6460,10 +4031,10 @@ F
 0.81
 </td>
 <td style="text-align:right;">
-0.82
+0.81
 </td>
 <td style="text-align:right;">
-94.9
+94.6
 </td>
 <td style="text-align:right;">
 0.15
@@ -6472,10 +4043,10 @@ F
 1.44
 </td>
 <td style="text-align:right;">
-1.75
+1.46
 </td>
 <td style="text-align:right;">
-98.1
+94.8
 </td>
 </tr>
 <tr>
@@ -6501,7 +4072,7 @@ T
 0.82
 </td>
 <td style="text-align:right;">
-94.9
+94.8
 </td>
 <td style="text-align:right;">
 -0.44
@@ -6510,10 +4081,10 @@ T
 1.64
 </td>
 <td style="text-align:right;">
-1.75
+1.66
 </td>
 <td style="text-align:right;">
-95.6
+93.7
 </td>
 </tr>
 <tr>
@@ -6539,7 +4110,7 @@ F
 0.82
 </td>
 <td style="text-align:right;">
-94.9
+94.5
 </td>
 <td style="text-align:right;">
 -0.46
@@ -6548,10 +4119,10 @@ F
 1.64
 </td>
 <td style="text-align:right;">
-1.76
+1.66
 </td>
 <td style="text-align:right;">
-95.7
+93.7
 </td>
 </tr>
 <tr>
@@ -6568,28 +4139,28 @@ Nonpar
 Nonpar
 </td>
 <td style="text-align:right;">
-0.08
-</td>
-<td style="text-align:right;">
-0.81
+0.05
 </td>
 <td style="text-align:right;">
 0.82
 </td>
 <td style="text-align:right;">
-95.0
+0.81
 </td>
 <td style="text-align:right;">
-1.09
+94.9
+</td>
+<td style="text-align:right;">
+-0.45
+</td>
+<td style="text-align:right;">
+1.58
 </td>
 <td style="text-align:right;">
 1.52
 </td>
 <td style="text-align:right;">
-1.74
-</td>
-<td style="text-align:right;">
-93.8
+92.8
 </td>
 </tr>
 <tr>
@@ -6612,22 +4183,22 @@ T
 0.62
 </td>
 <td style="text-align:right;">
-0.60
+0.64
 </td>
 <td style="text-align:right;">
-93.2
+94.8
 </td>
 <td style="text-align:right;">
 0.21
 </td>
 <td style="text-align:right;">
-1.23
+1.24
 </td>
 <td style="text-align:right;">
-0.73
+1.21
 </td>
 <td style="text-align:right;">
-76.7
+93.6
 </td>
 </tr>
 <tr>
@@ -6650,7 +4221,7 @@ F
 0.63
 </td>
 <td style="text-align:right;">
-0.60
+0.66
 </td>
 <td style="text-align:right;">
 0.0
@@ -6662,7 +4233,7 @@ F
 1.71
 </td>
 <td style="text-align:right;">
-0.66
+1.76
 </td>
 <td style="text-align:right;">
 0.0
@@ -6682,28 +4253,28 @@ Nonpar
 <ul>
 <li></td>
 <td style="text-align:right;">
-0.15
+-0.40
 </td>
 <td style="text-align:right;">
-0.76
+0.84
 </td>
 <td style="text-align:right;">
-0.60
+1.06
 </td>
 <td style="text-align:right;">
-88.2
+93.2
 </td>
 <td style="text-align:right;">
-2.04
+-2.21
 </td>
 <td style="text-align:right;">
-2.47
+2.79
 </td>
 <td style="text-align:right;">
-0.75
+4.14
 </td>
 <td style="text-align:right;">
-34.3
+88.8
 </td>
 </tr>
 <tr>
@@ -6729,7 +4300,7 @@ CC
 0.82
 </td>
 <td style="text-align:right;">
-94.7
+94.8
 </td>
 <td style="text-align:right;">
 -0.03
@@ -6738,7 +4309,7 @@ CC
 1.74
 </td>
 <td style="text-align:right;">
-1.77
+1.76
 </td>
 <td style="text-align:right;">
 95.1
@@ -6767,7 +4338,7 @@ Oracle
 0.52
 </td>
 <td style="text-align:right;">
-95.1
+95.2
 </td>
 <td style="text-align:right;">
 0.00
@@ -6805,7 +4376,7 @@ T
 0.36
 </td>
 <td style="text-align:right;">
-95.1
+95.2
 </td>
 <td style="text-align:right;">
 0.04
@@ -6814,10 +4385,10 @@ T
 0.61
 </td>
 <td style="text-align:right;">
-0.62
+0.60
 </td>
 <td style="text-align:right;">
-95.1
+94.4
 </td>
 </tr>
 <tr>
@@ -6841,22 +4412,22 @@ F
 </td>
 <td style="text-align:right;">
 0.36
-</td>
-<td style="text-align:right;">
-95.0
-</td>
-<td style="text-align:right;">
-0.04
-</td>
-<td style="text-align:right;">
-0.61
-</td>
-<td style="text-align:right;">
-0.62
 </td>
 <td style="text-align:right;">
 95.3
 </td>
+<td style="text-align:right;">
+0.04
+</td>
+<td style="text-align:right;">
+0.61
+</td>
+<td style="text-align:right;">
+0.61
+</td>
+<td style="text-align:right;">
+94.5
+</td>
 </tr>
 <tr>
 <td style="text-align:center;">
@@ -6881,7 +4452,7 @@ T
 0.36
 </td>
 <td style="text-align:right;">
-94.9
+95.2
 </td>
 <td style="text-align:right;">
 0.04
@@ -6890,10 +4461,10 @@ T
 0.63
 </td>
 <td style="text-align:right;">
-0.62
+0.63
 </td>
 <td style="text-align:right;">
-94.6
+94.7
 </td>
 </tr>
 <tr>
@@ -6919,7 +4490,7 @@ F
 0.36
 </td>
 <td style="text-align:right;">
-94.9
+95.1
 </td>
 <td style="text-align:right;">
 0.04
@@ -6928,10 +4499,10 @@ F
 0.63
 </td>
 <td style="text-align:right;">
-0.62
+0.63
 </td>
 <td style="text-align:right;">
-94.6
+94.8
 </td>
 </tr>
 <tr>
@@ -6948,7 +4519,7 @@ Nonpar
 Nonpar
 </td>
 <td style="text-align:right;">
-0.03
+0.02
 </td>
 <td style="text-align:right;">
 0.36
@@ -6957,19 +4528,19 @@ Nonpar
 0.36
 </td>
 <td style="text-align:right;">
-94.9
+95.1
 </td>
 <td style="text-align:right;">
-0.19
-</td>
-<td style="text-align:right;">
-0.63
+-0.04
 </td>
 <td style="text-align:right;">
 0.62
 </td>
 <td style="text-align:right;">
-93.3
+0.61
+</td>
+<td style="text-align:right;">
+94.2
 </td>
 </tr>
 <tr>
@@ -6992,10 +4563,10 @@ T
 0.32
 </td>
 <td style="text-align:right;">
-0.30
+0.32
 </td>
 <td style="text-align:right;">
-94.3
+95.6
 </td>
 <td style="text-align:right;">
 -0.01
@@ -7004,10 +4575,10 @@ T
 0.70
 </td>
 <td style="text-align:right;">
-0.40
+0.67
 </td>
 <td style="text-align:right;">
-73.7
+94.4
 </td>
 </tr>
 <tr>
@@ -7030,7 +4601,7 @@ F
 0.31
 </td>
 <td style="text-align:right;">
-0.31
+0.32
 </td>
 <td style="text-align:right;">
 0.0
@@ -7042,7 +4613,7 @@ F
 0.60
 </td>
 <td style="text-align:right;">
-0.41
+0.61
 </td>
 <td style="text-align:right;">
 0.0
@@ -7062,28 +4633,28 @@ Nonpar
 <ul>
 <li></td>
 <td style="text-align:right;">
-0.01
+-0.09
 </td>
 <td style="text-align:right;">
-0.36
+0.37
 </td>
 <td style="text-align:right;">
-0.30
+0.47
 </td>
 <td style="text-align:right;">
-91.1
+95.6
 </td>
 <td style="text-align:right;">
-0.31
+-0.54
 </td>
 <td style="text-align:right;">
-1.24
+1.22
 </td>
 <td style="text-align:right;">
-0.41
+1.84
 </td>
 <td style="text-align:right;">
-50.2
+89.1
 </td>
 </tr>
 <tr>
@@ -7109,7 +4680,7 @@ CC
 0.36
 </td>
 <td style="text-align:right;">
-95.0
+95.4
 </td>
 <td style="text-align:right;">
 0.02
@@ -7118,10 +4689,10 @@ CC
 0.63
 </td>
 <td style="text-align:right;">
-0.63
+0.62
 </td>
 <td style="text-align:right;">
-94.8
+94.6
 </td>
 </tr>
 <tr>
@@ -7159,7 +4730,7 @@ Oracle
 0.26
 </td>
 <td style="text-align:right;">
-95.6
+95.5
 </td>
 </tr>
 <tr>
@@ -7185,7 +4756,7 @@ T
 0.20
 </td>
 <td style="text-align:right;">
-96.0
+95.5
 </td>
 <td style="text-align:right;">
 -0.03
@@ -7197,7 +4768,7 @@ T
 0.35
 </td>
 <td style="text-align:right;">
-93.9
+94.3
 </td>
 </tr>
 <tr>
@@ -7223,7 +4794,7 @@ F
 0.20
 </td>
 <td style="text-align:right;">
-96.0
+95.5
 </td>
 <td style="text-align:right;">
 -0.03
@@ -7232,10 +4803,10 @@ F
 0.37
 </td>
 <td style="text-align:right;">
-0.36
+0.35
 </td>
 <td style="text-align:right;">
-93.9
+94.3
 </td>
 </tr>
 <tr>
@@ -7261,7 +4832,7 @@ T
 0.20
 </td>
 <td style="text-align:right;">
-96.0
+95.5
 </td>
 <td style="text-align:right;">
 -0.03
@@ -7270,10 +4841,10 @@ T
 0.37
 </td>
 <td style="text-align:right;">
-0.36
+0.35
 </td>
 <td style="text-align:right;">
-93.9
+94.3
 </td>
 </tr>
 <tr>
@@ -7299,7 +4870,7 @@ F
 0.20
 </td>
 <td style="text-align:right;">
-96.0
+95.5
 </td>
 <td style="text-align:right;">
 -0.03
@@ -7308,10 +4879,10 @@ F
 0.37
 </td>
 <td style="text-align:right;">
-0.36
+0.35
 </td>
 <td style="text-align:right;">
-93.9
+94.3
 </td>
 </tr>
 <tr>
@@ -7337,7 +4908,7 @@ Nonpar
 0.20
 </td>
 <td style="text-align:right;">
-96.1
+95.5
 </td>
 <td style="text-align:right;">
 -0.03
@@ -7346,10 +4917,10 @@ Nonpar
 0.37
 </td>
 <td style="text-align:right;">
-0.36
+0.35
 </td>
 <td style="text-align:right;">
-94.1
+94.3
 </td>
 </tr>
 <tr>
@@ -7375,7 +4946,7 @@ T
 0.19
 </td>
 <td style="text-align:right;">
-95.5
+95.7
 </td>
 <td style="text-align:right;">
 0.05
@@ -7387,7 +4958,7 @@ T
 0.29
 </td>
 <td style="text-align:right;">
-93.9
+94.3
 </td>
 </tr>
 <tr>
@@ -7410,10 +4981,10 @@ F
 0.18
 </td>
 <td style="text-align:right;">
-0.19
+0.24
 </td>
 <td style="text-align:right;">
-93.5
+93.3
 </td>
 <td style="text-align:right;">
 2.21
@@ -7422,7 +4993,7 @@ F
 0.37
 </td>
 <td style="text-align:right;">
-0.31
+0.38
 </td>
 <td style="text-align:right;">
 0.0
@@ -7442,28 +5013,28 @@ Nonpar
 <ul>
 <li></td>
 <td style="text-align:right;">
-0.02
+-0.03
 </td>
 <td style="text-align:right;">
 0.19
 </td>
 <td style="text-align:right;">
-0.19
+0.21
 </td>
 <td style="text-align:right;">
-94.3
+94.6
 </td>
 <td style="text-align:right;">
-0.43
+0.01
 </td>
 <td style="text-align:right;">
-0.42
+0.34
 </td>
 <td style="text-align:right;">
-0.30
+0.46
 </td>
 <td style="text-align:right;">
-67.9
+95.7
 </td>
 </tr>
 <tr>
@@ -7489,7 +5060,7 @@ CC
 0.20
 </td>
 <td style="text-align:right;">
-96.0
+95.5
 </td>
 <td style="text-align:right;">
 -0.03
@@ -7498,10 +5069,10 @@ CC
 0.37
 </td>
 <td style="text-align:right;">
-0.36
+0.35
 </td>
 <td style="text-align:right;">
-93.9
+94.3
 </td>
 </tr>
 <tr>
@@ -7527,7 +5098,7 @@ Oracle
 0.16
 </td>
 <td style="text-align:right;">
-95.2
+95.3
 </td>
 <td style="text-align:right;">
 -0.01
@@ -7539,7 +5110,7 @@ Oracle
 0.16
 </td>
 <td style="text-align:right;">
-95.7
+95.4
 </td>
 </tr>
 </tbody>

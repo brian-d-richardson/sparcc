@@ -13,6 +13,7 @@
 #'
 #' @importFrom statmod gauss.quad
 #' @importFrom fitdistrplus fitdistcens
+#' @importFrom zipfR Ibeta
 #' @import DALSM
 #' @import dplyr
 #'
@@ -216,47 +217,101 @@ sim1 <- function(n, q, seed) {
                    start = c(naive.lm$coef, log(var(naive.lm$resid))))
   V.cc <- var.est(dat = datcc, theta = B.cc, args = list(),
                   get.S = get.Scc, return.se = T)
-  S.cc <- var.est.sand(dat = datcc, theta = B.cc, args = list(),
-                       get.S = get.Scc, return.se = T)
 
   ## oracle
   B.or <- get.root(dat = dat0, score = get.Scc, start = B.cc)
   V.or <- var.est(dat = dat0, theta = B.or, args = list(),
                   get.S = get.Scc, return.se = T)
-  S.or <- var.est.sand(dat = dat0, theta = B.or, args = list(),
-                       get.S = get.Scc, return.se = T)
 
   ## MLE (X|Z correct)
   mle.args <- list(mu = mu, d.mu = d.mu, SF = SF, fy = fy, x.nds = x.nds)
   B.ml.1 <- get.root(dat = dat, score = get.Sml, start = B.cc,
                      args = append(mle.args, list("x.wts" = x.wts.correct)))
-  V.ml.1 <- var.est(dat = dat, theta = B.ml.1,
-                    args = append(mle.args, list("x.wts" = x.wts.correct)),
-                    get.S = get.Sml, return.se = T)
-  S.ml.1 <- var.est.sand(dat = dat, theta = B.ml.1,
-                         args = append(mle.args, list("x.wts" = x.wts.correct)),
-                         get.S = get.Sml, return.se = T)
+  V.ml.1 <- tryCatch(
+    expr =
+      var.est.sand(
+        dat = dat,
+        get.S = function(dat, theta, args, return.sums = F) {
+          alpha <- tail(theta, -4)
 
+        # define estimated X|Z density
+        eta1 <- function(x, z) {
+          dbeta(x = x,
+                shape1 = alpha[z + 1],
+                shape2 = alpha[z + 3])
+        }
+
+        # create quadrature nodes
+        x.wts <- vapply(
+          X = 1:length(zs),
+          FUN.VALUE = numeric(mx),
+          FUN = function(i) eta1(x.nds[,i], zs[i]) / sum(eta1(x.nds[,i], zs[i])))
+
+        args <- list(x.nds = x.nds, x.wts = x.wts)
+
+        # stack estimating equations
+        cbind(get.Sml(dat = dat, theta = head(theta, 4),
+                      args = args, return.sums = return.sums),
+              d.log.fxz(dat = dat, theta = alpha,
+                        args = args, return.sums = return.sums))
+      },
+      theta = c(B.ml.1, x.params.hat.correct),
+      args = list(x.nds = x.nds, x.wts = x.wts),
+      return.se = T),
+    error = rep(NA, length(V.cc)))
 
   ## MLE (X|Z incorrect)
   B.ml.0 <- get.root(dat = dat, score = get.Sml, start = B.cc,
                      args = append(mle.args, list("x.wts" = x.wts.wrong)))
-  V.ml.0 <- var.est(dat = dat, theta = B.ml.0,
-                    args = append(mle.args, list("x.wts" = x.wts.wrong)),
-                    get.S = get.Sml, return.se = T)
-  S.ml.0 <- var.est.sand(dat = dat, theta = B.ml.0,
-                         args = append(mle.args, list("x.wts" = x.wts.wrong)),
-                         get.S = get.Sml, return.se = T)
+  V.ml.0 <- tryCatch(
+    expr =
+    var.est.sand(
+    dat = dat,
+    get.S = function(dat, theta, args, return.sums = F) {
+
+      alpha <- tail(theta, -4)
+
+      # define estimated X|Z density
+      eta1 <- function(x, z) {
+        dbeta(x = x,
+              shape1 = alpha[1],
+              shape2 = alpha[2])
+      }
+
+      # create quadrature nodes
+      x.wts <- vapply(
+        X = 1:length(zs),
+        FUN.VALUE = numeric(mx),
+        FUN = function(i) eta1(x.nds[,i], zs[i]) / sum(eta1(x.nds[,i], zs[i])))
+
+      args <- list(x.nds = x.nds, x.wts = x.wts)
+
+      # stack estimating equations
+      ret <- cbind(get.Sml(dat = dat, theta = head(theta, 4),
+                           args = args, return.sums = F),
+                   d.log.fx(dat = dat, theta = alpha,
+                            args = args, return.sums = F))
+
+      if (return.sums) {
+        return(colSums(ret))
+      } else {
+        return(ret)
+      }
+    },
+    theta = c(B.ml.0, x.params.hat.wrong),
+    args = list(x.nds = x.nds, x.wts = x.wts),
+    return.se = T),
+    error = rep(NA, length(V.cc)))
 
   ## MLE (X|Z nonparametric)
   B.ml.2 <- get.root(dat = dat, score = get.Sml, start = B.cc,
                      args = append(mle.args, list("x.wts" = x.wts.nonpar)))
-  V.ml.2 <- var.est(dat = dat, theta = B.ml.2,
-                    args = append(mle.args, list("x.wts" = x.wts.nonpar)),
-                    get.S = get.Sml, return.se = T)
-  S.ml.2 <- var.est.sand(dat = dat, theta = B.ml.2,
-                         args = append(mle.args, list("x.wts" = x.wts.nonpar)),
-                         get.S = get.Sml, return.se = T)
+  V.ml.2 <- tryCatch(
+    expr =
+      var.est.sand(dat = dat, theta = B.ml.2,
+                   args = append(mle.args, list("x.wts" = x.wts.nonpar)),
+                   get.S = get.Sml, return.se = T),
+  error = rep(NA, length(V.cc)))
 
   ## semiparametric (X|Z, C|Z correct)
   sp.args <- list(mu = mu, d.mu = d.mu, SF = SF, fy = fy,
@@ -271,11 +326,6 @@ sim1 <- function(n, q, seed) {
                                                  "c.wts" = c.wts.correct,
                                                  "eta1" = eta1.correct)),
                      get.S = get.Seff, return.se = T)
-  S.sp.11 <- var.est.sand(dat = dat, theta = B.sp.11,
-                          args = append(sp.args, list("x.wts" = x.wts.correct,
-                                                      "c.wts" = c.wts.correct,
-                                                      "eta1" = eta1.correct)),
-                          get.S = get.Seff, return.se = T)
 
   ## semiparametric (X|Z correct, C|Z incorrect)
   B.sp.10 <- get.root(dat = dat, score = get.Seff, start = B.cc,
@@ -287,11 +337,6 @@ sim1 <- function(n, q, seed) {
                                                  "c.wts" = c.wts.wrong,
                                                  "eta1" = eta1.correct)),
                      get.S = get.Seff, return.se = T)
-  S.sp.10 <- var.est.sand(dat = dat, theta = B.sp.10,
-                          args = append(sp.args, list("x.wts" = x.wts.correct,
-                                                      "c.wts" = c.wts.wrong,
-                                                      "eta1" = eta1.correct)),
-                          get.S = get.Seff, return.se = T)
 
   ## semiparametric (X|Z incorrect, C|Z correct)
   B.sp.01 <- get.root(dat = dat, score = get.Seff, start = B.cc,
@@ -303,11 +348,6 @@ sim1 <- function(n, q, seed) {
                                                  "c.wts" = c.wts.correct,
                                                  "eta1" = eta1.wrong)),
                      get.S = get.Seff, return.se = T)
-  S.sp.01 <- var.est.sand(dat = dat, theta = B.sp.01,
-                          args = append(sp.args, list("x.wts" = x.wts.wrong,
-                                                      "c.wts" = c.wts.correct,
-                                                      "eta1" = eta1.wrong)),
-                          get.S = get.Seff, return.se = T)
 
   ## semiparametric (X|Z, C|Z incorrect)
   B.sp.00 <- get.root(dat = dat, score = get.Seff, start = B.cc,
@@ -319,11 +359,6 @@ sim1 <- function(n, q, seed) {
                                                  "c.wts" = c.wts.wrong,
                                                  "eta1" = eta1.wrong)),
                      get.S = get.Seff, return.se = T)
-  S.sp.00 <- var.est.sand(dat = dat, theta = B.sp.00,
-                          args = append(sp.args, list("x.wts" = x.wts.wrong,
-                                                      "c.wts" = c.wts.wrong,
-                                                      "eta1" = eta1.wrong)),
-                          get.S = get.Seff, return.se = T)
 
   ## semiparametric (X|Z, C|Z nonparametric)
   B.sp.22 <- get.root(dat = dat, score = get.Seff, start = B.cc,
@@ -335,13 +370,8 @@ sim1 <- function(n, q, seed) {
                                                  "c.wts" = c.wts.nonpar,
                                                  "eta1" = eta1.nonpar)),
                      get.S = get.Seff, return.se = T)
-  S.sp.22 <- var.est.sand(dat = dat, theta = B.sp.22,
-                          args = append(sp.args, list("x.wts" = x.wts.nonpar,
-                                                      "c.wts" = c.wts.nonpar,
-                                                      "eta1" = eta1.nonpar)),
-                          get.S = get.Seff, return.se = T)
 
-  # return setup parameters, estimates, and standard errors (length 123)
+  # return setup parameters, estimates, and standard errors (length 89)
   ret <- c(n = n, q = q, seed = seed,
            B.or = B.or, B.cc = B.cc,
            B.ml.0 = B.ml.0, B.ml.1 = B.ml.1, B.ml.2 = B.ml.2,
@@ -350,11 +380,7 @@ sim1 <- function(n, q, seed) {
            V.or = V.or, V.cc = V.cc,
            V.ml.0 = V.ml.0, V.ml.1 = V.ml.1, V.ml.2 = V.ml.2,
            V.sp.00 = V.sp.00, V.sp.01 = V.sp.01, V.sp.10 = V.sp.10,
-           V.sp.11 = V.sp.11, V.sp.22 = V.sp.22,
-           S.or = S.or, S.cc = S.cc,
-           S.ml.0 = S.ml.0, S.ml.1 = S.ml.1, S.ml.2 = S.ml.2,
-           S.sp.00 = S.sp.00, S.sp.01 = S.sp.01, S.sp.10 = S.sp.10,
-           S.sp.11 = S.sp.11, S.sp.22 = S.sp.22)
+           V.sp.11 = V.sp.11, V.sp.22 = V.sp.22)
 
   return(ret)
 }

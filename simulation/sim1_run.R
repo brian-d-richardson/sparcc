@@ -28,19 +28,19 @@ if (on.cluster) {
 library(devtools)
 library(statmod)
 library(fitdistrplus)
-library(DALSM)
 library(dplyr)
 library(numDeriv)
+library(zipfR)
 load_all()
 
 # simulation parameters ---------------------------------------------------
 
 base.seed <- 10^6 * as.integer(args) # baseline seed (specific to cluster)
-len.out <- 123                       # output size
+len.out <- 85                        # output size
 
-n.sim <- 100                         # number of sims per cluster
+n.sim <- 1#100                         # number of sims per cluster
 n <- 8000                            # sample size
-q <- c(0.4, 0.8)                     # censoring proportion
+q <- 0.4#c(0.4, 0.8)                     # censoring proportion
 
 # run simulations ---------------------------------------------------------
 
@@ -55,7 +55,8 @@ sim.out <- pbapply::pbvapply(
   FUN = function(ii) {
 
     tryCatch(
-      expr = sim1(
+      expr =
+        sim1_v2(
         n = sim.in$n[ii],
         q = sim.in$q[ii],
         seed = sim.in$sim.id[ii]),

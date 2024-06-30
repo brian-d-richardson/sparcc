@@ -60,7 +60,7 @@ colnames(sim.out) <- gsub("B2", "trueB2", colnames(sim.out))
 
 # make long data frame
 sim.out.long <- sim.out %>% 
-  pivot_longer(cols = starts_with(c("B", "V", "S.")),
+  pivot_longer(cols = starts_with(c("B", "V")),
                names_to = "method.param",
                values_to = "estimate") %>% 
   mutate(estimate = ifelse(abs(estimate) > 100, NA, estimate),
@@ -85,12 +85,9 @@ sim.out.long <- sim.out %>%
               values_from = estimate,
               id_cols = c(clust, n, q, method, nuis.x, nuis.c,
                           param, B.true, id)) %>% 
-  mutate(ci.if.lower = B - qnorm(0.975) * V,
-         ci.if.upper = B + qnorm(0.975) * V,
-         ci.if.cov = B.true >= ci.if.lower & B.true <= ci.if.upper,
-         ci.sand.lower = B - qnorm(0.975) * S,
-         ci.sand.upper = B + qnorm(0.975) * S,
-         ci.sand.cov = B.true >= ci.sand.lower & B.true <= ci.sand.upper)
+  mutate(ci.lower = B - qnorm(0.975) * V,
+         ci.upper = B + qnorm(0.975) * V,
+         ci.cov = B.true >= ci.lower & B.true <= ci.upper)
              
 ```
 
@@ -120,54 +117,7 @@ In the table, bias, variance, and MSE are all multiplied by a factor of 100. "Ne
 
 ```{r message = F}
 
-# table with both types of variance estimators
-make.table.bothvar <- function(param., format = "html") {
-  
-  tbl1 <- sim.out.long %>%
-    filter(param == param.) %>% 
-    group_by(q, method, nuis.x, nuis.c) %>% 
-    summarise(v1_Bias = 10*mean(B - B.true, na.rm = T),
-              v2_ESE = 10*sd(B, na.rm = T),
-              v3_ASEIF = 10*mean(V, na.rm = T),
-              v4_ASESand = 10*mean(S, na.rm = T),
-              v5_CovIF = 100*mean(ci.if.cov, na.rm = T),
-              v6_CovSand = 100*mean(ci.sand.cov, na.rm = T)) %>% 
-  gather(key, value, v1_Bias:v6_CovSand) %>% 
-  unite(Group, q, key) %>% 
-  spread(Group, value)
-  
-  kbl1 <- setNames(tbl1, c("Method", "X|Z", "C|Z",
-                   sub(".+_", "", tail(names(tbl1), -3)))) %>% 
-    kable(digits = c(0, 0, 0,
-                     2, 2, 2, 2, 1, 1,
-                     2, 2, 2, 2, 1, 1),
-          format = format,
-          align = "lccrrrrrrrrrrrr",
-          booktabs = T) %>%
-    kable_styling("striped") %>%
-    row_spec(row = 0, bold = TRUE)
-    add_header_above(c(" " = 3,
-                       "q = 0.4" = 6,
-                       "q = 0.8" = 6))
-  
-  return(kbl1)
-  
-}
-
-```
-
-```{r message = F}
-
-make.table.bothvar(1)
-make.table.bothvar(2)
-make.table.bothvar(3)
-make.table.bothvar(4)
-
-```
-
-```{r message = F}
-
-# table with sandwich variance only
+# table with simulation results
 make.table <- function(param., format = "html") {
   
   tbl1 <- sim.out.long %>%
@@ -176,7 +126,7 @@ make.table <- function(param., format = "html") {
     summarise(v1_Bias = 10*mean(B - B.true, na.rm = T),
               v2_ESE = 10*sd(B, na.rm = T),
               v3_ASE = 10*mean(V, na.rm = T),
-              v4_Cov = 100*mean(ci.if.cov, na.rm = T)) %>% 
+              v4_Cov = 100*mean(ci.cov, na.rm = T)) %>% 
   gather(key, value, v1_Bias:v4_Cov) %>% 
   unite(Group, q, key) %>% 
   spread(Group, value)
@@ -187,10 +137,10 @@ make.table <- function(param., format = "html") {
                      2, 2, 2, 1,
                      2, 2, 2, 1),
           format = format,
-          align = "cccrrrrrrrr",
+          align = "lccrrrrrrrr",
           booktabs = T) %>%
     kable_styling("striped") %>%
-    row_spec(row = 0, bold = TRUE) %>% 
+    row_spec(row = 0, bold = TRUE)
     add_header_above(c(" " = 3,
                        "q = 0.4" = 4,
                        "q = 0.8" = 4))
@@ -200,6 +150,7 @@ make.table <- function(param., format = "html") {
 }
 
 ```
+
 
 ```{r message = F}
 
@@ -225,12 +176,12 @@ make.table.allparam <- function(format = "html") {
     mutate(Param = ifelse(param == 1, "$\\beta_1$",
                    ifelse(param == 2, "$\\beta_2$",
                    ifelse(param == 3, "$\\beta_3$",
-                   ifelse(param == 4, "$\\log\\sigma^2$"))))) %>% 
+                          "$\\log\\sigma^2$")))) %>% 
     group_by(q, Param, method, nuis.x, nuis.c) %>% 
     summarise(v1_Bias = 10*mean(B - B.true, na.rm = T),
               v2_ESE = 10*sd(B, na.rm = T),
               v3_ASE = 10*mean(V, na.rm = T),
-              v4_Cov = 100*mean(ci.if.cov, na.rm = T)) %>% 
+              v4_Cov = 100*mean(ci.cov, na.rm = T)) %>% 
   gather(key, value, v1_Bias:v4_Cov) %>% 
   unite(Group, q, key) %>% 
   spread(Group, value)

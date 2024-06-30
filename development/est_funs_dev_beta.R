@@ -20,6 +20,7 @@ library(statmod)
 library(devtools)
 library(fitdistrplus)
 library(ggplot2)
+library(zipfR)
 load_all()
 
 # define parameters -------------------------------------------------------
@@ -38,25 +39,6 @@ mc <- 40                   # number of nodes for C
 my <- 5                    # number of nodes for Y
 x.correct <- T       # indicator for estimating X as gamma
 c.correct <- T       # indicator for estimating C as gamma
-
-# mean function mu(X, Z, B) = E(Y | X, Z)
-mu <- function(x, z, B) {
-  B[1] + B[2]*x + B[3]*z
-}
-
-# gradient of mu w.r.t. B
-d.mu <- function(x, z, B) {
-  cbind(1, x, z)
-}
-
-# Y|X, Z density
-fy <- function(y, x, z, B, s2) dnorm(x = y, mean = mu(x, z, B), sd = sqrt(s2))
-
-# full data score vector
-SF <- function(y, x, z, B, ls2) {
-  cbind((y - mu(x, z, B)) * d.mu(x, z, B),
-        ((y - mu(x, z, B)) ^ 2 - exp(ls2)) * exp(ls2))
-}
 
 # generate data -----------------------------------------------------------
 
@@ -213,20 +195,18 @@ assess.ee(S0)
 
 # complete case
 Scc <- get.Scc(dat = dat, B = B, ls2 = ls2,
-               args = list(mu = mu, d.mu = d.mu, SF = SF),
                return.sums = F)
 assess.ee(Scc)
 
 # MLE
 Sml <- get.Sml(dat = dat, B = B, ls2 = ls2,
-             args = list(mu = mu, d.mu = d.mu, SF = SF, fy = fy,
-                         x.nds = x.nds, x.wts = x.wts),
+             args = list(x.nds = x.nds, x.wts = x.wts),
              return.sums = F)
 assess.ee(Sml)
 
 # semiparametric efficient score
 Seff <- get.Seff(dat = dat, B = B, ls2 = ls2,
-                 args = list(mu = mu, d.mu = d.mu, SF = SF, fy = fy, eta1 = eta1,
+                 args = list(eta1 = eta1,
                              x.nds = x.nds, x.wts = x.wts,
                              c.nds = c.nds, c.wts = c.wts,
                              y.nds = y.nds, y.wts = y.wts),
@@ -265,6 +245,3 @@ Beff
 
 # compare estimates
 rbind(c(B, ls2), B0, Bcc, Bmle, Beff)
-
-
-
