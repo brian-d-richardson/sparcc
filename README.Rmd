@@ -241,7 +241,7 @@ SE.or <- var.est.sand(dat = dat0, theta = B.or, args = list(),
 
 
 ## MLE
-SE.ml <- var.est.sand(
+SE.mle <- var.est.sand(
     dat = dat,
     get.S = function(dat, theta, args, return.sums = F) {
 
@@ -276,12 +276,13 @@ SE.ml <- var.est.sand(
     },
     theta = c(B.mle, x.params.hat),
     args = list(),
-    return.se = T)
+    return.se = T)[1:4]
 
 ## semiparametric efficient
-SE.sp <- var.est(dat = dat, theta = B.sp,
-                 args = sp.args, get.S = get.Seff, return.se = T)
+SE.sp <- var.est.sand(dat = dat, theta = B.sp,
+                      args = sp.args,
+                      get.S = get.Seff, return.se = T)
 
-round(rbind(SE.or, SE.cc, SE.sp), 3)
+round(rbind(SE.or, SE.cc, SE.mle, SE.sp), 3)
 
 ```

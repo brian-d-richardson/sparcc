@@ -243,8 +243,8 @@ round(B.sp, 2)
     ## 0.96 9.95 2.07 0.03
 
 We then compare estimates. Note that the MLE estimates are far from the
-truth,. which sense since the MLE is inconsistent under a misspecified
-model for $X|Z$.
+truth, which makes sense since the MLE is inconsistent under a
+misspecified model for $X|Z$.
 
 ``` r
 # compare estimates
@@ -259,26 +259,69 @@ round(rbind(c(B, log(s2)), B.or, B.cc, B.mle, B.sp), 2)
     ## B.sp  0.96  9.95 2.07 0.03
 
 Finally, we can compute standard errors for the different estimators
-based on influence function variance estimators. For the MLE, this type
-of variance estimation is not valid and so is not included.
+using the sandwich variance technique. Since the variance of the MLE
+depends on uncertainty in estimation of nuisance parameters, we stack
+estimating functions for the outcome model and nuisance model.
 
 ``` r
 # complete case
-SE.cc <- var.est(dat = datcc, theta = B.cc, args = list(),
-                 get.S = get.Scc, return.se = T)
+SE.cc <- var.est.sand(dat = datcc, theta = B.cc, args = list(),
+                      n = sum(dat$Delta),
+                      get.S = get.Scc, return.se = T)
 
 ## oracle
-SE.or <- var.est(dat = dat0, theta = B.or, args = list(),
-                 get.S = get.Scc, return.se = T)
+SE.or <- var.est.sand(dat = dat0, theta = B.or, args = list(),
+                      get.S = get.Scc, return.se = T)
+
+
+## MLE
+SE.mle <- var.est.sand(
+    dat = dat,
+    get.S = function(dat, theta, args, return.sums = F) {
+
+      alpha <- tail(theta, -4)
+
+      # define estimated X|Z density
+      eta1 <- function(x, z) {
+        dbeta(x = x,
+              shape1 = alpha[1],
+              shape2 = alpha[2])
+      }
+
+      # create quadrature nodes
+      x.wts <- vapply(
+        X = 1:length(zs),
+        FUN.VALUE = numeric(mx),
+        FUN = function(i) eta1(x.nds[,i], zs[i]) / sum(eta1(x.nds[,i], zs[i])))
+
+      args <- list(x.nds = x.nds, x.wts = x.wts)
+
+      # stack estimating equations
+      S <- cbind(get.Sml(dat = dat, theta = head(theta, 4),
+                         args = args, return.sums = F),
+                 d.log.fx(dat = dat, theta = alpha,
+                          args = args, return.sums = F))
+
+      if (return.sums) {
+        return(colSums(S))
+      } else {
+        return(S)
+      }
+    },
+    theta = c(B.mle, x.params.hat),
+    args = list(),
+    return.se = T)[1:4]
 
 ## semiparametric efficient
-SE.sp <- var.est(dat = dat, theta = B.sp,
-                 args = sp.args, get.S = get.Seff, return.se = T)
+SE.sp <- var.est.sand(dat = dat, theta = B.sp,
+                      args = sp.args,
+                      get.S = get.Seff, return.se = T)
 
-round(rbind(SE.or, SE.cc, SE.sp), 3)
+round(rbind(SE.or, SE.cc, SE.mle, SE.sp), 3)
 ```
 
-    ##        [,1]  [,2]  [,3]  [,4]
-    ## SE.or 0.036 0.052 0.026 0.016
-    ## SE.cc 0.080 0.182 0.066 0.037
-    ## SE.sp 0.079 0.181 0.066 0.037
+    ##         [,1]  [,2]  [,3]  [,4]
+    ## SE.or  0.035 0.051 0.025 0.015
+    ## SE.cc  0.074 0.187 0.062 0.034
+    ## SE.mle 0.075 0.172 0.059 0.034
+    ## SE.sp  0.073 0.176 0.063 0.034
