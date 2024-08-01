@@ -71,14 +71,14 @@ sim.out.long <- sim.out %>%
 
 # prep for plots ----------------------------------------------------------
 
-param.labs <- c("\u03B20", "\u03B21", "log\u03C3\u00B2")
-
 pal_light <- c('#EE6677', '#228833', '#4477AA', '#CCBB44',
                '#66CCEE','#AA3377', '#BBBBBB')
 
 
 nuis.x <- unique(sim.out.long$nuis.x)
 nuis.c <- unique(sim.out.long$nuis.c)
+
+font.size <- 12
 
 # create plots ------------------------------------------------------------
 
@@ -101,9 +101,11 @@ seq1 <- ggplot(
         axis.text.x = element_blank(),
         axis.ticks.y = element_blank(),
         axis.text.y = element_blank(),
-        legend.position = "bottom") +
-  labs(y = "") +
-  guides(fill = "none", color = "none")
+        axis.title.y = element_text(size = font.size),
+        strip.text.x = element_text(size = font.size)) +
+  labs(y = "Estimated Coefficient") +
+  guides(fill = "none", color = "none") +
+  scale_fill_manual(values = pal_light[c(1, 2, 3)])
 
 # Oracle, Complete Case, and MLE
 seq2 <- ggplot(
@@ -124,16 +126,18 @@ seq2 <- ggplot(
         axis.text.x = element_blank(),
         axis.ticks.y = element_blank(),
         axis.text.y = element_blank(),
-        legend.position = "bottom") +
-  labs(y = "") +
-  guides(fill = "none", color = "none")
+        axis.title.y = element_text(size = font.size),
+        strip.text.x = element_text(size = font.size - 2)) +
+  labs(y = "Estimated Coefficient") +
+  guides(fill = "none", color = "none") +
+  scale_fill_manual(values = pal_light[c(1, 2, 3)])
 
-# Complete Case and SPARCC
+# SPARCC
 seq3 <- ggplot(
   filter(sim.out.long,
          param == 2,
          q == 0.8,
-         method %in% c("Complete Case", "SPARCC")),
+         method %in% c("SPARCC")),
   aes(y = estimate,
       fill = method)) +
   geom_boxplot() +
@@ -147,9 +151,11 @@ seq3 <- ggplot(
         axis.text.x = element_blank(),
         axis.ticks.y = element_blank(),
         axis.text.y = element_blank(),
-        legend.position = "bottom") +
-  labs(y = "") +
-  guides(fill = "none", color = "none")
+        axis.title.y = element_text(size = font.size),
+        strip.text.x = element_text(size = font.size)) +
+  labs(y = "Estimated Coefficient") +
+  guides(fill = "none", color = "none") +
+  scale_fill_manual(values = pal_light[5])
 
 # save plots --------------------------------------------------------------
 
@@ -157,16 +163,17 @@ seq1
 ggsave("create_figures/robsim_seq1.png",
        dpi = 300,
        width = 6,
-       height = 4)
+       height = 3)
 
 seq2
 ggsave("create_figures/robsim_seq2.png",
        dpi = 300,
        width = 6,
-       height = 4)
+       height = 3)
 
 seq3
 ggsave("create_figures/robsim_seq3.png",
        dpi = 300,
        width = 6,
-       height = 4)
+       height = 3)
+

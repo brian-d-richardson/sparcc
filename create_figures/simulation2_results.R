@@ -72,6 +72,7 @@ n.rep <- nrow(sim.out) /
 # make labels for plots
 param.labs <- c("\u03B20", "\u03B21", "\u03B22", "log\u03C3\u00B2")
 names(param.labs) <- 1:4
+font.size <- 16
 
 # colorblind friendly pallette
 pal_light <- c('#EE6677', '#228833', '#4477AA', '#CCBB44',
@@ -109,7 +110,13 @@ seq1 <- ggplot(
        shape = "Method",
        fill = "Method") +
   theme_bw() +
-  theme(legend.position = "bottom") +
+  theme(legend.position = "bottom",
+        axis.text.y = element_blank(),
+        axis.title.y = element_text(size = font.size),
+        axis.title.x = element_text(size = font.size),
+        axis.text.x = element_text(size = font.size - 2),
+        legend.text = element_text(size = font.size - 2),
+        legend.title = element_text(size = font.size)) +
   scale_x_continuous(breaks = seq(0.1, 0.9, by = 0.1)) +
   scale_color_manual(values = pal_light[c(1, 2, 3, 5)]) +
   scale_fill_manual(values = pal_light[c(1, 2, 3, 5)])
@@ -133,7 +140,13 @@ seq2 <- ggplot(
        shape = "Method",
        fill = "Method") +
   theme_bw() +
-  theme(legend.position = "bottom") +
+  theme(legend.position = "bottom",
+        axis.text.y = element_blank(),
+        axis.title.y = element_text(size = font.size),
+        axis.title.x = element_text(size = font.size),
+        axis.text.x = element_text(size = font.size - 2),
+        legend.text = element_text(size = font.size - 2),
+        legend.title = element_text(size = font.size)) +
   scale_x_continuous(breaks = seq(0.1, 0.9, by = 0.1)) +
   scale_color_manual(values = pal_light[c(1, 2, 3, 5)]) +
   scale_fill_manual(values = pal_light[c(1, 2, 3, 5)])
@@ -156,7 +169,13 @@ seq3 <- ggplot(
        shape = "Method",
        fill = "Method") +
   theme_bw() +
-  theme(legend.position = "bottom") +
+  theme(legend.position = "bottom",
+        axis.text.y = element_blank(),
+        axis.title.y = element_text(size = font.size),
+        axis.title.x = element_text(size = font.size),
+        axis.text.x = element_text(size = font.size - 2),
+        legend.text = element_text(size = font.size - 2),
+        legend.title = element_text(size = font.size)) +
   scale_x_continuous(breaks = seq(0.1, 0.9, by = 0.1)) +
   scale_color_manual(values = pal_light[c(1, 2, 3, 5)]) +
   scale_fill_manual(values = pal_light[c(1, 2, 3, 5)])
