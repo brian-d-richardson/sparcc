@@ -213,3 +213,34 @@ t3 <- make.table.allparam(format = "latex")
 
 ```
 
+```{r message = F}
+
+# table with beta_1 and median SE
+tbl4 <- sim.out.long %>%
+  filter(param == 2) %>% 
+  group_by(q, method, nuis.x, nuis.c) %>% 
+  summarise(v1_Bias = 10*mean(B - B.true, na.rm = T),
+            v2_ESE = 10*sd(B, na.rm = T),
+            v3_ASE = 10*mean(V, na.rm = T),
+            v4_MedSE = 10*median(V, na.rm = T),
+            v5_Cov = 100*mean(ci.cov, na.rm = T)) %>% 
+  gather(key, value, v1_Bias:v5_Cov) %>% 
+  unite(Group, q, key) %>% 
+  spread(Group, value)
+
+setNames(tbl4, c("Method", "X|Z", "C|Z",
+                 sub(".+_", "", tail(names(tbl4), -3)))) %>% 
+  kable(digits = c(0, 0, 0,
+                   2, 2, 2, 2, 1,
+                   2, 2, 2, 2, 1),
+        format = "html",
+        align = "lccrrrrrrrr",
+        booktabs = T) %>%
+  kable_styling("striped") %>%
+  row_spec(row = 0, bold = TRUE) %>% 
+  add_header_above(c(" " = 3,
+                   "q = 0.4" = 5,
+                   "q = 0.8" = 5))
+  
+```
+

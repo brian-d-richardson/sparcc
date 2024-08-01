@@ -411,10 +411,13 @@ assess.dat.beta <- function(n, q, B, s2, x.thetas, x.gamma, c.gamma,
   # grid to plot X density
   x.grid <- seq(0, 1, length = 100)
 
-  # plot data
-  datf %>%
+  # data for plotting
+  dat <- datf %>%
     mutate(e1 = eta1(x = X, z = Z),
-           e2 = eta2(c = C, z = Z)) %>%
+           e2 = eta2(c = C, z = Z))
+
+  # plot data
+  plot <- datf %>%
     ggplot() +
     geom_histogram(aes(x = X,
                        y = after_stat(density)),
@@ -436,5 +439,7 @@ assess.dat.beta <- function(n, q, B, s2, x.thetas, x.gamma, c.gamma,
             subtitle = paste0("q.hats = ", paste(round(q.hats$qhat, 2), collapse = ", "), "; ",
                               "x.bars = ", paste(round(x.bars$xbar, 2), collapse = ", ")))
 
+  return(list(dat = dat,
+              plot = plot))
 }
 

@@ -42,7 +42,7 @@ B <- c(1, 10, 2, log(1))
 
 # load simulation results from each of 10 clusters
 sim.out.list <- lapply(
-  X = c(1:9),
+  X = 0:9,
   FUN = function(clust) {
     cbind(clust,
           read.csv(paste0(
@@ -65,8 +65,8 @@ sim.out.long <- sim.out %>%
                            levels = c("or", "cc", "ml", "sp"),
                            labels = c("Oracle",
                                       "Complete Case",
-                                      "Parametric MLE",
-                                      "Semiparametric")),
+                                      "MLE",
+                                      "SPARCC")),
            param = factor(substr(method.param, 4, 4)),
            B.true = B[param])
              
@@ -190,4 +190,5 @@ ggsave("sim_plots/sim1_2_variances.png",
        height = 4)
 
 ```
+
 
