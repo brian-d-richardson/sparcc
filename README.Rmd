@@ -3,7 +3,7 @@ output: github_document
 ---
 
 # sparcc: semiparametric censored covariate estimation <img id="sparcc_hex" src="man/figures/sparcc_hex.png" align="right" width="125"/>
-Brian D. Richardson
+Anonymous
 
 
 ```{r setup, include=FALSE}
@@ -32,7 +32,7 @@ library(dplyr)
 
 ```
 
-The `sparcc` package contains functions to analyze data with a random right censored covariate using a semiparametric method. The methods implemented are introduced in the paper, "Doubly robust estimation under a random right censored covariate," which is currently in progress.
+The `sparcc` package contains functions to analyze data with a random right censored covariate using a semiparametric method. The methods implemented are introduced in the paper, "Robust and efficient estimation in the presence of a randomly censored covariate," which is currently in progress.
 
 The code implemented in this package is specific to the scenario where $Y|X,Z$ has a normal distribution with mean $\textrm{E}(Y|X,Z)=\beta_0+\beta_1X+\beta_2Z$, where $X$ is a censored covariate and $Z$ is an uncensored covariate.
 
