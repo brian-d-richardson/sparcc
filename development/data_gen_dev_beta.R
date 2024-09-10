@@ -3,7 +3,7 @@
 
 # Develop Data Generation when X and C have beta distributions
 
-# Brian Richardson
+# Anonymous
 
 # 2024-01-22
 

@@ -3,7 +3,7 @@
 
 # Develop integral equation solver
 
-# Brian Richardson
+# Anonymous
 
 # 2024-01-19
 

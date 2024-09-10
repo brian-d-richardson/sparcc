@@ -38,7 +38,7 @@ The `sparcc` package contains functions to analyze data with a random
 right censored covariate using a semiparametric method. The methods
 implemented are introduced in the paper, “Robust and efficient
 estimation in the presence of a randomly censored covariate,” which is
-currently in progress.
+currently submitted.
 
 The code implemented in this package is specific to the scenario where
 $Y|X,Z$ has a normal distribution with mean

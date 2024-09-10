@@ -3,7 +3,7 @@
 
 # Estimating function developer
 
-# Brian Richardson
+# Anonymous
 
 # 2024-04-02
 

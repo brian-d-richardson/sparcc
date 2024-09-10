@@ -3,7 +3,7 @@
 
 # MLE Variance Estimation
 
-# Brian Richardson
+# Anonymous
 
 # 2024-06-18
 

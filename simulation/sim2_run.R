@@ -3,7 +3,7 @@
 
 # Run Simulation 2
 
-# Brian Richardson
+# Anonymous
 
 # 2024-04-04
 

@@ -3,7 +3,7 @@
 
 # MLE B-spline Implementation
 
-# Brian Richardson
+# Anonymous
 
 # 2024-06-21
 
