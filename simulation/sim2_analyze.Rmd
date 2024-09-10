@@ -150,9 +150,9 @@ ggplot(sim.out.sum,
   scale_color_manual(values = pal_light[c(1, 2, 3, 5)]) +
   labs(x = "Censoring Proportion (q)",
        y = "Empircal Variance of Parameter Estimates",
-       color = "Method",
-       shape = "Method",
-       fill = "Method") +
+       color = "Estimator:",
+       shape = "Estimator:",
+       fill = "Estimator:") +
   ggtitle("Variance of Parameter Estimators by Censoring Proportion",
           subtitle = paste0(n.rep, " Simulations per Setting"))
 
@@ -174,9 +174,9 @@ ggplot(filter(sim.out.sum, param == 2, q <= 0.85),
   geom_ribbon(alpha = 0.3) +
   labs(x = "Censoring Proportion (q)",
        y = "Variance",
-       color = "Method",
-       shape = "Method",
-       fill = "Method") +
+       color = "Estimator:",
+       shape = "Estimator:",
+       fill = "Estimator:") +
   theme_bw() +
   theme(legend.position = "bottom") +
   scale_x_continuous(breaks = seq(0.1, 0.9, by = 0.1)) +
