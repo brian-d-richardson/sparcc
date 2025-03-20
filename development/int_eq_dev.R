@@ -17,6 +17,7 @@
 rm(list = ls())
 #setwd(dirname(getwd()))
 library(devtools)
+library(microbenchmark)
 load_all()
 
 # define parameters -------------------------------------------------------
@@ -108,7 +109,8 @@ a <- get.a(
   fy = fy, SF = SF, zs = zs,
   x.nds = x.nds, x.wts = x.wts,
   c.nds = c.nds, c.wts = c.wts,
-  y.nds = y.nds, y.wts = y.wts)
+  y.nds = y.nds, y.wts = y.wts,
+  xz.interaction = F)
 
 # check that a has mean zero
 colMeans(a[[1]] * x.wts[,1])
@@ -140,3 +142,16 @@ ggplot(adat,
   labs(x = "X",
        y = "Function Value",
        color = "Component")
+
+# Evaluate Computation Time -----------------------------------------------
+
+solve.a <- function() {
+  get.a(
+    B = B, s2 = s2, mu = mu, d.mu = d.mu,
+    fy = fy, SF = SF, zs = zs,
+    x.nds = x.nds, x.wts = x.wts,
+    c.nds = c.nds, c.wts = c.wts,
+    y.nds = y.nds, y.wts = y.wts,
+    xz.interaction = F)
+}
+microbenchmark(solve.a(), times = 10)

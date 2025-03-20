@@ -83,7 +83,7 @@ We first look at which simulation settings lead to errors.
 # check for simulations with errors
 sim.out.long %>% 
   filter(param == 1) %>% 
-  group_by(q, method) %>% 
+  group_by(n, q, method) %>% 
   summarize(prop.error = mean(is.na(estimate))) %>% 
   filter(prop.error > 0) %>% 
   kable(digits = 3) %>%
@@ -91,22 +91,19 @@ sim.out.long %>%
 
 ```
 
-In these simulations, all models converged with no errors.
-
 ```{r}
 
 # extract simulation parameters
+n <- unique(sim.out$n)
 q <- unique(sim.out$q)
 n.rep <- nrow(sim.out) /
-  n_distinct(dplyr::select(sim.out, q))
+  n_distinct(dplyr::select(sim.out, n, q))
 
 # make labels for plots
 param.labs <- c("\u03B20", "\u03B21", "\u03B22", "log\u03C3\u00B2")
 names(param.labs) <- 1:4
 
 # colorblind friendly pallette
-#pal_light <- cbbPalette <- c('#BBBBBB', '#228833', '#4477AA', '#AA3377')
-#pal_dark <- cbbPalette <- c('#5d5d5d', '#114419', '#223b55', '#55193b')
 pal_light <- c('#EE6677', '#228833', '#4477AA', '#CCBB44', '#66CCEE', '#AA3377', '#BBBBBB')
 pal_dark <- c('#991122', '#114419', '#223b55', '#6b611d', '#117799', '#55193b', '#5d5d5d')
 
@@ -117,7 +114,7 @@ pal_dark <- c('#991122', '#114419', '#223b55', '#6b611d', '#117799', '#55193b', 
 
 # obtain empirical variances by method, parameter, and q
 sim.out.sum <- sim.out.long %>% 
-  group_by(q, method, param) %>% 
+  group_by(n, q, method, param) %>% 
   filter(!is.na(estimate)) %>% 
   summarise(var = var(estimate),
             Var = mean((estimate - B.true) ^ 2),
@@ -139,10 +136,9 @@ ggplot(sim.out.sum,
            color = method,
            shape = method)) +
   geom_point() +
-  #geom_errorbar() +
   geom_ribbon(alpha = 0.3) +
   geom_line() +
-  facet_wrap(~ param,
+  facet_grid(n ~ param,
              scales = "free",
              labeller = labeller(param = param.labs)) +
   theme_bw() +
@@ -153,15 +149,53 @@ ggplot(sim.out.sum,
        color = "Estimator:",
        shape = "Estimator:",
        fill = "Estimator:") +
-  ggtitle("Variance of Parameter Estimators by Censoring Proportion",
+  ggtitle("Variance of Parameter Estimators by Censoring Proportion and Sample Size",
           subtitle = paste0(n.rep, " Simulations per Setting"))
 
 ```
 
+This is difficult to read due to the instability of the MLE with small sample size and large censoring proportion. We can subset to only $n=8000$.
+
 ```{r}
 
-# plot variance over q for beta_1 only
-ggplot(filter(sim.out.sum, param == 2, q <= 0.85),
+# plot variance over q
+ggplot(filter(sim.out.sum,
+              n == 8000),
+       aes(x = q,
+           y = Var,
+           ymin = Var.lower,
+           ymax = Var.upper,
+           fill = method,
+           color = method,
+           shape = method)) +
+  geom_point() +
+  geom_ribbon(alpha = 0.3) +
+  geom_line() +
+  facet_grid(~ param,
+             scales = "free",
+             labeller = labeller(param = param.labs)) +
+  theme_bw() +
+  theme(legend.position = "bottom") +
+  scale_color_manual(values = pal_light[c(1, 2, 3, 5)]) +
+  labs(x = "Censoring Proportion (q)",
+       y = "Empircal Variance of Parameter Estimates",
+       color = "Estimator:",
+       shape = "Estimator:",
+       fill = "Estimator:") +
+  ggtitle("Variance of Parameter Estimators by Censoring Proportion and Sample Size",
+          subtitle = paste0(n.rep, " Simulations per Setting"))
+
+```
+
+
+
+```{r}
+
+# plot variance over q for beta_1 only and n = 8000
+ggplot(filter(sim.out.sum,
+              param == 2,
+              q <= 0.85,
+              n == 8000),
        aes(x = q,
            y = var,
            ymin = Var.lower,
@@ -180,9 +214,7 @@ ggplot(filter(sim.out.sum, param == 2, q <= 0.85),
   theme_bw() +
   theme(legend.position = "bottom") +
   scale_x_continuous(breaks = seq(0.1, 0.9, by = 0.1)) +
-  scale_color_manual(values = pal_light[c(1, 2, 3, 5)]) #+
-  #ggtitle("Variance of \u03B21 Estimator by Censoring Proportion",
-          #subtitle = paste0(n.rep, " Simulations per Setting"))
+  scale_color_manual(values = pal_light[c(1, 2, 3, 5)])
 
 ggsave("sim_plots/sim1_2_variances.png",
        dpi = 300,

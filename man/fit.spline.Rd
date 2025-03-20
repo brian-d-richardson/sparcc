@@ -4,7 +4,7 @@
 \alias{fit.spline}
 \title{Fit spline model with censored outcome data}
 \usage{
-fit.spline(dat, m.knots, deg)
+fit.spline(dat, m.knots, deg, Boundary.knots)
 }
 \arguments{
 \item{dat}{data frame, the observed data}

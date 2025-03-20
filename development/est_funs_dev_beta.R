@@ -205,12 +205,15 @@ Sml <- get.Sml(dat = dat, B = B, ls2 = ls2,
 assess.ee(Sml)
 
 # semiparametric efficient score
+st <- Sys.time()
 Seff <- get.Seff(dat = dat, B = B, ls2 = ls2,
                  args = list(eta1 = eta1,
                              x.nds = x.nds, x.wts = x.wts,
                              c.nds = c.nds, c.wts = c.wts,
                              y.nds = y.nds, y.wts = y.wts),
                  return.sums = F)
+et <- Sys.time()
+et - st
 assess.ee(Seff)
 
 # estimate beta -----------------------------------------------------------

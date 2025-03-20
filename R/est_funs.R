@@ -204,8 +204,14 @@ get.root <- function(dat, score, start, args = list()) {
     rootSolve::multiroot(
       f = function(theta) score(dat = dat, args = args, theta = theta),
       start = start)$root,
-    warning = function(w) rep(NA, length(start)),
-    error = function(e) rep(NA, length(start)))
+    warning = function(w) {
+      print(w)
+      rep(NA, length(start))
+    },
+    error = function(e) {
+      print(e)
+      rep(NA, length(start))
+    })
   names(est) <- paste0("B", 1:length(start))
   return(est)
 }

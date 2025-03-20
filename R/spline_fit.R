@@ -19,7 +19,7 @@
 #'
 #' @export
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-fit.spline <- function(dat, m.knots, deg) {
+fit.spline <- function(dat, m.knots, deg, Boundary.knots) {
 
   # unique z values
   zs <- sort(unique(dat$Z))
@@ -32,7 +32,7 @@ fit.spline <- function(dat, m.knots, deg) {
   bs.grid <- splines::bs(
     x = xx,
     knots = knots,
-    Boundary.knots = c(0, 1),
+    Boundary.knots = Boundary.knots,
     degree = deg,
     intercept = F)
   #bs.grid <- bs.grid[, -c(ncol(bs.grid) - 1, ncol(bs.grid))]
@@ -51,7 +51,7 @@ fit.spline <- function(dat, m.knots, deg) {
     bs.obs <- splines::bs(
       x = dat$W,
       knots = knots,
-      Boundary.knots = c(0, 1),
+      Boundary.knots = Boundary.knots,
       degree = deg,
       intercept = F)
     #bs.obs <- bs.obs[, -c(ncol(bs.obs) - 1, ncol(bs.obs))]
@@ -98,7 +98,7 @@ fit.spline <- function(dat, m.knots, deg) {
     bs.obs <- splines::bs(
       x = dat$W,
       knots = knots,
-      Boundary.knots = c(0, 1),
+      Boundary.knots = Boundary.knots,
       degree = deg,
       intercept = F)
     #bs.obs <- bs.obs[, -c(ncol(bs.obs) - 1, ncol(bs.obs))]
@@ -177,7 +177,7 @@ fit.spline <- function(dat, m.knots, deg) {
     bs.x <- splines::bs(
       x = x,
       knots = knots,
-      Boundary.knots = c(0, 1),
+      Boundary.knots = Boundary.knots,
       degree = deg,
       intercept = F)
     #bs.x <- bs.x[, -c(ncol(bs.x) - 1, ncol(bs.x))]

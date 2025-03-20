@@ -36,10 +36,10 @@ load_all()
 # simulation parameters ---------------------------------------------------
 
 base.seed <- 10^6 * as.integer(args) # baseline seed (specific to cluster)
-len.out <- 85                        # output size
+len.out <- 95                        # output size
 
 n.sim <- 100                         # number of sims per cluster
-n <- 8000                            # sample size
+n <- c(800, 8000)                    # sample size
 q <- c(0.4, 0.8)                     # censoring proportion
 
 # run simulations ---------------------------------------------------------
