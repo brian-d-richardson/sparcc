@@ -58,17 +58,20 @@
 #' \item{`x.model`: a list with
 #' `x.model.type` (parametric or nonparametric),
 #' `distr.x`, `m.knots`, `deg`,
+#' `x.params.hat` (the estimated parameters for the distribution of `X|Z` at
+#' each level of `Z`),
 #' `x.nds` (the quadrature nodes used for `X`),
 #' `x.wts` (the quadrature weights used for `X`),
-#' `eta1.hat` (the estimated density function of `X|Z`)
+#' `eta1` (the estimated density function of `X|Z` at specific nodes)
 #' }
-#'
 #' \item{`c.model`: a list with
 #' `c.model.type` (parametric or nonparametric),
 #' `distr.c`, `m.knots`, `deg`,
+#' `c.params.hat` (the estimated parameters for the distribution of `C|Z` at
+#' each level of `Z`),
 #' `c.nds` (the quadrature nodes used for `C`),
 #' `c.wts` (the quadrature weights used for `C`),
-#' `eta1.hat` (the estimated density function of `C|Z`)
+#' `eta2` (the estimated density function of `C|Z` at specific nodes)
 #' }
 #' \item{`outcome.model`: a list with
 #' `outcome.fmla` (the outcome model formula),
@@ -115,6 +118,13 @@ sparcc <- function(
   ## unique z values
   zs <- sort(unique(dat$Z))
 
+  ## outcome model
+  outcome.fmla <- if (xz.interaction) {
+    Y ~ X * Z
+  } else {
+    Y ~ X + Z
+  }
+
   ## X|Z quadrature nodes
   x.nds <- vapply(
     X = zs,
@@ -153,7 +163,7 @@ sparcc <- function(
           mutate(left = W,
                  right = ifelse(Delta == 1, W, NA)) %>%
           dplyr::select(left, right) %>%
-          fitdistrplus::fitdistcens(distr = distr.x)
+          { suppressWarnings(fitdistrplus::fitdistcens(., distr = distr.x)) }
         return(est$estimate)
       }))
     eta1.hat <- function(x, z) {
@@ -170,7 +180,7 @@ sparcc <- function(
           mutate(left = W,
                  right = ifelse(Delta == 0, W, NA)) %>%
           dplyr::select(left, right) %>%
-          fitdistrplus::fitdistcens(distr = distr.c)
+          { suppressWarnings(fitdistrplus::fitdistcens(., distr = distr.c)) }
         return(est$estimate)
       }))
     eta2.hat <- function(c, z) {
@@ -205,6 +215,8 @@ sparcc <- function(
     ## nullify parametric model values
     distr.x = NULL
     distr.c = NULL
+    x.params.hat = NULL
+    c.params.hat = NULL
   }
 
   ## create X|Z quadrature weights
@@ -231,13 +243,19 @@ sparcc <- function(
   st2 <- Sys.time()
 
   ## complete case linear model to get starting value
-  naive.lm <- lm(Y ~ W + Z,
-                 data = filter(data, Delta == 1))
-  start <- c(naive.lm$coef, log(var(naive.lm$resid)))
+  naive.fmla <- if (xz.interaction) {
+    Y ~ W * Z
+  } else {
+    Y ~ W + Z
+  }
+  cc.lm <- lm(naive.fmla,
+              data = filter(data, Delta == 1))
+  start <- c(cc.lm$coef, log(var(cc.lm$resid)))
 
   sp.args <- list(
     mu = mu, d.mu = d.mu, SF = SF, fy = fy,
     eta1 = eta1.hat,
+    xz.interaction = xz.interaction,
     x.nds = x.nds, x.wts = x.wts,
     c.nds = c.nds, c.wts = c.wts,
     y.nds = y.nds, y.wts = y.wts)
@@ -266,6 +284,53 @@ sparcc <- function(
   t3 <- round(as.numeric(difftime(et3, st3, units = "secs")), 2)
   message(paste0("STEP 3 complete (", t3, " seconds)"))
 
+
+  # format quadrature rules for output --------------------------------------
+
+  ## X|Z quadrature
+  eta1 <- cbind(
+    x.nds,
+    vapply(
+      X = 1:length(zs),
+      FUN.VALUE = numeric(mx),
+      FUN = function(i) eta1.hat(x.nds[,i], zs[i]))) %>%
+    `colnames<-`(do.call(paste0, expand.grid(zs, c("x.nds", "eta1")))) %>%
+    as.data.frame() %>%
+    mutate(row = row_number()) %>%
+    tidyr::pivot_longer(
+      cols = -row,
+      names_to = c("Z", "var"),
+      names_pattern = "([01])(.*)",
+      values_to = "value") %>%
+    tidyr::pivot_wider(
+      id_cols = c(row, Z),
+      names_from = var,
+      values_from = value) %>%
+    mutate(Z = as.integer(Z)) %>%
+    select(Z, x.nds, eta1)
+
+  ## C|Z quadrature
+  eta2 <- cbind(
+    c.nds,
+    vapply(
+      X = 1:length(zs),
+      FUN.VALUE = numeric(mc),
+      FUN = function(i) eta2.hat(c.nds[,i], zs[i]))) %>%
+    `colnames<-`(do.call(paste0, expand.grid(zs, c("c.nds", "eta2")))) %>%
+    as.data.frame() %>%
+    mutate(row = row_number()) %>%
+    tidyr::pivot_longer(
+      cols = -row,
+      names_to = c("Z", "var"),
+      names_pattern = "([01])(.*)",
+      values_to = "value") %>%
+    tidyr::pivot_wider(
+      id_cols = c(row, Z),
+      names_from = var,
+      values_from = value) %>%
+    mutate(Z = as.integer(Z)) %>%
+    select(Z, c.nds, eta2)
+
   # format output -----------------------------------------------------------
 
   ## X|Z model
@@ -274,9 +339,8 @@ sparcc <- function(
     distr.x = distr.x,
     m.knots = m.knots,
     deg = deg,
-    x.nds = x.nds,
-    x.wts = x.wts,
-    eta1.hat = eta1.hat,
+    x.params.hat = x.params.hat,
+    eta1 = eta1
   )
 
   ## C|Z model
@@ -285,17 +349,11 @@ sparcc <- function(
     distr.c = distr.c,
     m.knots = m.knots,
     deg = deg,
-    c.nds = c.nds,
-    c.wts = c.wts,
-    eta2.hat = eta2.hat,
+    c.params.hat = c.params.hat,
+    eta2 = eta2
   )
 
   ## outcome model
-  outcome.fmla <- if (xz.interaction) {
-    Y ~ X * Z
-  } else {
-    Y ~ X + Z
-  }
   outcome.model <- list(
     outcome.fmla = outcome.fmla,
     coef = sparcc.root,

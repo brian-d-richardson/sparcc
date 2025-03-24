@@ -73,17 +73,20 @@ a list of arguments including
 \item{\code{x.model}: a list with
 \code{x.model.type} (parametric or nonparametric),
 \code{distr.x}, \code{m.knots}, \code{deg},
+\code{x.params.hat} (the estimated parameters for the distribution of \code{X|Z} at
+each level of \code{Z}),
 \code{x.nds} (the quadrature nodes used for \code{X}),
 \code{x.wts} (the quadrature weights used for \code{X}),
-\code{eta1.hat} (the estimated density function of \code{X|Z})
+\code{eta1} (the estimated density function of \code{X|Z} at specific nodes)
 }
-
 \item{\code{c.model}: a list with
 \code{c.model.type} (parametric or nonparametric),
 \code{distr.c}, \code{m.knots}, \code{deg},
+\code{c.params.hat} (the estimated parameters for the distribution of \code{C|Z} at
+each level of \code{Z}),
 \code{c.nds} (the quadrature nodes used for \code{C}),
 \code{c.wts} (the quadrature weights used for \code{C}),
-\code{eta1.hat} (the estimated density function of \code{C|Z})
+\code{eta2} (the estimated density function of \code{C|Z} at specific nodes)
 }
 \item{\code{outcome.model}: a list with
 \code{outcome.fmla} (the outcome model formula),
