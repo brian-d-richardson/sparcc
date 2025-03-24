@@ -1,7 +1,7 @@
 
 # sparcc: semiparametric censored covariate estimation <img id="sparcc_hex" src="man/figures/sparcc_hex.png" align="right" width="125"/>
 
-Anonymous
+Brian Richardson
 
 ## Installation
 
@@ -10,79 +10,122 @@ Installation of `sparcc` from GitHub requires the
 package and can be done with the following code:
 
 ``` r
-# install the package
+## install the package
 devtools::install_github(repo = "brian-d-richardson/sparcc", 
                          ref = "main")
 ```
 
 ``` r
-# load the package
+## load the package
 library(sparcc)
 
-# other necessary packages
+## other necessary packages
 library(dplyr)
+library(ggplot2)
 ```
 
-    ## 
-    ## Attaching package: 'dplyr'
+The `sparcc` package contains functions to analyze data with a randomly
+right-censored covariate using the SPARCC (or “semiparametric censored
+covariate”) estimator.
 
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     filter, lag
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     intersect, setdiff, setequal, union
-
-The `sparcc` package contains functions to analyze data with a random
-right censored covariate using a semiparametric method. The methods
-implemented are introduced in the paper, “Robust and efficient
-estimation in the presence of a randomly censored covariate,” which is
-currently submitted.
+The methods implemented are introduced in the paper, “Robust and
+efficient estimation in the presence of a randomly right-censored
+covariate,” which is currently under revision. A pre-print can be found
+here: <https://arxiv.org/abs/2409.07795>.
 
 The code implemented in this package is specific to the scenario where
 $Y|X,Z$ has a normal distribution with mean
-$\textrm{E}(Y|X,Z)=\beta_0+\beta_1X+\beta_2Z$, where $X$ is a censored
-covariate and $Z$ is an uncensored covariate.
+$\textrm{E}(Y|X,Z)=\beta_0+\beta_1X+\beta_2Z + \beta_3XZ$, for a
+censored covariate $X$ and an uncensored discrete-valued covariate $Z$.
 
-## Example
+## Tutorial
 
-Below is an example of three estimation procedures used on a data set
-with a censored covariate. We first define parameters for data
-generation and estimation.
+Below is a tutorial for how the SPARCC estimator can be used on a data
+set with a censored covariate.
+
+### Data Generation
+
+We first need to simulate a data set with a censored covariate. This can
+be done, for example, using the built in `gen.data.beta` function in the
+`sparcc` package.
+
+The `gen.data.beta` function generates the following variables: \*
+$Z \sim \textrm{Bernoulli}(0.5)$, a binary fully observed covariate, \*
+$X$, a censored covariate with
+$X|Z \sim \textrm{beta}(\alpha_{11} + \alpha_{12}Z, \alpha_{13} + \alpha_{14}Z)$,
+\* $C$, the censoring variable with
+$C|Z \sim \textrm{beta}(\alpha_{21} + \alpha_{22}Z, \alpha_{23} + \alpha_{24}Z)$,
+\* $Y$, the outcome with
+$Y|X,Z \sim \textrm{Normal}(\beta_0 + \beta_1X + \beta_2Z, \sigma^2)$.
+
+To ensure that $X$ and $C$ are generated with the desired censoring
+proportion $q=P(X>C)$, the following reparametrization is used:
+
+$$
+\begin{bmatrix}
+\alpha_{11} \\
+\alpha_{12} \\
+\alpha_{13} \\
+\alpha_{14}
+\end{bmatrix} =
+\begin{bmatrix}
+1 + \gamma_x - \theta_{x1} \\
+\theta_{x1} - \theta_{x2} \\
+1 + \gamma_x + \theta_{x1} \\
+-\theta_{x1} + \theta_{x2}
+\end{bmatrix}
+$$ $$
+\begin{bmatrix}
+\alpha_{21} \\
+\alpha_{22} \\
+\alpha_{23} \\
+\alpha_{24}
+\end{bmatrix} =
+\begin{bmatrix}
+1 + \gamma_c - \theta_{c1} \\
+\theta_{c1} - \theta_{c2} \\
+1 + \gamma_c + \theta_{c1} \\
+-\theta_{c1} + \theta_{c2}
+\end{bmatrix}
+$$
+
+The user specifies desired values for
+$\gamma_x, \gamma_c, \theta_{x1}, \theta_{x2}$ along with a desired
+censoring proportion $q$. The function then finds an appropriate
+$\theta_{c1}, \theta_{c2}$ in order to satisfy the constraint
+$q=\textrm{P}(X>C)$.
+
+From the complete data $(Y, X, C, Z)$, the observed data
+$(Y, W, \Delta, Z)$ are generated using $W = \min(X, C)$ and
+$\Delta = I(X \leq C)$.
+
+The `gen.data.beta` function returns a list of four data frames:
+
+1)  `datf`: The full data, including the outcome `Y`, the covariate `X`,
+    and the censoring time `C`.
+2)  `dat`: The observed data, including the outcome `Y`, the possibly
+    censored covariate `W`, and the censoring indicator `Delta`.
+3)  `dat0`: The oracle data, a version of the observed data where no
+    observations are censored (essentially setting `C` equal to infinity
+    for all observations).
+4)  `datcc`: The complete case data, or the subset of `dat` with
+    `Delta == 1`.
 
 ``` r
-# define parameters -------------------------------------------------------
-
+## define parameters
 set.seed(123)                 # random number seed for reproducibility
-n <- 8000                     # sample size
-q <- 0.8                      # censoring proportion
+n <- 800                      # sample size
+q <- 0.6                      # censoring proportion
 B <- c(1, 10, 2)              # outcome model parameters
 s2 <- 1                       # Var(Y|X,Z)
 x.thetas <- 0.5 * c(-1, 1)    # parameters governing X|Z and C|Z
 x.gamma <- 1
 c.gamma <- 2
-mx <- 40                      # number of nodes in quadrature grid for X|Z
-mc <- 40                      # number of nodes in quadrature grid for C|Z
-my <- 5                       # number of nodes in quadrature grid for Y|X,Z
-```
 
-We now generate data using the built in `gen.data` function. This
-returns a list of data frames: (i) `datf`: The full data, including the
-outcome `Y`, the covariate `X`, and the censoring time `C`. (ii) `dat`:
-The observed data, including the outcome `Y`, the possibly censored
-covariate `W`, and the censoring indicator `Delta`. (iii) `dat0`: The
-oracle data, a version of the observed data where no observations are
-censored (essentially setting `C` equal to infinity for all
-observations) (iv) `datcc`: The complete case data, or the subset of
-`dat` with `Delta == 1`.
-
-For this example, $X|Z$ and $C|Z$ follow beta distributions leading to
-the desired censoring proportion $q=\textrm{P}(X>C)$.
-
-``` r
-dat.list <- gen.data.beta(n = n, q = q, B = B, s2 = s2,
-                          x.thetas = x.thetas, x.gamma = x.gamma, c.gamma)
+## generate data
+dat.list <- gen.data.beta(
+  n = n, q = q, B = B, s2 = s2,
+  x.thetas = x.thetas, x.gamma = x.gamma, c.gamma)
 datf <- dat.list$datf          # full data
 dat0 <- dat.list$dat0          # oracle data
 dat <- dat.list$dat            # observed data
@@ -90,239 +133,363 @@ datcc <- dat.list$datcc        # complete case data
 zs <- sort(unique(dat$Z))      # unique z values
 ```
 
-Using the observed data, we can estimate the nuisance distributions of
-$X|Z$ and $C|Z$. To illustrate the consequences of model
-misspecification, we incorrectly model $X|Z$ with marginal beta
-distribution, while it truly follows a conditional beta distribution. We
-correctly specify $C|Z$ as conditional beta.
+We can visualize the full and observed data below.
 
 ``` r
-## estimated parameters for X|Z
-x.fit <- dat %>%
-  mutate(left = W,
-           right = ifelse(Delta == 1, W, NA)) %>%
-  dplyr::select(left, right) %>%
-  fitdistrplus::fitdistcens(distr = "beta")
-x.params.hat <- x.fit$estimate
-
-## estimated density of X|Z
-eta1 <- function(x, z) {
-  dbeta(x = x,
-        shape1 = x.params.hat["shape1"],
-        shape2 = x.params.hat["shape2"])
-}
-
-## estimated parameters for C|Z
-c.params.hat <- t(vapply(
-    X = 0:1,
-    FUN.VALUE = numeric(2),
-    FUN = function(z) {
-      est <- dat %>%
-        filter(Z == z) %>%
-        mutate(left = W,
-               right = ifelse(Delta == 0, W, NA)) %>%
-        dplyr::select(left, right) %>%
-        fitdistrplus::fitdistcens(distr = "beta")
-      return(est$estimate)
-    }))
-
-## estimated density of C|Z
-eta2 <- function(c, z) {
-  dbeta(x = c,
-        shape1 = c.params.hat[z + 1, "shape1"],
-        shape2 = c.params.hat[z + 1, "shape2"])
-}
+## plot full data
+datf %>% 
+  ggplot(aes(x = X,
+             y = Y, 
+             color = factor(Z))) +
+  geom_point() +
+  labs(x = "True X Value",
+       color = "Z",
+       title = "Full Data") +
+  theme_bw() +
+  theme(legend.position = "bottom")
 ```
 
-Using the estimated densities, we then create quadrature rules for $X|Z$
-and $C|Z$. Additionally, we create a Gauss-Hermite quadrature rule for
-$Y$.
+![](README_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
 ``` r
-## X|Z quadrature nodes
-x.nds <- vapply(
-  X = zs,
-  FUN.VALUE = numeric(mx),
-  FUN = function(z) seq(1E-6, 1-1E-6, length = mx))
-
-## X|Z quadrature weights
-x.wts <- vapply(
-  X = 1:length(zs),
-  FUN.VALUE = numeric(mx),
-  FUN = function(i) eta1(x.nds[,i], zs[i]) /
-    sum(eta1(x.nds[,i], zs[i])))
-
-## C|Z quadrature nodes
-c.nds <- vapply(
-  X = zs,
-  FUN.VALUE = numeric(mc),
-  FUN = function(z) seq(1E-6, 1-1E-6, length = mc))
-
-## X|Z quadrature weights
-c.wts <- vapply(
-  X = 1:length(zs),
-  FUN.VALUE = numeric(mc),
-  FUN = function(i) eta2(c.nds[,i], zs[i]) /
-    sum(eta2(c.nds[,i], zs[i])))
-
-## Y|X,Z quadrature
-gq <- statmod::gauss.quad(n = my, kind = "hermite")
-y.nds <- gq$nodes
-y.wts <- gq$weights
+## plot observed data
+dat %>% 
+  ggplot(aes(x = W,
+             y = Y, 
+             color = factor(Z))) +
+  geom_point() +
+  labs(x = "Observed W = min(X, Delta)",
+       color = "Z",
+       title = "Observed Data") +
+  theme_bw() +
+  theme(legend.position = "bottom")
 ```
 
-We can now estimate the parameters of interest in the outcome model
-using:
+![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
-1)  oracle method (using the unobserved $X$ values)
-2)  complete case
-3)  maximum likelihood estimation
-4)  semiparametric efficient estimation
+### Estimation
 
-Note that, since we misspecified $X|Z$, the MLE is not a consistent
-estimator. The semiparametric method on the other hand remains
-consistent since the distribution for $C|Z$ is correctly specified as
-gamma.
+Using the observed data, we can fit the SPARCC estimator using the
+`sparcc` function. This can be done by either (i) using parametric
+working models for the nuisance distributions for $X|Z$ and $C|Z$, or
+(ii) using nonparametric models for the nuisance distributions.
+
+#### Parametric Working Models
+
+To use the SPARCC estimator with parametric working models, use the
+`nuisance.models = "parametric"` option.
+
+Then supply the posited parametric distributions for $X$ and $C$ using
+the `distr.x` and `distr.c` options, respectively. Each should be a
+character string `"name"` naming a distribution for which the
+corresponding density function `dname` is defined. For example, the
+default is `"beta"`, for which the density `dbeta` is defined in base R.
+It is assumed that $X$ (and $C$) then follow these posited distributions
+with possibly different parameter values at each level of $Z$.
+
+Importantly, this implementation of the SPARCC estimator is consistent
+and asymptotically normal provided at least one of these two model
+specifications is correct.
+
+The following additional function arguments have default values, but are
+included in the function call below for the sake of this tutorial: \*
+`xz.interaction`: a logical indicator for whether an `X*Z` interaction
+is to be included in the outcome model (`TRUE`) or not (`FALSE`), \*
+`mx`: a positive integer, the number of quadrature nodes used for `X`,
+\* `mc`: a positive integer, the number of quadrature nodes used for
+`C`, \* `my`: a positive integer, the number of Gauss-Hermite quadrature
+nodes used for $Y$, \* `range.x`: a numeric vector of length 2, the
+range of the support of `X`, \* `range.c`: a numeric vector of length 2,
+the range of the support of `C`.
 
 ``` r
-## complete case linear model to get starting value
-naive.lm <- lm(Y ~ W + Z, data = datcc)
-
-## complete case
-B.cc <- get.root(dat = dat, score = get.Scc,
-                 start = c(naive.lm$coef, log(var(naive.lm$resid))))
-
-round(B.cc, 2)
+sparcc.param <- sparcc(
+  data = dat,
+  xz.interaction = T,
+  nuisance.models = "parametric",
+  distr.x = "beta",
+  distr.c = "beta",
+  mx = 40,
+  mc = 40,
+  my = 5,
+  range.x = c(1E-6, 1-1E-6),
+  range.c = c(1E-6, 1-1E-6), 
+)
 ```
 
-    ##    B1    B2    B3    B4 
-    ##  0.94 10.03  2.08  0.03
+    ## STEP 1: fit parametric nuisance models
+
+    ## STEP 1 complete (0.13 seconds)
+
+    ## STEP 2: obtain SPARCC estimator
+
+    ## STEP 2 complete (33.92 seconds)
+
+    ## STEP 3: obtain SPARCC variance estimator
+
+    ## STEP 3 complete (11.69 seconds)
+
+The `sparcc` function returns a list with three items: `x.model`,
+`c.model`, and `outcome.model`, which are themselves lists with results
+for the $X|Z$ nuisance model, the $C|Z$ nuisance model, and the $Y|X,Z$
+outcome model, respectively.
+
+The `x.model` and `c.model` lists contain the estimated density
+functions for these two distributions at their quadrature nodes (`eta1`
+and `eta2`). With the parametric nuisance model implementation (i.e., if
+`nuisance.models = "parametric"`), the `x.model` and `c.model` lists
+also contain the posited distributional families (`distr.x` and
+`distr.c`) and estimated parameters (`x.params.hat` and `c.params.hat`).
+
+As a demonstration, we can assess here how well the posited beta
+distribution for $X|Z$ fits the data. (Note that in reality, we would
+not observe most of these $X$ values due to censoring.)
 
 ``` r
-## oracle
-B.or <- get.root(dat = dat0, score = get.Scc, start = B.cc)
+## extract estimated X|Z density
+eta1 <- sparcc.param$x.model$eta1
 
-round(B.or, 2)
+## plot full data vs estimated density of X|Z
+ggplot(data = NULL) +
+  geom_line(data = eta1,
+            aes(x = x.nds,
+                y = eta1,
+                color = factor(Z)),
+            linewidth = 2) +
+  geom_histogram(data = datf,
+                 aes(x = X,
+                     y = after_stat(density),
+                     group = factor(Z),
+                     fill = factor(Z)),
+                 position = "identity",
+                 alpha = 0.5,
+                 bins = 50) +
+  labs(x = "X",
+       y = "Density",
+       title = "Estimated and Observed X|Z",
+       subtitle = "(Parametric Model)",
+       fill = "Z",
+       color = "Z") +
+  theme_bw() +
+  theme(legend.position = "bottom")
 ```
 
-    ##    B1    B2    B3    B4 
-    ##  0.91 10.09  2.07  0.00
+![](README_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
-The MLE requires the additional arguments `x.nds` and `x.wts`,
-corresponding to the nodes and weights in the quadrature rule for $X|Z$.
-These are passed to the `get.root` function as named items in the `args`
-list.
+The `outcome.model` list contains the outcome model formula, the
+estimated model coefficients, and the covariance matrix for these
+coefficients.
 
 ``` r
-## MLE
-mle.args <- list(x.nds = x.nds, x.wts = x.wts)
-B.mle <- get.root(dat = dat, score = get.Sml, start = B.cc,
-                  args = mle.args)
-
-round(B.mle, 2)
+## outcome model formula
+sparcc.param$outcome.model$outcome.fmla
 ```
 
-    ##   B1   B2   B3   B4 
-    ## 1.94 8.24 0.93 0.22
-
-The MLE requires the additional arguments `x.nds`, `x.wts`, `c.nds`, and
-`c.wts`, corresponding to the nodes and weights in the quadrature rules
-for $X|Z$ and $C|Z$.
+    ## Y ~ X * Z
+    ## <environment: 0x000002b1ae4361e0>
 
 ``` r
-## semiparametric efficient estimator
-sp.args <- list(x.nds = x.nds, x.wts = x.wts,
-                c.nds = c.nds, c.wts = c.wts,
-                y.nds = y.nds, y.wts = y.wts)
-B.sp <- get.root(dat = dat, score = get.Seff, start = B.cc,
-                 args = sp.args)
-
-round(B.sp, 2)
+## estimated coefficient; truth is c(1, 10, 2, 0, 0)
+sparcc.est <- sparcc.param$outcome.model$coef
+round(sparcc.est, 3)
 ```
 
-    ##   B1   B2   B3   B4 
-    ## 0.96 9.95 2.07 0.03
-
-We then compare estimates. Note that the MLE estimates are far from the
-truth, which makes sense since the MLE is inconsistent under a
-misspecified model for $X|Z$.
+    ##     B1     B2     B3     B4     B5 
+    ##  0.659 10.689  2.502 -0.830 -0.144
 
 ``` r
-# compare estimates
-round(rbind(c(B, log(s2)), B.or, B.cc, B.mle, B.sp), 2)
+## covariance matrix
+sparcc.cov <- sparcc.param$outcome.model$cov
+round(sparcc.cov, 3)
 ```
 
-    ##         B1    B2   B3   B4
-    ##       1.00 10.00 2.00 0.00
-    ## B.or  0.91 10.09 2.07 0.00
-    ## B.cc  0.94 10.03 2.08 0.03
-    ## B.mle 1.94  8.24 0.93 0.22
-    ## B.sp  0.96  9.95 2.07 0.03
+    ##        [,1]   [,2]   [,3]   [,4]   [,5]
+    ## [1,]  0.040 -0.078 -0.040  0.078  0.000
+    ## [2,] -0.078  0.173  0.078 -0.174  0.000
+    ## [3,] -0.040  0.078  0.055 -0.123 -0.001
+    ## [4,]  0.078 -0.174 -0.123  0.397  0.003
+    ## [5,]  0.000  0.000 -0.001  0.003  0.006
 
-Finally, we can compute standard errors for the different estimators
-using the sandwich variance technique. Since the variance of the MLE
-depends on uncertainty in estimation of nuisance parameters, we stack
-estimating functions for the outcome model and nuisance model.
+We can use these estimated coefficients and corresponding covariance
+matrix to plot the regression line of $Y$ on $X$ and $Z$, along with a
+corresponding 95% confidence interval.
 
 ``` r
-## complete case
-SE.cc <- var.est.sand(dat = datcc, theta = B.cc, args = list(),
-                      n = sum(dat$Delta),
-                      get.S = get.Scc, return.se = T)
+## new X and Z data for fitting the regression model
+Xnew <- data.frame(
+  int = 1,
+  X = seq(0, 1, length = 100),
+  Z = rep(0:1, each = 100)) %>% 
+  mutate(XZ = X * Z) %>% 
+  as.matrix()
 
-## oracle
-SE.or <- var.est.sand(dat = dat0, theta = B.or, args = list(),
-                      get.S = get.Scc, return.se = T)
+## fitted values
+Yhat <- Xnew %*% sparcc.est[1:4]
 
+## standard errors for fitted values
+Yhat.se <- sqrt(diag(Xnew %*% sparcc.cov[1:4, 1:4] %*% t(Xnew)))
 
-## MLE
-SE.mle <- var.est.sand(
-    dat = dat,
-    get.S = function(dat, theta, args, return.sums = F) {
+## data for plotting
+plot.dat <- data.frame(
+  X = Xnew[,2],
+  Z = factor(Xnew[,3]),
+  Yhat = Yhat,
+  Ylower = Yhat - qnorm(0.975) * Yhat.se,
+  Yupper = Yhat + qnorm(0.975) * Yhat.se)
 
-      alpha <- tail(theta, -4)
-
-      # define estimated X|Z density
-      eta1 <- function(x, z) {
-        dbeta(x = x,
-              shape1 = alpha[1],
-              shape2 = alpha[2])
-      }
-
-      # create quadrature nodes
-      x.wts <- vapply(
-        X = 1:length(zs),
-        FUN.VALUE = numeric(mx),
-        FUN = function(i) eta1(x.nds[,i], zs[i]) / sum(eta1(x.nds[,i], zs[i])))
-
-      args <- list(x.nds = x.nds, x.wts = x.wts)
-
-      # stack estimating equations
-      S <- cbind(get.Sml(dat = dat, theta = head(theta, 4),
-                         args = args, return.sums = F),
-                 d.log.fx(dat = dat, theta = alpha,
-                          args = args, return.sums = F))
-
-      if (return.sums) {
-        return(colSums(S))
-      } else {
-        return(S)
-      }
-    },
-    theta = c(B.mle, x.params.hat),
-    args = list(),
-    return.se = T)[1:4]
-
-## semiparametric efficient
-SE.sp <- var.est.sand(dat = dat, theta = B.sp,
-                      args = sp.args,
-                      get.S = get.Seff, return.se = T)
-
-round(rbind(SE.or, SE.cc, SE.mle, SE.sp), 3)
+## plot fitted lines and 95% confidence intervals
+ggplot(data = plot.dat,
+       aes(x = X,
+           y = Yhat,
+           ymin = Ylower,
+           ymax = Yupper,
+           color = Z,
+           fill = Z)) +
+  geom_line() +
+  geom_ribbon(alpha = 0.5) +
+  labs(x = "X",
+       y = "Estimated Regression Line (95% CI)",
+       color = "Z",
+       fill = "Z",
+       title = "SPARCC Outcome Model Results",
+       subtitle = "(Using Parametric Nuisance Models)") +
+  theme_bw() +
+  theme(legend.position = "bottom")
 ```
 
-    ##         [,1]  [,2]  [,3]  [,4]
-    ## SE.or  0.035 0.051 0.025 0.015
-    ## SE.cc  0.074 0.187 0.062 0.034
-    ## SE.mle 0.075 0.172 0.059 0.034
-    ## SE.sp  0.073 0.176 0.063 0.034
+![](README_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+
+#### Nonparametric Models
+
+To use the SPARCC estimator with nonparametric nuisance models, use the
+`nuisance.models = "nonparametric"` option.
+
+Under this option, the distributions of $X|Z$ and $C|Z$ are fit using a
+nonparametric B-spline estimator. Instead of supplying posited
+parametric distributions, specify the polynomial degree and number of
+spline knots using the `deg` and `m.knots` arguments.
+
+``` r
+sparcc.nonpar <- sparcc(
+  data = dat,
+  xz.interaction = T,
+  nuisance.models = "nonparametric",
+  deg = 3,
+  m.knots = 5,
+  mx = 40,
+  mc = 40,
+  my = 5,
+  range.x = c(1E-6, 1-1E-6),
+  range.c = c(1E-6, 1-1E-6), 
+)
+```
+
+    ## STEP 1: fit nonparametric nuisance models
+
+    ## STEP 1 complete (1.33 seconds)
+
+    ## STEP 2: obtain SPARCC estimator
+
+    ## STEP 2 complete (33.35 seconds)
+
+    ## STEP 3: obtain SPARCC variance estimator
+
+    ## STEP 3 complete (11.6 seconds)
+
+The output is very similar to that for the parametric working model
+implementation. We can again assess the fit of the B-spline estimator of
+the density of $X|Z$.
+
+``` r
+## extract nonparametrically estimated X|Z density
+eta1.np <- sparcc.nonpar$x.model$eta1
+
+## plot full data vs estimated density of X|Z
+ggplot(data = NULL) +
+  geom_line(data = eta1.np,
+            aes(x = x.nds,
+                y = eta1,
+                color = factor(Z)),
+            linewidth = 2) +
+  geom_histogram(data = datf,
+                 aes(x = X,
+                     y = after_stat(density),
+                     group = factor(Z),
+                     fill = factor(Z)),
+                 position = "identity",
+                 alpha = 0.5,
+                 bins = 50) +
+  labs(x = "X",
+       y = "Density",
+       title = "Estimated and Observed X|Z",
+       subtitle = "(Nonparametric Model)",
+       fill = "Z",
+       color = "Z") +
+  theme_bw() +
+  theme(legend.position = "bottom")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+
+Finally, we can extract the estimated outcome model coefficients and
+corresponding covariance matrix, and plot the regression line of $Y$ on
+$X$ and $Z$.
+
+``` r
+## estimated coefficient; truth is c(1, 10, 2, 0, 0)
+sparcc.est.np <- sparcc.nonpar$outcome.model$coef
+round(sparcc.est.np, 3)
+```
+
+    ##     B1     B2     B3     B4     B5 
+    ##  0.658 10.693  2.502 -0.814 -0.144
+
+``` r
+## covariance matrix
+sparcc.cov.np <- sparcc.nonpar$outcome.model$cov
+round(sparcc.cov.np, 3)
+```
+
+    ##        [,1]   [,2]   [,3]   [,4]   [,5]
+    ## [1,]  0.040 -0.078 -0.040  0.078  0.000
+    ## [2,] -0.078  0.173  0.078 -0.173  0.000
+    ## [3,] -0.040  0.078  0.055 -0.122 -0.001
+    ## [4,]  0.078 -0.173 -0.122  0.390  0.003
+    ## [5,]  0.000  0.000 -0.001  0.003  0.006
+
+``` r
+## fitted values
+Yhat.np <- Xnew %*% sparcc.est.np[1:4]
+
+## standard errors for fitted values
+Yhat.se.np <- sqrt(diag(Xnew %*% sparcc.cov.np[1:4, 1:4] %*% t(Xnew)))
+
+## data for plotting
+plot.dat.np <- data.frame(
+  X = Xnew[,2],
+  Z = factor(Xnew[,3]),
+  Yhat = Yhat.np,
+  Ylower = Yhat.np - qnorm(0.975) * Yhat.se.np,
+  Yupper = Yhat.np + qnorm(0.975) * Yhat.se.np)
+
+## plot fitted lines and 95% confidence intervals
+ggplot(data = plot.dat.np,
+       aes(x = X,
+           y = Yhat,
+           ymin = Ylower,
+           ymax = Yupper,
+           color = Z,
+           fill = Z)) +
+  geom_line() +
+  geom_ribbon(alpha = 0.5) +
+  labs(x = "X",
+       y = "Estimated Regression Line (95% CI)",
+       color = "Z",
+       fill = "Z",
+       title = "SPARCC Outcome Model Results",
+       subtitle = "(Using Nonparametric Nuisance Models)") +
+  theme_bw() +
+  theme(legend.position = "bottom")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->

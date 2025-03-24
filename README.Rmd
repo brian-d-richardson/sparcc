@@ -3,7 +3,7 @@ output: github_document
 ---
 
 # sparcc: semiparametric censored covariate estimation <img id="sparcc_hex" src="man/figures/sparcc_hex.png" align="right" width="125"/>
-Anonymous
+Brian Richardson
 
 
 ```{r setup, include=FALSE}
@@ -33,11 +33,11 @@ library(ggplot2)
 
 ```
 
-The `sparcc` package contains functions to analyze data with a random-right censored covariate using the SPARCC (or "semiparametric censored covariate") estimator.
+The `sparcc` package contains functions to analyze data with a randomly right-censored covariate using the SPARCC (or "semiparametric censored covariate") estimator.
 
 The methods implemented are introduced in the paper, "Robust and efficient estimation in the presence of a randomly right-censored covariate," which is currently under revision. A pre-print can be found here: https://arxiv.org/abs/2409.07795.
 
-The code implemented in this package is specific to the scenario where $Y|X,Z$ has a normal distribution with mean $\textrm{E}(Y|X,Z)=\beta_0+\beta_1X+\beta_2Z + \beta_3XZ$, where $X$ is a censored covariate and $Z$ is an uncensored discrete-valued covariate.
+The code implemented in this package is specific to the scenario where $Y|X,Z$ has a normal distribution with mean $\textrm{E}(Y|X,Z)=\beta_0+\beta_1X+\beta_2Z + \beta_3XZ$, for a censored covariate $X$ and an uncensored discrete-valued covariate $Z$.
 
 ## Tutorial
 
@@ -45,13 +45,13 @@ Below is a tutorial for how the SPARCC estimator can be used on a data set with 
 
 ### Data Generation
 
-We first define parameters for data generation and estimation. This can be done using the built in `gen.data.beta` function in the `sparcc` package.
+We first need to simulate a data set with a censored covariate. This can be done, for example, using the built in `gen.data.beta` function in the `sparcc` package.
 
 The `gen.data.beta` function generates the following variables:
-- $Z \sim \textrm{Bernoulli}(0.5)$, a binary fully observed covariate,
-- $X$, a censored covariate with $X|Z \sim \textrm{beta}(\alpha_{11} + alpha_{12}Z, \alpha_{13} + \alpha_{14}Z)$,
-- $C$, the censoring variable with $C|Z \sim \textrm{beta}(\alpha_{21} + \alpha_{22}Z, \alpha_{23} + \alpha_{24}Z)$,
-- $Y$, the outcome with $Y|X,Z \sim \Normal(\beta_0 + \beta_1X + \beta_2Z, \sigma^2)$.
+* $Z \sim \textrm{Bernoulli}(0.5)$, a binary fully observed covariate,
+* $X$, a censored covariate with $X|Z \sim \textrm{beta}(\alpha_{11} + \alpha_{12}Z, \alpha_{13} + \alpha_{14}Z)$,
+* $C$, the censoring variable with $C|Z \sim \textrm{beta}(\alpha_{21} + \alpha_{22}Z, \alpha_{23} + \alpha_{24}Z)$,
+* $Y$, the outcome with $Y|X,Z \sim \textrm{Normal}(\beta_0 + \beta_1X + \beta_2Z, \sigma^2)$.
 
 To ensure that $X$ and $C$ are generated with the desired censoring proportion $q=P(X>C)$, the following reparametrization is used:
 
@@ -85,7 +85,7 @@ $$
 $$
 
 
-The user specifies desired values for $\gamma_x, \gamma_c, \theta_{x1}, \theta_{x2}$ along with a desired censoring proportion $q=\textrm{P}(X>C)$. The function then finds an appropriate $\theta_{x1}, \theta_{x2}$ in order to satisfy the constriant $q=\textrm{P}(X>C)$.
+The user specifies desired values for $\gamma_x, \gamma_c, \theta_{x1}, \theta_{x2}$ along with a desired censoring proportion $q$. The function then finds an appropriate $\theta_{c1}, \theta_{c2}$ in order to satisfy the constraint $q=\textrm{P}(X>C)$.
 
 From the complete data $(Y, X, C, Z)$, the observed data $(Y, W, \Delta, Z)$ are
 generated using $W = \min(X, C)$ and $\Delta = I(X \leq C)$.
@@ -101,7 +101,7 @@ The `gen.data.beta` function returns a list of four data frames:
 
 ## define parameters
 set.seed(123)                 # random number seed for reproducibility
-n <- 200                      # sample size
+n <- 800                      # sample size
 q <- 0.6                      # censoring proportion
 B <- c(1, 10, 2)              # outcome model parameters
 s2 <- 1                       # Var(Y|X,Z)
@@ -161,19 +161,19 @@ Using the observed data, we can fit the SPARCC estimator using the `sparcc` func
 
 #### Parametric Working Models
 
-To use the SPARCC estimator with parametric working models, use the `nuisance.models = "parametric` option.
+To use the SPARCC estimator with parametric working models, use the `nuisance.models = "parametric"` option.
 
-Then supply the posited parametric distributions for $X$ and $C$ using the `distr.x` and `distr.c` options, respectively. Each should be a character string "name" naming a distribution for which the corresponding density function `dname` must be defined. For example, the default is `"beta"`, for which the density `dbeta` is defined in base R. It is assumed that $X$ (and $C$) then follow these posited distributions with possibly different parameter values at each level of $Z$.
+Then supply the posited parametric distributions for $X$ and $C$ using the `distr.x` and `distr.c` options, respectively. Each should be a character string `"name"` naming a distribution for which the corresponding density function `dname` is defined. For example, the default is `"beta"`, for which the density `dbeta` is defined in base R. It is assumed that $X$ (and $C$) then follow these posited distributions with possibly different parameter values at each level of $Z$.
 
 Importantly, this implementation of the SPARCC estimator is consistent and asymptotically normal provided at least one of these two model specifications is correct.
 
-The following additional function arguments have default values, but included in the functio call below for the sake of this tutorial:
--`xz.interaction` a logical indicator for whether an `X*Z` interaction is to be included in the outcome model (`TRUE`) or not (`FALSE`),
--`mx`: a positive integer, the number of quadrature nodes used for `X`,
--`mc`: a positive integer, the number of quadrature nodes used for `C`,
--`my`: a positive integer, the number of Gauss-Hermite quadrature nodes
--`range.x`: a numeric vector of length 2, the range of the support of `X`,
--`range.c` a numeric vector of length 2, the range of the support of `C`,
+The following additional function arguments have default values, but are included in the function call below for the sake of this tutorial:
+* `xz.interaction`: a logical indicator for whether an `X*Z` interaction is to be included in the outcome model (`TRUE`) or not (`FALSE`),
+* `mx`: a positive integer, the number of quadrature nodes used for `X`,
+* `mc`: a positive integer, the number of quadrature nodes used for `C`,
+* `my`: a positive integer, the number of Gauss-Hermite quadrature nodes used for $Y$,
+* `range.x`: a numeric vector of length 2, the range of the support of `X`,
+* `range.c`: a numeric vector of length 2, the range of the support of `C`.
 
 ```{r}
 
@@ -192,9 +192,9 @@ sparcc.param <- sparcc(
 
 ```
 
-The `sparcc` function returns a list with three items: `x.model`, `c.model`, and `outcome.model`. Each of these is a list with results for the $X|Z$ nuisance model, the $C|Z$ nuisance model, and the $Y|X,Z$ outcome model, respectively.
+The `sparcc` function returns a list with three items: `x.model`, `c.model`, and `outcome.model`, which are themselves lists with results for the $X|Z$ nuisance model, the $C|Z$ nuisance model, and the $Y|X,Z$ outcome model, respectively.
 
-The `x.model` and `c.model` lists contain the estimated density functions for these two distributions at their quadrature nodes (`eta1` and `eta2`). With the parametric nuisance model implementation (i.e., if `nuisance.models = "parametric`), the `x.model` and `c.model` lists also contain the posited distributions (`distr.x` and `distr.c`) and estimated parameters (`x.params.hat` and `c.params.hat`).
+The `x.model` and `c.model` lists contain the estimated density functions for these two distributions at their quadrature nodes (`eta1` and `eta2`). With the parametric nuisance model implementation (i.e., if `nuisance.models = "parametric"`), the `x.model` and `c.model` lists also contain the posited distributional families (`distr.x` and `distr.c`) and estimated parameters (`x.params.hat` and `c.params.hat`).
 
 As a demonstration, we can assess here how well the posited beta distribution for $X|Z$ fits the data. (Note that in reality, we would not observe most of these $X$ values due to censoring.)
 
@@ -221,7 +221,7 @@ ggplot(data = NULL) +
   labs(x = "X",
        y = "Density",
        title = "Estimated and Observed X|Z",
-       subtitle = "(Paremetric Model)",
+       subtitle = "(Parametric Model)",
        fill = "Z",
        color = "Z") +
   theme_bw() +
@@ -295,7 +295,7 @@ ggplot(data = plot.dat,
 
 #### Nonparametric  Models
 
-To use the SPARCC estimator with nonparametric nuisance models, use the `nuisance.models = "nonparametric` option.
+To use the SPARCC estimator with nonparametric nuisance models, use the `nuisance.models = "nonparametric"` option.
 
 Under this option, the distributions of $X|Z$ and $C|Z$ are fit using a nonparametric B-spline estimator. Instead of supplying posited parametric distributions, specify the polynomial degree and number of spline knots using the `deg` and `m.knots` arguments.
 
@@ -341,7 +341,7 @@ ggplot(data = NULL) +
   labs(x = "X",
        y = "Density",
        title = "Estimated and Observed X|Z",
-       subtitle = "(Nonparemetric Model)",
+       subtitle = "(Nonparametric Model)",
        fill = "Z",
        color = "Z") +
   theme_bw() +
@@ -349,7 +349,7 @@ ggplot(data = NULL) +
 
 ```
 
-Finally, we can use extract the estimated outcome model coefficients and corresponding covariance matrix, and plot the regression line of $Y$ on $X$ and $Z$.
+Finally, we can extract the estimated outcome model coefficients and corresponding covariance matrix, and plot the regression line of $Y$ on $X$ and $Z$.
 
 ```{r}
 
