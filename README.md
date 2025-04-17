@@ -45,9 +45,9 @@ set with a censored covariate.
 
 ### Data Generation
 
-We first need to simulate a data set with a censored covariate. This can
-be done, for example, using the built in `gen.data.beta` function in the
-`sparcc` package.
+We first need to simulate a data set with a censored covariate. This
+data generation can be done, for example, using the built in
+`gen.data.beta` function in the `sparcc` package.
 
 The `gen.data.beta` function generates the following variables: \*
 $Z \sim \textrm{Bernoulli}(0.5)$, a binary fully observed covariate, \*
@@ -59,7 +59,8 @@ $C|Z \sim \textrm{beta}(\alpha_{21} + \alpha_{22}Z, \alpha_{23} + \alpha_{24}Z)$
 $Y|X,Z \sim \textrm{Normal}(\beta_0 + \beta_1X + \beta_2Z, \sigma^2)$.
 
 To ensure that $X$ and $C$ are generated with the desired censoring
-proportion $q=P(X>C)$, the following reparametrization is used:
+proportion $q=P(X>C)$, the following reparametrization is used within
+the `gen.data.beta` function:
 
 $$
 \begin{bmatrix}
@@ -91,9 +92,9 @@ $$
 
 The user specifies desired values for
 $\gamma_x, \gamma_c, \theta_{x1}, \theta_{x2}$ along with a desired
-censoring proportion $q$. The function then finds an appropriate
-$\theta_{c1}, \theta_{c2}$ in order to satisfy the constraint
-$q=\textrm{P}(X>C)$.
+censoring proportion $q$. The `gen.data.beta` function then finds an
+appropriate $\theta_{c1}, \theta_{c2}$ in order to satisfy the
+constraint $q=\textrm{P}(X>C)$.
 
 From the complete data $(Y, X, C, Z)$, the observed data
 $(Y, W, \Delta, Z)$ are generated using $W = \min(X, C)$ and
@@ -170,16 +171,17 @@ dat %>%
 ### Estimation
 
 Using the observed data, we can fit the SPARCC estimator using the
-`sparcc` function. This can be done by either (i) using parametric
-working models for the nuisance distributions for $X|Z$ and $C|Z$, or
-(ii) using nonparametric models for the nuisance distributions.
+`sparcc` function. The SPARCC estimator can be obtained by either (i)
+using parametric working models for the nuisance distributions for $X|Z$
+and $C|Z$, or (ii) using nonparametric models for the nuisance
+distributions.
 
 #### Parametric Working Models
 
 To use the SPARCC estimator with parametric working models, use the
 `nuisance.models = "parametric"` option.
 
-Then supply the posited parametric distributions for $X$ and $C$ using
+Then supply the posited parametric working models for $X$ and $C$ using
 the `distr.x` and `distr.c` options, respectively. Each should be a
 character string `"name"` naming a distribution for which the
 corresponding density function `dname` is defined. For example, the
@@ -219,15 +221,15 @@ sparcc.param <- sparcc(
 
     ## STEP 1: fit parametric nuisance models
 
-    ## STEP 1 complete (0.13 seconds)
+    ## STEP 1 complete (0.19 seconds)
 
     ## STEP 2: obtain SPARCC estimator
 
-    ## STEP 2 complete (33.92 seconds)
+    ## STEP 2 complete (38.16 seconds)
 
     ## STEP 3: obtain SPARCC variance estimator
 
-    ## STEP 3 complete (11.69 seconds)
+    ## STEP 3 complete (12.02 seconds)
 
 The `sparcc` function returns a list with three items: `x.model`,
 `c.model`, and `outcome.model`, which are themselves lists with results
@@ -236,14 +238,14 @@ outcome model, respectively.
 
 The `x.model` and `c.model` lists contain the estimated density
 functions for these two distributions at their quadrature nodes (`eta1`
-and `eta2`). With the parametric nuisance model implementation (i.e., if
+and `eta2`). With the parametric working model implementation (i.e., if
 `nuisance.models = "parametric"`), the `x.model` and `c.model` lists
 also contain the posited distributional families (`distr.x` and
 `distr.c`) and estimated parameters (`x.params.hat` and `c.params.hat`).
 
 As a demonstration, we can assess here how well the posited beta
 distribution for $X|Z$ fits the data. (Note that in reality, we would
-not observe most of these $X$ values due to censoring.)
+not observe most of these $X$ values due to right-censoring.)
 
 ``` r
 ## extract estimated X|Z density
@@ -286,7 +288,7 @@ sparcc.param$outcome.model$outcome.fmla
 ```
 
     ## Y ~ X * Z
-    ## <environment: 0x000002b1ae4361e0>
+    ## <environment: 0x000001e8d17a50e8>
 
 ``` r
 ## estimated coefficient; truth is c(1, 10, 2, 0, 0)
@@ -386,17 +388,18 @@ sparcc.nonpar <- sparcc(
 
     ## STEP 1: fit nonparametric nuisance models
 
-    ## STEP 1 complete (1.33 seconds)
+    ## STEP 1 complete (1.39 seconds)
 
     ## STEP 2: obtain SPARCC estimator
 
-    ## STEP 2 complete (33.35 seconds)
+    ## STEP 2 complete (34.71 seconds)
 
     ## STEP 3: obtain SPARCC variance estimator
 
-    ## STEP 3 complete (11.6 seconds)
+    ## STEP 3 complete (12.1 seconds)
 
-The output is very similar to that for the parametric working model
+The output is a list containing `x.model`, `c.model`, and
+`outcome.model`, similar to that for the parametric working model
 implementation. We can again assess the fit of the B-spline estimator of
 the density of $X|Z$.
 
