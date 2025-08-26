@@ -30,6 +30,7 @@ library(sparcc)
 ## other necessary packages
 library(dplyr)
 library(ggplot2)
+library(statmod)
 
 ```
 

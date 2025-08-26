@@ -22,6 +22,7 @@ library(sparcc)
 ## other necessary packages
 library(dplyr)
 library(ggplot2)
+library(statmod)
 ```
 
 The `sparcc` package contains functions to analyze data with a randomly
@@ -221,15 +222,15 @@ sparcc.param <- sparcc(
 
     ## STEP 1: fit parametric nuisance models
 
-    ## STEP 1 complete (0.19 seconds)
+    ## STEP 1 complete (0.91 seconds)
 
     ## STEP 2: obtain SPARCC estimator
 
-    ## STEP 2 complete (38.16 seconds)
+    ## STEP 2 complete (46.22 seconds)
 
     ## STEP 3: obtain SPARCC variance estimator
 
-    ## STEP 3 complete (12.02 seconds)
+    ## STEP 3 complete (15.91 seconds)
 
 The `sparcc` function returns a list with three items: `x.model`,
 `c.model`, and `outcome.model`, which are themselves lists with results
@@ -288,7 +289,7 @@ sparcc.param$outcome.model$outcome.fmla
 ```
 
     ## Y ~ X * Z
-    ## <environment: 0x000001e8d17a50e8>
+    ## <environment: 0x000002110fcacee8>
 
 ``` r
 ## estimated coefficient; truth is c(1, 10, 2, 0, 0)
@@ -388,15 +389,15 @@ sparcc.nonpar <- sparcc(
 
     ## STEP 1: fit nonparametric nuisance models
 
-    ## STEP 1 complete (1.39 seconds)
+    ## STEP 1 complete (1.26 seconds)
 
     ## STEP 2: obtain SPARCC estimator
 
-    ## STEP 2 complete (34.71 seconds)
+    ## STEP 2 complete (46.91 seconds)
 
     ## STEP 3: obtain SPARCC variance estimator
 
-    ## STEP 3 complete (12.1 seconds)
+    ## STEP 3 complete (16.25 seconds)
 
 The output is a list containing `x.model`, `c.model`, and
 `outcome.model`, similar to that for the parametric working model
