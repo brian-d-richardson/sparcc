@@ -8,4 +8,14 @@ Description: The `sparcc` package contains functions to analyze data with a rand
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2
+Imports:
+    dplyr,
+    fitdistrplus,
+    ggh4x,
+    ggplot2,
+    numDeriv,
+    rootSolve,
+    statmod,
+    tidyr,
+    zipfR
