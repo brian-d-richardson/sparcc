@@ -1,0 +1,265 @@
+---
+title: "Sparcc Simulation 3"
+author: "Anonymous"
+date: "`r format(Sys.time(), '%m/%d/%Y')`"
+output:
+  html_document:
+    code_folding: hide
+---
+
+```{r message = F, warning = F}
+
+rm(list = ls())
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(stringr)
+library(ggh4x)
+library(scales)
+library(ggthemes)
+library(kableExtra)
+
+```
+
+## Simulation Setup
+
+The goal of this program is to evaluate the performance of the semiparametric efficient estimator $\widehat{\pmb{\beta}}_{sp}$ using simulations in the following setting:
+
+* $Z \sim \textrm{Uniform}(0, \dots, p-1)$,
+* $X|Z \sim \textrm{beta}(\pmb{\alpha}_1(Z))$,
+* $C|Z \sim \textrm{beta}(\pmb{\alpha}_@(Z))$,
+* $Y|X,Z \sim N(\beta_0 + \beta_1X + \beta_2Z, \sigma^2)$.
+
+For each simulation, we generate a data set of size $n$ then compute the complete case estimator $\widehat{\pmb{\beta}}_{cc}$, the oracle estimator $\widehat{\pmb{\beta}}_{or}$, the parametric MLE $\widehat{\pmb{\beta}}_{ml}$, and the semiparametric efficient estimator $\widehat{\pmb{\beta}}_{sp}$ using either parametric or nonparametric nuisance distribution models.
+
+```{r}
+
+# true beta
+B.true <- c(1, 10, 2, log(1))
+
+# load simulation results from each of 10 clusters
+sim.out.list <- lapply(
+  X = 0:9,
+  FUN = function(clust) {
+    cbind(clust,
+          read.csv(paste0(
+            "sim3_data/sd",
+            clust, ".csv")))
+  })
+
+# combine simulation results into 1 data frame
+sim.out <- bind_rows(sim.out.list)
+
+colnames(sim.out) <- gsub(".B", ".", colnames(sim.out))
+colnames(sim.out) <- gsub("B2", "trueB2", colnames(sim.out))
+
+# make long data frame
+sim.out.long <- sim.out %>% 
+  pivot_longer(cols = starts_with(c("B", "V")),
+               names_to = "method.param",
+               values_to = "estimate") %>% 
+  mutate(name = factor(str_sub(method.param, 1, 1)),
+         method = factor(str_sub(method.param, 3, 4),
+                         levels = c("sp", "cc", "or"),
+                         labels = c("Semipar", "CC", "Oracle")),
+         nuis.x = factor(str_sub(str_sub(
+           gsub("[.]", "", method.param), 4, -2), 1, 1),
+           levels = c("", "1", "2"),
+           labels = c("-", "Correct", "Nonpar")),
+         nuis.c = factor(str_sub(str_sub(
+           gsub("[.]", "", method.param), 4, -2), 2, 2),
+           levels = c("", "1", "2"),
+           labels = c("-", "Correct", "Nonpar")),
+         param = factor(str_sub(method.param, -1, -1)),
+         B.true = B.true[param]) %>% 
+  dplyr::select(-c(method.param)) %>% 
+  group_by(clust, n, q, ndistinct.Z, name, method, nuis.x, nuis.c, param) %>% 
+  mutate(id = row_number()) %>% 
+  pivot_wider(names_from = name,
+              values_from = estimate,
+              id_cols = c(clust, n, q, ndistinct.Z, method, nuis.x, nuis.c,
+                          param, B.true, id)) %>% 
+  mutate(B = ifelse(abs(B - B.true) > 10, NA, B),
+         ci.lower = B - qnorm(0.975) * V,
+         ci.upper = B + qnorm(0.975) * V,
+         ci.cov = B.true >= ci.lower & B.true <= ci.upper)
+
+```
+
+## Simulation Results
+
+#### Errors in Simulations
+
+We first look at which simulation settings lead to errors.
+
+```{r message = F}
+
+# check for simulations with errors
+sim.out.long %>% 
+  filter(param == 1) %>% 
+  group_by(q, n, ndistinct.Z, method, nuis.x, nuis.c) %>% 
+  summarize(n.error = sum(is.na(B)),
+            prop.error = mean(is.na(B))) %>% 
+  filter(prop.error > 0) %>% 
+  kable(digits = 3) %>%
+  kable_styling("striped")
+
+```
+
+#### Table of Results
+
+In the table, bias, variance, and MSE are all multiplied by a factor of 100.
+
+```{r message = F}
+
+tbl1 <- sim.out.long %>%
+  filter(param == 2) %>% 
+  mutate(dim.z = factor(log(as.numeric(ndistinct.Z), 2),
+                        levels = 1:3,
+                        labels = c("Univariate Z",
+                                   "Bivariate Z",
+                                   "Trivariate Z"))) %>% 
+  group_by(dim.z, method, nuis.x, nuis.c) %>% 
+  summarise(v1_Bias = 10*mean(B - B.true, na.rm = T),
+            v2_ESE = 10*sd(B, na.rm = T),
+            v3_ASE = 10*mean(V, na.rm = T),
+            v4_Cov = 100*mean(ci.cov, na.rm = T))
+
+kbl1 <- setNames(tbl1, c("Dimension of Z", "Method", "X|Z", "C|Z",
+                 sub(".+_", "", tail(names(tbl1), -4)))) %>% 
+  kable(digits = c(0, 0, 0, 0,
+                   2, 2, 2, 1),
+        format = "latex",
+        align = "ccccrrrr",
+        booktabs = T) %>%
+  kable_styling("striped") %>%
+  row_spec(row = 0, bold = TRUE)
+
+```
+
+
+#### Plot of Results
+
+```{r}
+
+pal_light <- c('#EE6677', '#228833', '#4477AA', '#CCBB44',
+               '#66CCEE','#AA3377', '#BBBBBB')
+font.size <- 12
+
+sim.out.long %>%
+  filter(param == 2) %>%
+  mutate(ndistinct.Z = factor(ndistinct.Z)) %>% 
+  ggplot(aes(y = B,
+             x = ndistinct.Z,
+             fill = method)) +
+  geom_boxplot() +
+  geom_hline(aes(yintercept = B.true),
+             linetype = "dashed",
+             linewidth = 0.75) +
+  facet_nested(q ~ method + nuis.x + nuis.c,
+               scales = "free") +
+  theme_bw() +
+  theme(axis.ticks.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.title.y = element_text(size = font.size),
+        strip.text.x = element_text(size = font.size)) +
+  labs(y = "Estimated Coefficient") +
+  guides(fill = "none", color = "none") +
+  scale_fill_manual(values = pal_light[c(1, 2, 3, 5)])
+
+
+```
+
+#### Plot of Computation Times
+
+```{r}
+
+sim.out.time <- sim.out %>% 
+  select(ndistinct.Z, starts_with("time")) %>% 
+  pivot_longer(starts_with("time"),
+               names_to = "proc",
+               values_to = "time") %>% 
+  mutate(proc = gsub("time.", "", proc)) %>% 
+  separate(proc, into = c("proc1", "proc2"), sep = "[.]") %>% 
+  mutate(Proc1 = factor(proc1,
+                        levels = c("xz", "cz", "est", "var"),
+                        labels = c("X|Z Model", "C|Z Model",
+                                   "Param. Est.",
+                                   "Var. Est."),
+                        ordered = T),
+         Proc2 = factor(proc2,
+                        levels = c("sp", "ml", "cc", "or",
+                                   "param", "nonpar"),
+                        labels = c("SPARCC", "MLE",
+                                   "Complete Case", "Oracle",
+                                   "Parametric", "Nonparametric"),
+                        ordered = T))
+
+```
+
+```{r}
+
+# plot times for nuisance model fitting
+sim.out.time %>% 
+  filter(proc1 %in% c("cz", "xz")) %>% 
+  mutate(ndistinct.Z = factor(ndistinct.Z)) %>% 
+  ggplot(aes(x = ndistinct.Z,
+             y = time)) +
+  geom_boxplot() +
+  facet_grid(Proc2 ~ Proc1,
+             scales = "free") +
+  labs(x = "Number of Distinct Z Values",
+       y = "Computation Time (Seconds)") +
+  theme(legend.position = "bottom") +
+  labs(title = "Nuisance Model Computation Times")
+
+# plot times for outcome model fitting
+sim.out.time %>% 
+  filter(proc1 %in% c("est", "var")) %>% 
+  mutate(ndistinct.Z = factor(ndistinct.Z)) %>% 
+  ggplot(aes(x = ndistinct.Z,
+             y = time)) +
+  geom_boxplot() +
+  facet_grid(Proc2 ~ Proc1,
+             scales = "free") +
+  labs(x = "Number of Distinct Z Values",
+       y = "Computation Time (Seconds)") +
+  theme(legend.position = "bottom") +
+  labs(title = "Nuisance Outcome Model Computation Times")
+
+```
+
+#### Table of Computation Times
+
+```{r message = F}
+
+tbl.time <- sim.out.time %>%
+  filter(!is.na(time)) %>% 
+  group_by(ndistinct.Z, Proc1, Proc2) %>% 
+  summarise(mean = mean(time)) %>% 
+  select(ndistinct.Z, Proc1, Proc2, mean) %>% 
+  gather(key, value, mean) %>% 
+  unite(Group, ndistinct.Z, key) %>% 
+  spread(Group, value)
+
+tbl.time
+
+kbl.time <- setNames(tbl.time, c("Task", "Method",
+                                 "Univariate Z",
+                                 "Bivariate Z",
+                                 "Trivariate Z")) %>% 
+  kable(digits = c(0, 0,
+                   rep(1, 6)),
+        format = "latex",
+        align = "ccrrrrrr",
+        booktabs = T) %>%
+  kable_styling("striped") %>%
+  row_spec(row = 0, bold = TRUE)
+
+```
+
+
+
+
+
+
