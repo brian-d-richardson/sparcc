@@ -32,6 +32,7 @@ library(dplyr)
 library(numDeriv)
 library(zipfR)
 load_all()
+source("sim1_function.R")
 
 # simulation parameters ---------------------------------------------------
 

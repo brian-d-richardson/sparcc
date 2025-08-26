@@ -30,6 +30,7 @@ library(statmod)
 library(fitdistrplus)
 library(dplyr)
 load_all()
+source("simulation/sim2_function.R")
 
 # simulation parameters ---------------------------------------------------
 
