@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Installation of `sparcc` from GitHub requires the [`devtools`](https://www.r-project.org/nosvn/pandoc/devtools.html) package and can be done with the following code: 
 
-```{r, eval = F}
+```{r, eval = T, message = F}
 
 ## install the package
 devtools::install_github(repo = "brian-d-richardson/sparcc", 
