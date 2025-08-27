@@ -36,7 +36,7 @@ library(statmod)
 
 The `sparcc` package contains functions to analyze data with a randomly right-censored covariate using the SPARCC (or "semiparametric censored covariate") estimator.
 
-The methods implemented are introduced in the paper, "Robust and efficient estimation in the presence of a randomly right-censored covariate," which is currently under revision. A pre-print can be found here: https://arxiv.org/abs/2409.07795.
+The methods implemented are introduced in the paper, "SPARCC: Semi-Parametric Robust Estimation in a Right-Censored Covariate Model," which is currently under revision. A pre-print can be found here: https://arxiv.org/abs/2409.07795.
 
 The code implemented in this package is specific to the scenario where $Y|X,Z$ has a normal distribution with mean $\textrm{E}(Y|X,Z)=\beta_0+\beta_1X+\beta_2Z + \beta_3XZ$, for a censored covariate $X$ and an uncensored discrete-valued covariate $Z$.
 
@@ -400,3 +400,37 @@ ggplot(data = plot.dat.np,
   theme(legend.position = "bottom")
 
 ```
+
+## Workflow
+
+### Simulations
+
+The four simulation studies for the paper accompanying this R package can all be reproduced using the code in `simulations/`. For each of these four simulation studies (`x = 1,2,3,4`), the following exist:
+
+* `simx_function.R`: An R script defining a function to run a single simulation.  
+* `simx_run.R`: An R script to run repeated simulations in parallel on a computing cluster using a variety of desired settings.  
+* `simx_data/`: A folder containing simulation results produced by running `simx_run.R` on a computing cluster.
+* `simx_analyze.Rmd`: An R Markdown report to analyze the results from the simulation study (found in `simx_data/`).  
+
+Simulation figures are output to the folder `sim_plots/`.
+
+### Synthetic Data Analysis
+
+The workflow used to analyze the ENROLL-HD dataset in the accompanying paper is replicated in the folder `fake_data_analysis/`, but using synthetic data. Details and a data dictionary are provided in `fake_data_analysis/00-FakeData-Dictionary.Rmd`.
+
+The entire synthetic data analysis can be reproduced by running the following R scripts in order:
+
+* `01-FakeData-Generation.R`  
+* `02-FakeData-Analysis-TMS.R`  
+* `03-FakeData-Analysis-SDMT.R`  
+* `04-FakeData-Analysis-cUHDRS.R`  
+* `05-FakeData-Results.R`
+
+
+
+
+
+
+
+
+

@@ -15,6 +15,17 @@ devtools::install_github(repo = "brian-d-richardson/sparcc",
                          ref = "main")
 ```
 
+    ## 
+    ## ── R CMD build ─────────────────────────────────────────────────────────────────
+    ##       ✔  checking for file 'C:\Users\brich\AppData\Local\Temp\RtmpCyqTjP\remotes8ef4741b7e8b\brian-d-richardson-sparcc-904f3b6/DESCRIPTION' (482ms)
+    ##       ─  preparing 'sparcc': (4.6s)
+    ##    checking DESCRIPTION meta-information ...  ✔  checking DESCRIPTION meta-information
+    ##       ─  checking for LF line-endings in source and make files and shell scripts (590ms)
+    ##   ─  checking for empty or unneeded directories
+    ##       ─  building 'sparcc_0.0.0.9000.tar.gz'
+    ##      
+    ## 
+
 ``` r
 ## load the package
 library(sparcc)
@@ -29,10 +40,10 @@ The `sparcc` package contains functions to analyze data with a randomly
 right-censored covariate using the SPARCC (or “semiparametric censored
 covariate”) estimator.
 
-The methods implemented are introduced in the paper, “Robust and
-efficient estimation in the presence of a randomly right-censored
-covariate,” which is currently under revision. A pre-print can be found
-here: <https://arxiv.org/abs/2409.07795>.
+The methods implemented are introduced in the paper, “SPARCC:
+Semi-Parametric Robust Estimation in a Right-Censored Covariate Model,”
+which is currently under revision. A pre-print can be found here:
+<https://arxiv.org/abs/2409.07795>.
 
 The code implemented in this package is specific to the scenario where
 $Y|X,Z$ has a normal distribution with mean
@@ -222,15 +233,15 @@ sparcc.param <- sparcc(
 
     ## STEP 1: fit parametric nuisance models
 
-    ## STEP 1 complete (0.91 seconds)
+    ## STEP 1 complete (1.42 seconds)
 
     ## STEP 2: obtain SPARCC estimator
 
-    ## STEP 2 complete (46.22 seconds)
+    ## STEP 2 complete (74.99 seconds)
 
     ## STEP 3: obtain SPARCC variance estimator
 
-    ## STEP 3 complete (15.91 seconds)
+    ## STEP 3 complete (24.71 seconds)
 
 The `sparcc` function returns a list with three items: `x.model`,
 `c.model`, and `outcome.model`, which are themselves lists with results
@@ -289,7 +300,7 @@ sparcc.param$outcome.model$outcome.fmla
 ```
 
     ## Y ~ X * Z
-    ## <environment: 0x000002110fcacee8>
+    ## <environment: 0x0000015d51d52850>
 
 ``` r
 ## estimated coefficient; truth is c(1, 10, 2, 0, 0)
@@ -389,15 +400,15 @@ sparcc.nonpar <- sparcc(
 
     ## STEP 1: fit nonparametric nuisance models
 
-    ## STEP 1 complete (1.26 seconds)
+    ## STEP 1 complete (1.92 seconds)
 
     ## STEP 2: obtain SPARCC estimator
 
-    ## STEP 2 complete (46.91 seconds)
+    ## STEP 2 complete (69.59 seconds)
 
     ## STEP 3: obtain SPARCC variance estimator
 
-    ## STEP 3 complete (16.25 seconds)
+    ## STEP 3 complete (28.02 seconds)
 
 The output is a list containing `x.model`, `c.model`, and
 `outcome.model`, similar to that for the parametric working model
@@ -497,3 +508,38 @@ ggplot(data = plot.dat.np,
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+
+## Workflow
+
+### Simulations
+
+The four simulation studies for the paper accompanying this R package
+can all be reproduced using the code in `simulations/`. For each of
+these four simulation studies (`x = 1,2,3,4`), the following exist:
+
+- `simx_function.R`: An R script defining a function to run a single
+  simulation.  
+- `simx_run.R`: An R script to run repeated simulations in parallel on a
+  computing cluster using a variety of desired settings.  
+- `simx_data/`: A folder containing simulation results produced by
+  running `simx_run.R` on a computing cluster.
+- `simx_analyze.Rmd`: An R Markdown report to analyze the results from
+  the simulation study (found in `simx_data/`).
+
+Simulation figures are output to the folder `sim_plots/`.
+
+### Synthetic Data Analysis
+
+The workflow used to analyze the ENROLL-HD dataset in the accompanying
+paper is replicated in the folder `fake_data_analysis/`, but using
+synthetic data. Details and a data dictionary are provided in
+`fake_data_analysis/00-FakeData-Dictionary.Rmd`.
+
+The entire synthetic data analysis can be reproduced by running the
+following R scripts in order:
+
+- `01-FakeData-Generation.R`  
+- `02-FakeData-Analysis-TMS.R`  
+- `03-FakeData-Analysis-SDMT.R`  
+- `04-FakeData-Analysis-cUHDRS.R`  
+- `05-FakeData-Results.R`
