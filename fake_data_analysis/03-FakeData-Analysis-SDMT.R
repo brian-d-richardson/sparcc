@@ -3,7 +3,7 @@
 
 # Fake ENROLL-HD Data Analysis with SDMT Outcome
 
-# Anonymous
+# Brian Richardson
 
 # 2025-08-26
 

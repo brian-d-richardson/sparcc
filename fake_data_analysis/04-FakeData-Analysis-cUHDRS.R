@@ -3,7 +3,7 @@
 
 # Fake ENROLL-HD Data Analysis with cUHDRS Outcome
 
-# Anonymous
+# Brian Richardson
 
 # 2025-08-26
 

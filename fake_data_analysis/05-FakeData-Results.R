@@ -3,7 +3,7 @@
 
 # Fake ENROLL-HD Data Analysis Results for All Outcomes
 
-# Anonymous
+# Brian Richardson
 
 # 2025-08-26
 

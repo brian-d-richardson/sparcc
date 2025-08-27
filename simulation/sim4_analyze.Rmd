@@ -1,6 +1,6 @@
 ---
 title: "Sparcc Simulation 4"
-author: "Anonymous"
+author: "Brian Richardson"
 date: "`r format(Sys.time(), '%m/%d/%Y')`"
 output:
   html_document:

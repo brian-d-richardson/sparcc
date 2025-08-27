@@ -1,7 +1,7 @@
 
 # sparcc: semiparametric censored covariate estimation <img id="sparcc_hex" src="man/figures/sparcc_hex.png" align="right" width="125"/>
 
-Anonymous
+Brian Richardson
 
 ## Installation
 
