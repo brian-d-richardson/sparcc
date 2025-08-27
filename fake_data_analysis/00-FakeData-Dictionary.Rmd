@@ -7,7 +7,7 @@ output:
     code_folding: hide
 ---
 
-This document describes the data used in the fake data analysis accompanying the `sparcc` R package and the paper *"SPARCC: Semi-Parametric Robust Estimation in a Right-Censored Covariate Model"* (Lee and Richardson, 2025+).
+This document describes the data used in the fake data analysis accompanying the `sparcc` R package and the paper "SPARCC: Semi-Parametric Robust Estimation in a Right-Censored Covariate Model," which is currently under revision. A pre-print can be found here: https://arxiv.org/abs/2409.07795.
 
 The real analysis uses data from the ENROLL-HD study, available upon request at: https://enroll-hd.org/for-researchers/access-data-biosamples/.  
 

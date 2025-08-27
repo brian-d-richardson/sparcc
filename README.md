@@ -5,30 +5,12 @@ Brian Richardson
 
 ## Installation
 
-Installation of `sparcc` from GitHub requires the
-[`devtools`](https://www.r-project.org/nosvn/pandoc/devtools.html)
-package and can be done with the following code:
-
-``` r
-## install the package
-devtools::install_github(repo = "brian-d-richardson/sparcc", 
-                         ref = "main")
-```
-
-    ## 
-    ## ── R CMD build ─────────────────────────────────────────────────────────────────
-    ##       ✔  checking for file 'C:\Users\brich\AppData\Local\Temp\RtmpIPLkFU\remotes4b842646546a\brian-d-richardson-sparcc-028851d/DESCRIPTION' (369ms)
-    ##       ─  preparing 'sparcc': (3.8s)
-    ##    checking DESCRIPTION meta-information ...  ✔  checking DESCRIPTION meta-information
-    ##       ─  checking for LF line-endings in source and make files and shell scripts (432ms)
-    ##   ─  checking for empty or unneeded directories
-    ##       ─  building 'sparcc_0.0.0.9000.tar.gz'
-    ##      
-    ## 
+The `sparcc` package can be loaded locally using the `devtools` package.
 
 ``` r
 ## load the package
-library(sparcc)
+library(devtools)
+load_all()
 
 ## other necessary packages
 library(dplyr)
@@ -162,7 +144,7 @@ datf %>%
   theme(legend.position = "bottom")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
 
 ``` r
 ## plot observed data
@@ -178,7 +160,7 @@ dat %>%
   theme(legend.position = "bottom")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
 ### Estimation
 
@@ -233,15 +215,15 @@ sparcc.param <- sparcc(
 
     ## STEP 1: fit parametric nuisance models
 
-    ## STEP 1 complete (1.34 seconds)
+    ## STEP 1 complete (0.33 seconds)
 
     ## STEP 2: obtain SPARCC estimator
 
-    ## STEP 2 complete (75.84 seconds)
+    ## STEP 2 complete (92.29 seconds)
 
     ## STEP 3: obtain SPARCC variance estimator
 
-    ## STEP 3 complete (23.67 seconds)
+    ## STEP 3 complete (28.37 seconds)
 
 The `sparcc` function returns a list with three items: `x.model`,
 `c.model`, and `outcome.model`, which are themselves lists with results
@@ -288,7 +270,7 @@ ggplot(data = NULL) +
   theme(legend.position = "bottom")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
 The `outcome.model` list contains the outcome model formula, the
 estimated model coefficients, and the covariance matrix for these
@@ -300,7 +282,7 @@ sparcc.param$outcome.model$outcome.fmla
 ```
 
     ## Y ~ X * Z
-    ## <environment: 0x0000020f10dc36c8>
+    ## <environment: 0x00000193b38450b0>
 
 ``` r
 ## estimated coefficient; truth is c(1, 10, 2, 0, 0)
@@ -371,7 +353,7 @@ ggplot(data = plot.dat,
   theme(legend.position = "bottom")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
 #### Nonparametric Models
 
@@ -400,15 +382,15 @@ sparcc.nonpar <- sparcc(
 
     ## STEP 1: fit nonparametric nuisance models
 
-    ## STEP 1 complete (2.02 seconds)
+    ## STEP 1 complete (2.03 seconds)
 
     ## STEP 2: obtain SPARCC estimator
 
-    ## STEP 2 complete (99.64 seconds)
+    ## STEP 2 complete (76.78 seconds)
 
     ## STEP 3: obtain SPARCC variance estimator
 
-    ## STEP 3 complete (41.99 seconds)
+    ## STEP 3 complete (30.03 seconds)
 
 The output is a list containing `x.model`, `c.model`, and
 `outcome.model`, similar to that for the parametric working model
@@ -444,7 +426,7 @@ ggplot(data = NULL) +
   theme(legend.position = "bottom")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
 Finally, we can extract the estimated outcome model coefficients and
 corresponding covariance matrix, and plot the regression line of $Y$ on
@@ -507,7 +489,7 @@ ggplot(data = plot.dat.np,
   theme(legend.position = "bottom")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
 
 ## Workflow
 
