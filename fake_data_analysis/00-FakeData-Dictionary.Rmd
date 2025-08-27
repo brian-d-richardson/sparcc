@@ -1,6 +1,6 @@
 ---
 title: "Data Dictionary: SPARCC Fake Data Analysis"
-author: "Anonymous"
+author: "Brian Richardson"
 date: "`r format(Sys.time(), '%m/%d/%Y')`"
 output:
   html_document:
