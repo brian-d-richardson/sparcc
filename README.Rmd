@@ -3,7 +3,7 @@ output: github_document
 ---
 
 # sparcc: semiparametric censored covariate estimation <img id="sparcc_hex" src="man/figures/sparcc_hex.png" align="right" width="125"/>
-Brian Richardson
+Anonymous
 
 
 ```{r setup, include=FALSE}

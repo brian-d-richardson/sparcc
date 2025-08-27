@@ -1,7 +1,7 @@
 
 # sparcc: semiparametric censored covariate estimation <img id="sparcc_hex" src="man/figures/sparcc_hex.png" align="right" width="125"/>
 
-Brian Richardson
+Anonymous
 
 ## Installation
 
@@ -17,10 +17,10 @@ devtools::install_github(repo = "brian-d-richardson/sparcc",
 
     ## 
     ## ── R CMD build ─────────────────────────────────────────────────────────────────
-    ##       ✔  checking for file 'C:\Users\brich\AppData\Local\Temp\RtmpCyqTjP\remotes8ef4741b7e8b\brian-d-richardson-sparcc-904f3b6/DESCRIPTION' (482ms)
-    ##       ─  preparing 'sparcc': (4.6s)
+    ##       ✔  checking for file 'C:\Users\brich\AppData\Local\Temp\RtmpIPLkFU\remotes4b842646546a\brian-d-richardson-sparcc-028851d/DESCRIPTION' (369ms)
+    ##       ─  preparing 'sparcc': (3.8s)
     ##    checking DESCRIPTION meta-information ...  ✔  checking DESCRIPTION meta-information
-    ##       ─  checking for LF line-endings in source and make files and shell scripts (590ms)
+    ##       ─  checking for LF line-endings in source and make files and shell scripts (432ms)
     ##   ─  checking for empty or unneeded directories
     ##       ─  building 'sparcc_0.0.0.9000.tar.gz'
     ##      
@@ -233,15 +233,15 @@ sparcc.param <- sparcc(
 
     ## STEP 1: fit parametric nuisance models
 
-    ## STEP 1 complete (1.42 seconds)
+    ## STEP 1 complete (1.34 seconds)
 
     ## STEP 2: obtain SPARCC estimator
 
-    ## STEP 2 complete (74.99 seconds)
+    ## STEP 2 complete (75.84 seconds)
 
     ## STEP 3: obtain SPARCC variance estimator
 
-    ## STEP 3 complete (24.71 seconds)
+    ## STEP 3 complete (23.67 seconds)
 
 The `sparcc` function returns a list with three items: `x.model`,
 `c.model`, and `outcome.model`, which are themselves lists with results
@@ -300,7 +300,7 @@ sparcc.param$outcome.model$outcome.fmla
 ```
 
     ## Y ~ X * Z
-    ## <environment: 0x0000015d51d52850>
+    ## <environment: 0x0000020f10dc36c8>
 
 ``` r
 ## estimated coefficient; truth is c(1, 10, 2, 0, 0)
@@ -400,15 +400,15 @@ sparcc.nonpar <- sparcc(
 
     ## STEP 1: fit nonparametric nuisance models
 
-    ## STEP 1 complete (1.92 seconds)
+    ## STEP 1 complete (2.02 seconds)
 
     ## STEP 2: obtain SPARCC estimator
 
-    ## STEP 2 complete (69.59 seconds)
+    ## STEP 2 complete (99.64 seconds)
 
     ## STEP 3: obtain SPARCC variance estimator
 
-    ## STEP 3 complete (28.02 seconds)
+    ## STEP 3 complete (41.99 seconds)
 
 The output is a list containing `x.model`, `c.model`, and
 `outcome.model`, similar to that for the parametric working model

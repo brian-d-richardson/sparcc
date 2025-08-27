@@ -3,7 +3,7 @@
 
 # Fake ENROLL-HD Data Analysis Results for All Outcomes
 
-# Brian Richardson
+# Anonymous
 
 # 2025-08-26
 
@@ -29,7 +29,7 @@ dat <- read.csv("derived-data/dat_cuhdrs.csv")
 
 res <- rbind(cbind(outcome = "TMS", res.tms),
              cbind(outcome = "SDMT", res.sdmt),
-             cbind(outcome = "cUHDRS", res.cuhdrs)) %>% 
+             cbind(outcome = "cUHDRS", res.cuhdrs)) %>%
   mutate(Method = ifelse(method == "Semipar. (Param.)", "Semipar",
                   ifelse(method == "Semipar. (Nonpar.)", "Semipar",
                   ifelse(method == "MLE", "MLE", "CC"))),
@@ -79,12 +79,12 @@ ggplot(
 ## Table of results
 tbl1 <- res %>%
   mutate(ci = paste0("(", round(ci.lower, 2),
-                     ", ", round(ci.upper, 2), ")")) %>% 
-  dplyr::select(outcome, param, Method, nuisX, nuisC, est, ste, ci) %>% 
-  arrange(outcome, param, Method, nuisX) %>% 
+                     ", ", round(ci.upper, 2), ")")) %>%
+  dplyr::select(outcome, param, Method, nuisX, nuisC, est, ste, ci) %>%
+  arrange(outcome, param, Method, nuisX) %>%
   mutate_if(is.numeric, function(x) round(x, 2))
 
-tbl1 %>% 
+tbl1 %>%
   kable(format = "latex",
         digits = 2,
         align = c(rep("c", 4),
@@ -94,7 +94,7 @@ tbl1 %>%
         escape = FALSE,
         col.names = c("Outcome", "Parameter", "Method", "X|Z", "C|Z",
                       "Estimate", "Std Error", "95% CI")) %>%
-  kable_styling("striped") %>% 
+  kable_styling("striped") %>%
   row_spec(row = 0, bold = TRUE)
 
 ## Table of results with all params and with est(se) only
@@ -102,13 +102,13 @@ tbl2 <- res %>%
   mutate(sig = ifelse(abs(est / ste) > qnorm(0.975), "*", ""),
          est.ste = paste0(formatC(est, format = "f", digits = 2), "(",
                           formatC(ste, format = "f", digits = 2), ")",
-                          sig)) %>% 
-  dplyr::select(outcome, Method, nuisX, nuisC, param, est.ste) %>% 
+                          sig)) %>%
+  dplyr::select(outcome, Method, nuisX, nuisC, param, est.ste) %>%
   pivot_wider(values_from = est.ste,
               names_from = param,
               id_cols = c(outcome, Method, nuisX, nuisC))
 
-tbl2 %>% 
+tbl2 %>%
   kable(format = "latex",
         digits = 2,
         align = c(rep("c", 4),
@@ -120,8 +120,8 @@ tbl2 %>%
                       "beta_1", "beta_2", "beta_3",
                       "beta_4", "log(sigma2)")) %>%
   add_header_above(c(" " = 4,
-                     "Est(Std Error)" = 5)) %>% 
-  kable_styling("striped") %>% 
+                     "Est(Std Error)" = 5)) %>%
+  kable_styling("striped") %>%
   row_spec(row = 0, bold = TRUE)
 
 # plot regression lines ---------------------------------------------------
@@ -131,8 +131,8 @@ len.new <- 100
 Xnew <- data.frame(
   int = 1,
   X = seq(min(dat$W), max(dat$W), length = len.new),
-  Z = rep(0:1, each = len.new)) %>% 
-  mutate(XZ = X * Z) %>% 
+  Z = rep(0:1, each = len.new)) %>%
+  mutate(XZ = X * Z) %>%
   as.matrix()
 
 Yhats <- do.call(rbind, lapply(
@@ -141,14 +141,14 @@ Yhats <- do.call(rbind, lapply(
     Yhat.list <- lapply(
       names(method.labs),
       function(m) {
-        
+
         BV <- readRDS(paste0("derived-data/", outcome,
                              "-results/", m, "_res"))
         B <- BV$B[1:4]; V <- BV$V[1:4, 1:4]
         g <- ifelse(outcome == "TMS",
                     function(x) exp(x) - 1,
                     function(x) x)
-        
+
         Yhat <- Xnew %*% B
         Yhat.se <- sqrt(diag(Xnew %*% V %*% t(Xnew)))
         pred <- data.frame(
@@ -163,7 +163,7 @@ Yhats <- do.call(rbind, lapply(
 
       })
     return(cbind(outcome = outcome, do.call(rbind, Yhat.list)))
-  })) %>% 
+  })) %>%
   mutate(Xscaled = (X * (2796.01 - 17.99) + 17.99) / 365,
          Z = factor(Z,
                     levels = 0:1,
@@ -196,12 +196,12 @@ ggsave("figures/analysis_fig1.png", dpi = 300, width = 6, height = 6)
 
 
 ## plot fitted lines and 95% confidence intervals for cUHDRS only
-Yhats %>% 
-  filter(outcome == "cUHDRS") %>% 
+Yhats %>%
+  filter(outcome == "cUHDRS") %>%
   mutate(method = factor(
     method,
     levels = c("cc", "ml", "sp_param", "sp_nonpar"),
-    labels = c("Complete Case", "MLE", "SPARCC (Param)", "SPARCC (Nonpar)"))) %>% 
+    labels = c("Complete Case", "MLE", "SPARCC (Param)", "SPARCC (Nonpar)"))) %>%
   ggplot(
     aes(x = Xscaled,
         y = Yhat,

@@ -2,8 +2,8 @@ Package: sparcc
 Title: Robust and efficient estimation in the presence of a randomly censored covariate
 Version: 0.0.0.9000
 Authors@R: 
-    person("Brian", "Richardson", , "brichson@ad.unc.edu", role = c("aut", "cre"),
-           comment = c(ORCID = "0000-0002-8870-5499"))
+    person("Anon", "Ymous", , "anon@ad.edu", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0000-0000-0000"))
 Description: The `sparcc` package contains functions to analyze data with a random right censored covariate using a semiparametric method. The methods implemented are introduced in the paper, "Robust and efficient estimation in the presence of a randomly censored covariate."
 License: MIT + file LICENSE
 Encoding: UTF-8
