@@ -1,7 +1,7 @@
 ###############################################################################
 ###############################################################################
 
-# ENROLL-HD Fake Data Generation
+# ENROLL-HD Synthetic Data Generation
 
 # Brian Richardson
 
@@ -21,7 +21,7 @@ load_all(dirname(getwd()))
 
 # parameters --------------------------------------------------------------
 
-# parameters to emulate in fake date (based on real ENROLL-HD analysis)
+# parameters to emulate in synthetic date (based on real ENROLL-HD analysis)
 n <- 4530 # sample size
 q <- 0.819 # censoring proportion
 

@@ -1,7 +1,7 @@
 ###############################################################################
 ###############################################################################
 
-# Fake ENROLL-HD Data Analysis with cUHDRS Outcome
+# Synthetic ENROLL-HD Data Analysis with TMS Outcome
 
 # Brian Richardson
 
@@ -18,16 +18,16 @@ library(ggplot2)
 library(devtools)
 library(fitdistrplus)
 library(MASS)
-library(tictoc)
 library(statmod)
+library(tictoc)
 library(here)
 setwd(here())
 load_all(dirname(getwd()))
 
 # load data ---------------------------------------------------------------
 
-datf <- read.csv("derived-data/datf_cuhdrs.csv")
-dat <- read.csv("derived-data/dat_cuhdrs.csv")
+datf <- read.csv("derived-data/datf_tms.csv")
+dat <- read.csv("derived-data/dat_tms.csv")
 
 # estimate nuisance distributions -----------------------------------------
 
@@ -75,10 +75,8 @@ x.wts.param <- vapply(
     sum(eta1.param(x.nds[,i], zs[i])))
 
 ## nonparametric estimated distribution of X|Z (using B-splines)
-tic("Spline fit X")
 spline.res.x <- fit.spline(dat = dat, m.knots = m.knots,
                            Boundary.knots = Boundary.knots, deg = deg)
-toc()
 eta1.nonpar <- spline.res.x$dens
 theta.hat.x <- spline.res.x$theta
 knots.x <- spline.res.x$knots
@@ -126,11 +124,10 @@ c.wts.param <- vapply(
     sum(eta2.param(c.nds[,i], zs[i])))
 
 ## nonparametric estimated distribution of C|Z (using B-splines)
-tic("Spline fit C")
 spline.res.c <- fit.spline(dat = mutate(dat, Delta = 1 - Delta),
                            m.knots = m.knots, Boundary.knots = Boundary.knots,
                            deg = deg)
-toc()
+
 eta2.nonpar <- spline.res.c$dens
 
 c.wts.nonpar <- vapply(
@@ -163,7 +160,7 @@ V.cc <- var.est.sand(dat = dat, theta = B.cc,
                      get.S = get.Scc, return.se = F)
 toc()
 saveRDS(list(B = B.cc, V = V.cc),
-        file = "derived-data/cUHDRS-results/cc_res")
+        file = "derived-data/TMS-results/cc_res")
 
 cbind(B.cc, sqrt(diag(V.cc)))
 summary(cc.lm)$coefficients[,1:2]
@@ -216,28 +213,7 @@ V.ml <- var.est.sand(
   return.se = F)
 toc()
 saveRDS(list(B = B.ml, V = V.ml),
-        file = "derived-data/cUHDRS-results/ml_res")
-
-## semiparametric (X|Z, C|Z nonparametric)
-sp.nonpar.args <- list(mu = mu, d.mu = d.mu, SF = SF, fy = fy,
-                       x.nds = x.nds, c.nds = c.nds,
-                       y.nds = y.nds, y.wts = y.wts,
-                       x.wts = x.wts.nonpar,
-                       c.wts = c.wts.nonpar,
-                       eta1 = eta1.nonpar,
-                       xz.interaction = T)
-tic("SP (nonpar) estimate")
-B.sp.nonpar <- get.root(dat = dat, score = get.Seff,
-                        start = B.cc,
-                        args = sp.nonpar.args)
-toc()
-tic("SP (nonpar) variance")
-V.sp.nonpar <- var.est.sand(dat = dat, theta = B.sp.nonpar,
-                            args = sp.nonpar.args,
-                            get.S = get.Seff, return.se = F)
-toc()
-saveRDS(list(B = B.sp.nonpar, V = V.sp.nonpar),
-        file = "derived-data/cUHDRS-results/sp_nonpar_res")
+        file = "derived-data/TMS-results/ml_res")
 
 ## semiparametric (X|Z, C|Z parametric)
 sp.param.args <- list(mu = mu, d.mu = d.mu, SF = SF, fy = fy,
@@ -249,7 +225,7 @@ sp.param.args <- list(mu = mu, d.mu = d.mu, SF = SF, fy = fy,
                       xz.interaction = T)
 tic("SP (param) estimate")
 B.sp.param <- get.root(dat = dat, score = get.Seff,
-                       start = B.sp.nonpar,
+                       start = B.cc,#B.sp.nonpar,
                        args = sp.param.args)
 toc()
 tic("SP (param) variance")
@@ -258,7 +234,28 @@ V.sp.param <- var.est.sand(dat = dat, theta = B.sp.param,
                            get.S = get.Seff, return.se = F)
 toc()
 saveRDS(list(B = B.sp.param, V = V.sp.param),
-        file = "derived-data/cUHDRS-results/sp_param_res")
+        file = "derived-data/TMS-results/sp_param_res")
+
+## semiparametric (X|Z, C|Z nonparametric)
+sp.nonpar.args <- list(mu = mu, d.mu = d.mu, SF = SF, fy = fy,
+                       x.nds = x.nds, c.nds = c.nds,
+                       y.nds = y.nds, y.wts = y.wts,
+                       x.wts = x.wts.nonpar,
+                       c.wts = c.wts.nonpar,
+                       eta1 = eta1.nonpar,
+                       xz.interaction = T)
+tic("SP (nonpar) estimate")
+B.sp.nonpar <- get.root(dat = dat, score = get.Seff,
+                        start = B.sp.param,#B.cc,
+                        args = sp.nonpar.args)
+toc()
+tic("SP (nonpar) variance")
+V.sp.nonpar <- var.est.sand(dat = dat, theta = B.sp.nonpar,
+                            args = sp.nonpar.args,
+                            get.S = get.Seff, return.se = F)
+toc()
+saveRDS(list(B = B.sp.nonpar, V = V.sp.nonpar),
+        file = "derived-data/TMS-results/sp_nonpar_res")
 
 ## results
 res <- data.frame(
@@ -272,7 +269,7 @@ res <- data.frame(
          ci.upper = est + qnorm(0.975) * ste)
 
 ## save results
-write.csv(res, "derived-data/cUHDRS-results/res.csv", row.names = F)
+write.csv(res, "derived-data/TMS-results/res.csv", row.names = F)
 
 
 

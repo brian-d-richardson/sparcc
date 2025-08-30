@@ -1,7 +1,7 @@
 ###############################################################################
 ###############################################################################
 
-# Fake ENROLL-HD Data Analysis with SDMT Outcome
+# Synthetic ENROLL-HD Data Analysis with SDMT Outcome
 
 # Brian Richardson
 

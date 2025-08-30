@@ -1,7 +1,7 @@
 ###############################################################################
 ###############################################################################
 
-# Fake ENROLL-HD Data Analysis Results for All Outcomes
+# Synthetic ENROLL-HD Data Analysis Results for All Outcomes
 
 # Brian Richardson
 

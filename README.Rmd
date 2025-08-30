@@ -409,15 +409,15 @@ Simulation figures are output to the folder `sim_plots/`.
 
 ### Synthetic Data Analysis
 
-The workflow used to analyze the ENROLL-HD dataset in the accompanying paper is replicated in the folder `fake_data_analysis/`, but using synthetic data. Details and a data dictionary are provided in `fake_data_analysis/00-FakeData-Dictionary.Rmd`.
+The workflow used to analyze the ENROLL-HD dataset in the accompanying paper is replicated in the folder `synth_data_analysis/`, but using synthetic data. Details and a data dictionary are provided in `synth_data_analysis/00-SynthData-Dictionary.Rmd`.
 
 The entire synthetic data analysis can be reproduced by running the following R scripts in order:
 
-* `01-FakeData-Generation.R`  
-* `02-FakeData-Analysis-TMS.R`  
-* `03-FakeData-Analysis-SDMT.R`  
-* `04-FakeData-Analysis-cUHDRS.R`  
-* `05-FakeData-Results.R`
+* `01-SynthData-Generation.R`  
+* `02-SynthData-Analysis-TMS.R`  
+* `03-SynthData-Analysis-SDMT.R`  
+* `04-SynthData-Analysis-cUHDRS.R`  
+* `05-SynthData-Results.R`
 
 
 
