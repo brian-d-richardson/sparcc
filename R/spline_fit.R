@@ -1,5 +1,5 @@
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#' Fit spline model with censored outcome data
+#' Fit spline model with right-censored outcome data
 #'
 #' @param dat data frame, the observed data
 #' @param m.knots a positive integer, the number of knots for the spline model

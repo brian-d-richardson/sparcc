@@ -1,4 +1,4 @@
-#' get censoring probability q given X and C ~ Beta
+#' get right-censoring probability q given X and C ~ Beta
 #'
 #' @param x.theta a positive number, theta parameter for X
 #' @param x.gamma a positive number, gamma parameter for X
@@ -7,7 +7,7 @@
 #'
 #' @importFrom zipfR Ibeta
 #'
-#' @return a number in [0,1], the censoring proportion q
+#' @return a number in [0,1], the right-censoring proportion q
 #'
 #' @export
 get.q.beta <- function(x.theta, x.gamma, c.theta, c.gamma) {
@@ -28,10 +28,10 @@ get.q.beta <- function(x.theta, x.gamma, c.theta, c.gamma) {
 }
 
 
-#' get beta parameters for C given desired censoring proportion
+#' get beta parameters for C given desired right-censoring proportion
 #'
 #' @inheritParams get.q.beta
-#' @param q a number in [0,1], the censoring proportion
+#' @param q a number in [0,1], the right-censoring proportion
 #'
 #' @return a positive number, the theta parameter for C
 #'
@@ -51,14 +51,14 @@ get.c.param.beta <- function(q, x.theta, x.gamma, c.gamma) {
 #'
 #' @inheritParams get.q.beta
 #' @param n a positive integer, the sample size
-#' @param q a number in [0,1], the censoring proportion
+#' @param q a number in [0,1], the right-censoring proportion
 #' @param B a vector of numbers, parameters in the outcome model
 #' @param s2 a positive number, variance in the outcome model
 #'
 #' @return a list of the following data frames:
 #' \itemize{
 #' \item{`datf`: the full data set with Y, X, C, Z}
-#' \item{`dat0`: the oracle data Y, W, Delta, Z (with no censoring)}
+#' \item{`dat0`: the oracle data Y, W, Delta, Z (with no right-censoring)}
 #' \item{`datcc`: the observed data Y, W, Delta, Z}
 #' \item{`dat`: the complete cases from the observed data}
 #' }
@@ -81,7 +81,7 @@ gen.data.beta <- function(n, q, B, s2, x.thetas, x.gamma, c.gamma) {
   Z <- rbinom(n, size = 1, prob = 1/2)                   # uncensored covariate
   X <- rbeta(n, 1 + x.gamma - x.thetas[Z + 1],           # censored covariate
                 1 + x.gamma + x.thetas[Z + 1])
-  C <- rbeta(n, 1 + c.gamma - c.thetas[Z + 1],           # censoring time
+  C <- rbeta(n, 1 + c.gamma - c.thetas[Z + 1],           # censoring value
                 1 + c.gamma + c.thetas[Z + 1])
   W <- ifelse(X <= C, X, C)                              # observed covariate
   Delta <- ifelse(X <= C, 1, 0)                          # uncensored indicator

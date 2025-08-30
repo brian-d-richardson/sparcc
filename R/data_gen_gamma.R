@@ -1,11 +1,11 @@
-#' get censoring probability q given X and C ~ gamma
+#' get right-censoring probability q given X and C ~ gamma
 #'
 #' @param x.rate a positive number, rate parameter for gamma distribution of X
 #' @param x.shape a positive number, shape parameter for gamma distribution of X
 #' @param c.rate a positive number, rate parameter for gamma distribution of C
 #' @param c.shape a positive number, shape parameter for gamma distribution of C
 #'
-#' @return a number in [0,1], the censoring proportion q
+#' @return a number in [0,1], the right-censoring proportion q
 #'
 #' @export
 get.q.gamma <- function(x.rate, x.shape, c.rate, c.shape) {
@@ -21,10 +21,10 @@ get.q.gamma <- function(x.rate, x.shape, c.rate, c.shape) {
 }
 
 
-#' get rate parameter for C given desired censoring proportion
+#' get rate parameter for C given desired right-censoring proportion
 #'
 #' @inheritParams get.q.gamma
-#' @param q a number in [0,1], the censoring proportion
+#' @param q a number in [0,1], the right-censoring proportion
 #'
 #' @return rate parameter for gamma distribution of C
 #'
@@ -42,14 +42,14 @@ get.c.rate <- function(q, x.rate, x.shape, c.shape) {
 #'
 #' @inheritParams get.q.gamma
 #' @param n a positive integer, the sample size
-#' @param q a number in [0,1], the censoring proportion
+#' @param q a number in [0,1], the right-censoring proportion
 #' @param B a vector of numbers, parameters in the outcome model
 #' @param s2 a positive number, variance in the outcome model
 #'
 #' @return a list of the following data frames:
 #' \itemize{
 #' \item{`datf`: the full data set with Y, X, C, Z}
-#' \item{`dat0`: the oracle data Y, W, Delta, Z (with no censoring)}
+#' \item{`dat0`: the oracle data Y, W, Delta, Z (with no right-censoring)}
 #' \item{`datcc`: the observed data Y, W, Delta, Z}
 #' \item{`dat`: the complete cases from the observed data}
 #' }
@@ -72,7 +72,7 @@ gen.data.gamma <- function(n, q, B, s2, x.means, x.shape, c.shape) {
 
   Z <- rbinom(n, size = 1, prob = 1/2)                   # uncensored covariate
   X <- rgamma(n, shape = x.shape, rate = x.rates[Z + 1]) # censored covariate
-  C <- rgamma(n, shape = c.shape, rate = c.rates[Z + 1]) # censoring time
+  C <- rgamma(n, shape = c.shape, rate = c.rates[Z + 1]) # censoring variable
   W <- ifelse(X <= C, X, C)                              # observed covariate
   Delta <- ifelse(X <= C, 1, 0)                          # uncensored indicator
   Y <- rnorm(n, cbind(1, X, Z) %*% B, sd = sqrt(s2))     # outcome

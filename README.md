@@ -1,5 +1,5 @@
 
-# sparcc: semiparametric censored covariate estimation <img id="sparcc_hex" src="man/figures/sparcc_hex.png" align="right" width="125"/>
+# sparcc: Semi-Parametric Robust Estimation in a Right-Censored Covariate Model <img id="sparcc_hex" src="man/figures/sparcc_hex.png" align="right" width="125"/>
 
 Brian Richardson
 
@@ -19,42 +19,41 @@ library(statmod)
 ```
 
 The `sparcc` package contains functions to analyze data with a randomly
-right-censored covariate using the SPARCC (or “semiparametric censored
-covariate”) estimator.
+right-censored covariate using the SPARCC estimator.
 
 The methods implemented are introduced in the paper, “SPARCC:
 Semi-Parametric Robust Estimation in a Right-Censored Covariate Model,”
-which is currently under revision. A pre-print can be found here:
-<https://arxiv.org/abs/2409.07795>.
+which is currently under revision.
 
 The code implemented in this package is specific to the scenario where
 $Y|X,Z$ has a normal distribution with mean
 $\textrm{E}(Y|X,Z)=\beta_0+\beta_1X+\beta_2Z + \beta_3XZ$, for a
-censored covariate $X$ and an uncensored discrete-valued covariate $Z$.
+randomly right-censored covariate $X$ and an uncensored discrete-valued
+covariate $Z$.
 
 ## Tutorial
 
 Below is a tutorial for how the SPARCC estimator can be used on a data
-set with a censored covariate.
+set with a randomly right-censored covariate.
 
 ### Data Generation
 
-We first need to simulate a data set with a censored covariate. This
-data generation can be done, for example, using the built in
-`gen.data.beta` function in the `sparcc` package.
+We first need to simulate a data set with a randomly right-censored
+covariate. This data generation can be done, for example, using the
+built in `gen.data.beta` function in the `sparcc` package.
 
 The `gen.data.beta` function generates the following variables: \*
 $Z \sim \textrm{Bernoulli}(0.5)$, a binary fully observed covariate, \*
-$X$, a censored covariate with
+$X$, a randomly right-censored covariate with
 $X|Z \sim \textrm{beta}(\alpha_{11} + \alpha_{12}Z, \alpha_{13} + \alpha_{14}Z)$,
 \* $C$, the censoring variable with
 $C|Z \sim \textrm{beta}(\alpha_{21} + \alpha_{22}Z, \alpha_{23} + \alpha_{24}Z)$,
 \* $Y$, the outcome with
 $Y|X,Z \sim \textrm{Normal}(\beta_0 + \beta_1X + \beta_2Z, \sigma^2)$.
 
-To ensure that $X$ and $C$ are generated with the desired censoring
-proportion $q=P(X>C)$, the following reparametrization is used within
-the `gen.data.beta` function:
+To ensure that $X$ and $C$ are generated with the desired
+right-censoring proportion $q=P(X>C)$, the following reparametrization
+is used within the `gen.data.beta` function:
 
 $$
 \begin{bmatrix}
@@ -86,8 +85,8 @@ $$
 
 The user specifies desired values for
 $\gamma_x, \gamma_c, \theta_{x1}, \theta_{x2}$ along with a desired
-censoring proportion $q$. The `gen.data.beta` function then finds an
-appropriate $\theta_{c1}, \theta_{c2}$ in order to satisfy the
+right-censoring proportion $q$. The `gen.data.beta` function then finds
+an appropriate $\theta_{c1}, \theta_{c2}$ in order to satisfy the
 constraint $q=\textrm{P}(X>C)$.
 
 From the complete data $(Y, X, C, Z)$, the observed data
@@ -97,12 +96,12 @@ $\Delta = I(X \leq C)$.
 The `gen.data.beta` function returns a list of four data frames:
 
 1)  `datf`: The full data, including the outcome `Y`, the covariate `X`,
-    and the censoring time `C`.
+    and the censoring variable `C`.
 2)  `dat`: The observed data, including the outcome `Y`, the possibly
-    censored covariate `W`, and the censoring indicator `Delta`.
+    right-censored covariate `W`, and the censoring indicator `Delta`.
 3)  `dat0`: The oracle data, a version of the observed data where no
-    observations are censored (essentially setting `C` equal to infinity
-    for all observations).
+    observations are right-censored (essentially setting `C` equal to
+    infinity for all observations).
 4)  `datcc`: The complete case data, or the subset of `dat` with
     `Delta == 1`.
 
@@ -110,7 +109,7 @@ The `gen.data.beta` function returns a list of four data frames:
 ## define parameters
 set.seed(123)                 # random number seed for reproducibility
 n <- 800                      # sample size
-q <- 0.6                      # censoring proportion
+q <- 0.6                      # right-censoring proportion
 B <- c(1, 10, 2)              # outcome model parameters
 s2 <- 1                       # Var(Y|X,Z)
 x.thetas <- 0.5 * c(-1, 1)    # parameters governing X|Z and C|Z
@@ -166,18 +165,18 @@ dat %>%
 
 Using the observed data, we can fit the SPARCC estimator using the
 `sparcc` function. The SPARCC estimator can be obtained by either (i)
-using parametric working models for the nuisance distributions for $X|Z$
-and $C|Z$, or (ii) using nonparametric models for the nuisance
-distributions.
+using parametric models for the nuisance parameters for $f_{X|Z}$ and
+$f_{C|Z}$, or (ii) using nonparametric/machine learning methods for the
+nuisance parameters.
 
 #### Parametric Working Models
 
-To use the SPARCC estimator with parametric working models, use the
+To use the SPARCC estimator with parametric models, use the
 `nuisance.models = "parametric"` option.
 
-Then supply the posited parametric working models for $X$ and $C$ using
-the `distr.x` and `distr.c` options, respectively. Each should be a
-character string `"name"` naming a distribution for which the
+Then supply the posited parametric models for $f_{X|Z}$ and $f_{C|Z}$
+using the `distr.x` and `distr.c` options, respectively. Each should be
+a character string `"name"` naming a distribution for which the
 corresponding density function `dname` is defined. For example, the
 default is `"beta"`, for which the density `dbeta` is defined in base R.
 It is assumed that $X$ (and $C$) then follow these posited distributions
@@ -215,37 +214,37 @@ sparcc.param <- sparcc(
 
     ## STEP 1: fit parametric nuisance models
 
-    ## STEP 1 complete (0.33 seconds)
+    ## STEP 1 complete (0.21 seconds)
 
     ## STEP 2: obtain SPARCC estimator
 
-    ## STEP 2 complete (92.29 seconds)
+    ## STEP 2 complete (54.76 seconds)
 
     ## STEP 3: obtain SPARCC variance estimator
 
-    ## STEP 3 complete (28.37 seconds)
+    ## STEP 3 complete (19.03 seconds)
 
 The `sparcc` function returns a list with three items: `x.model`,
 `c.model`, and `outcome.model`, which are themselves lists with results
-for the $X|Z$ nuisance model, the $C|Z$ nuisance model, and the $Y|X,Z$
-outcome model, respectively.
+for the $f_{X|Z}$ nuisance parameter, the $f_{C|Z}$ nuisance parameter,
+and the $Y|X,Z$ outcome model, respectively.
 
-The `x.model` and `c.model` lists contain the estimated density
-functions for these two distributions at their quadrature nodes (`eta1`
-and `eta2`). With the parametric working model implementation (i.e., if
+The `x.model` and `c.model` lists contain the estimated $f_{X|Z}$ and
+$f_{C|Z}$ at their quadrature nodes (`eta1` and `eta2`). With the
+parametric model implementation (i.e., if
 `nuisance.models = "parametric"`), the `x.model` and `c.model` lists
 also contain the posited distributional families (`distr.x` and
 `distr.c`) and estimated parameters (`x.params.hat` and `c.params.hat`).
 
 As a demonstration, we can assess here how well the posited beta
-distribution for $X|Z$ fits the data. (Note that in reality, we would
-not observe most of these $X$ values due to right-censoring.)
+distribution for $f_{X|Z}$ fits the data. (Note that in reality, we
+would not observe most of these $X$ values due to right-censoring.)
 
 ``` r
-## extract estimated X|Z density
+## extract nuisance parameter f_{X|Z}
 eta1 <- sparcc.param$x.model$eta1
 
-## plot full data vs estimated density of X|Z
+## plot full data vs estimated f_{X|Z}
 ggplot(data = NULL) +
   geom_line(data = eta1,
             aes(x = x.nds,
@@ -282,7 +281,7 @@ sparcc.param$outcome.model$outcome.fmla
 ```
 
     ## Y ~ X * Z
-    ## <environment: 0x00000193b38450b0>
+    ## <environment: 0x0000023eb7997c40>
 
 ``` r
 ## estimated coefficient; truth is c(1, 10, 2, 0, 0)
@@ -348,7 +347,7 @@ ggplot(data = plot.dat,
        color = "Z",
        fill = "Z",
        title = "SPARCC Outcome Model Results",
-       subtitle = "(Using Parametric Nuisance Models)") +
+       subtitle = "(Using Parametric Models for Nuisance Parameters)") +
   theme_bw() +
   theme(legend.position = "bottom")
 ```
@@ -357,13 +356,14 @@ ggplot(data = plot.dat,
 
 #### Nonparametric Models
 
-To use the SPARCC estimator with nonparametric nuisance models, use the
+To use the SPARCC estimator with nonparametric/machine learning methods
+to estimate the nuisance parameters, use the
 `nuisance.models = "nonparametric"` option.
 
-Under this option, the distributions of $X|Z$ and $C|Z$ are fit using a
-nonparametric B-spline estimator. Instead of supplying posited
-parametric distributions, specify the polynomial degree and number of
-spline knots using the `deg` and `m.knots` arguments.
+Under this option, $f_{X|Z}$ and $f_{C|Z}$ are fit using a nonparametric
+B-spline estimator. Instead of supplying posited parametric
+distributions, specify the polynomial degree and number of spline knots
+using the `deg` and `m.knots` arguments.
 
 ``` r
 sparcc.nonpar <- sparcc(
@@ -382,26 +382,26 @@ sparcc.nonpar <- sparcc(
 
     ## STEP 1: fit nonparametric nuisance models
 
-    ## STEP 1 complete (2.03 seconds)
+    ## STEP 1 complete (1.5 seconds)
 
     ## STEP 2: obtain SPARCC estimator
 
-    ## STEP 2 complete (76.78 seconds)
+    ## STEP 2 complete (54.48 seconds)
 
     ## STEP 3: obtain SPARCC variance estimator
 
-    ## STEP 3 complete (30.03 seconds)
+    ## STEP 3 complete (19.08 seconds)
 
 The output is a list containing `x.model`, `c.model`, and
-`outcome.model`, similar to that for the parametric working model
+`outcome.model`, similar to that for the parametric model
 implementation. We can again assess the fit of the B-spline estimator of
-the density of $X|Z$.
+$f_{X|Z}$.
 
 ``` r
-## extract nonparametrically estimated X|Z density
+## extract nonparametrically estimated f_{X|Z}
 eta1.np <- sparcc.nonpar$x.model$eta1
 
-## plot full data vs estimated density of X|Z
+## plot full data vs estimated f_{X|Z}
 ggplot(data = NULL) +
   geom_line(data = eta1.np,
             aes(x = x.nds,
@@ -484,7 +484,7 @@ ggplot(data = plot.dat.np,
        color = "Z",
        fill = "Z",
        title = "SPARCC Outcome Model Results",
-       subtitle = "(Using Nonparametric Nuisance Models)") +
+       subtitle = "(Using Nonparametric Estimator for Nuisance Parameters)") +
   theme_bw() +
   theme(legend.position = "bottom")
 ```
@@ -512,7 +512,7 @@ Simulation figures are output to the folder `sim_plots/`.
 
 ### Synthetic Data Analysis
 
-The workflow used to analyze the ENROLL-HD dataset in the accompanying
+The workflow used to analyze the ENROLL-HD data set in the accompanying
 paper is replicated in the folder `synth_data_analysis/`, but using
 synthetic data. Details and a data dictionary are provided in
 `synth_data_analysis/00-SynthData-Dictionary.Rmd`.

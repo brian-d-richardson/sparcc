@@ -2,15 +2,15 @@
 #'
 #' @description
 #' To fit the SPARCC estimator for linear model with a conditionally normal
-#' outcome `Y`, a censored covariate `X`, and a discrete-valued uncensored
+#' outcome `Y`, a randomly right-censored covariate `X`, and a discrete-valued uncensored
 #' covariate `Z`.
 #'
 #'
 #' @param data a data frame with the following columns
 #' \itemize{
 #' \item{`Y`: outcome}
-#' \item{`W`: minimum of the censored covariate `X` and the censoring time `C`}
-#' \item{`Delta`: an indicator if `X` is observed (`Delta = 1`) or censored
+#' \item{`W`: minimum of the right-censored covariate `X` and the censoring variable `C`}
+#' \item{`Delta`: an indicator if `X` is observed (`Delta = 1`) or right-censored
 #' (`Delta = 0`)}
 #' \item{`Z`: a discrete-valued uncensored covariate}
 #' }
@@ -19,7 +19,7 @@
 #' to be included in the outcome model (`TRUE`) or not (`FALSE`), default is
 #' `TRUE`
 #'
-#' @param nuisance.models model type for nuisance distribution models
+#' @param nuisance.models model type for nuisance parameters f_{X|Z} and f_{C|Z}
 #' ("parametric" or "nonparametric)
 #'
 #' @param distr.x a character string "name" naming a distribution for `X|Z`,
@@ -84,17 +84,17 @@ sparcc <- function(
 
     data,
 
-    # for outcome model speification
+    # for outcome model specification
     xz.interaction = T,
 
-    # for nuisance model estimation
+    # for nuisance parameter estimation
     nuisance.models = "parametric",
 
-    # for parametric nuisance model estimation
+    # for parametric nuisance parameter estimation
     distr.x = "beta",
     distr.c = "beta",
 
-    # for nonparametric nuisance model estimation
+    # for nonparametric nuisance parameter estimation
     m.knots = 5,
     deg = 3,
 
@@ -142,9 +142,10 @@ sparcc <- function(
   y.nds <- gq$nodes
   y.wts <- gq$weights
 
-  # fit nuisance models -----------------------------------------------------
 
-  message(paste0("STEP 1: fit ", nuisance.models, " nuisance models"))
+  # estimate nuisance parameters --------------------------------------------
+
+  message(paste0("STEP 1: estimate ", nuisance.models, " nuisance parameters"))
   st1 <- Sys.time()
 
   if (nuisance.models == "parametric") {

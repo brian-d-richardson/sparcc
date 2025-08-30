@@ -76,7 +76,7 @@ get.Sml <- function(dat, B, ls2, theta = NULL, args, return.sums = T) {
     B = B, ls2 = ls2,
     xz.interaction = xz.interaction)
 
-  # expected score for censored observations
+  # expected score for right-censored observations
   for (i in which(dat$Delta == 0)) {
 
     # index for Z
@@ -153,7 +153,7 @@ get.Seff <- function(dat, B, ls2, theta = NULL, args, return.sums = T) {
                z = z, eta1 = eta1)
   }
 
-  # expected score minus a() for censored observations
+  # expected score minus a() for right-censored observations
   for (i in which(dat$Delta == 0)) {
 
     # index for Z

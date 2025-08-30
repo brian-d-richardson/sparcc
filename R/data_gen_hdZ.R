@@ -2,14 +2,14 @@
 #'
 #' @inheritParams get.q.beta
 #' @param n a positive integer, the sample size
-#' @param q a number in [0,1], the censoring proportion
+#' @param q a number in [0,1], the right-censoring proportion
 #' @param B a vector of numbers, parameters in the outcome model
 #' @param s2 a positive number, variance in the outcome model
 #'
 #' @return a list of the following data frames:
 #' \itemize{
 #' \item{`datf`: the full data set with Y, X, C, Z}
-#' \item{`dat0`: the oracle data Y, W, Delta, Z (with no censoring)}
+#' \item{`dat0`: the oracle data Y, W, Delta, Z (with no right-censoring)}
 #' \item{`datcc`: the observed data Y, W, Delta, Z}
 #' \item{`dat`: the complete cases from the observed data}
 #' }
@@ -34,7 +34,7 @@ gen.data.hdZ <- function(n, q, B, s2, x.thetas, x.gamma, c.gamma) {
               size = n, replace = T)
   X <- rbeta(n, 1 + x.gamma - x.thetas[Z + 1],           # censored covariate
                 1 + x.gamma + x.thetas[Z + 1])
-  C <- rbeta(n, 1 + c.gamma - c.thetas[Z + 1],           # censoring time
+  C <- rbeta(n, 1 + c.gamma - c.thetas[Z + 1],           # censoring variable
                 1 + c.gamma + c.thetas[Z + 1])
   W <- ifelse(X <= C, X, C)                              # observed covariate
   Delta <- ifelse(X <= C, 1, 0)                          # uncensored indicator
