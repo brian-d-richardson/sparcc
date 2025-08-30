@@ -128,69 +128,18 @@ dat0 <- dat.list$dat0          # oracle data
 dat <- dat.list$dat            # observed data
 datcc <- dat.list$datcc        # complete case data
 zs <- sort(unique(dat$Z))      # unique z values
-
-## look at data
-print("(i) datf"); head(datf, 5)
 ```
-
-    ## [1] "(i) datf"
-
-    ##          Y         X         C Z
-    ## 1 7.716814 0.6455596 0.3829191 0
-    ## 2 4.813844 0.1183763 0.4903024 1
-    ## 3 8.502785 0.7842411 0.6165680 0
-    ## 4 6.245471 0.3668816 0.2329855 1
-    ## 5 8.162265 0.5780536 0.3142294 1
-
-``` r
-print("(ii) dat"); head(dat, 5)
-```
-
-    ## [1] "(ii) dat"
-
-    ##          Y         W Delta Z
-    ## 1 7.716814 0.3829191     0 0
-    ## 2 4.813844 0.1183763     1 1
-    ## 3 8.502785 0.6165680     0 0
-    ## 4 6.245471 0.2329855     0 1
-    ## 5 8.162265 0.3142294     0 1
-
-``` r
-print("(iii) dat0"); head(dat0, 5)
-```
-
-    ## [1] "(iii) dat0"
-
-    ##          Y         W Delta Z
-    ## 1 7.716814 0.6455596     1 0
-    ## 2 4.813844 0.1183763     1 1
-    ## 3 8.502785 0.7842411     1 0
-    ## 4 6.245471 0.3668816     1 1
-    ## 5 8.162265 0.5780536     1 1
-
-``` r
-print("(iv) datcc"); head(datcc, 5)
-```
-
-    ## [1] "(iv) datcc"
-
-    ##           Y         W Delta Z
-    ## 2  4.813844 0.1183763     1 1
-    ## 7  3.310786 0.2818952     1 1
-    ## 8  8.880093 0.6047671     1 1
-    ## 9  5.407894 0.2369681     1 1
-    ## 18 4.990429 0.4641996     1 0
 
 We can visualize the full data, observed data, and complete case data
 below.
 
 For the full data, all `n = 800` observations appear in the scatterplot.
 The colors of points indicate the level of the uncensored binary
-covariate `Z`. The trends in the scatterplot clearly reflect the
+covariate $Z$. The trends in the scatterplot clearly reflect the
 parameters in the outcome model
 $\textrm{E}(Y|X,Z)=\beta_0+\beta_1X+\beta_2Z + \beta_3XZ$, for
 $\mathbf{\beta} = (\beta_0, \beta_1, \beta_2, \beta_3) = (1, 10, 2, 0)$.
-For example, the average slope of `Y` with respect to `X` appears to be
+For example, the average slope of $Y$ with respect to $X$ appears to be
 around 10, and the blue dots (`Z=1`) tend to be above the red points
 (`Z=0`) by 2.
 
@@ -210,11 +159,11 @@ datf %>%
 
 ![](README_files/figure-gfm/unnamed-chunk-3-1.png)<!-- --> For the
 observed data, all `n = 800` observations again appear in the
-scatterplot, with colors indicating the level of `Z`. But in this plot,
-the outcome `Y` is plotted against the observed value `W = min(X, C)` of
+scatterplot, with colors indicating the level of $Z$. But in this plot,
+the outcome $Y$ is plotted against the observed value `W = min(X, C)` of
 the right-censored covariate. Using this plot, the outcome model
 parameters are not so easily ascertained. For example, the average slope
-of `Y` with respect to `X` does not appear to be 10.
+of $Y$ with respect to $X$ does not appear to be 10.
 
 ``` r
 ## plot observed data
@@ -341,7 +290,7 @@ sparcc.param <- sparcc(
 
     ## STEP 1: estimate parametric nuisance parameters
 
-    ## STEP 1 complete (0.23 seconds)
+    ## STEP 1 complete (0.21 seconds)
 
     ## STEP 2: obtain SPARCC estimator
 
@@ -349,7 +298,7 @@ sparcc.param <- sparcc(
 
     ## STEP 3: obtain SPARCC variance estimator
 
-    ## STEP 3 complete (17.8 seconds)
+    ## STEP 3 complete (17.29 seconds)
 
 The `sparcc` function returns a list with three items: `x.model`,
 `c.model`, and `outcome.model`, which are themselves lists with results
@@ -413,7 +362,7 @@ sparcc.param$outcome.model$outcome.fmla
 ```
 
     ## Y ~ X * Z
-    ## <environment: 0x00000267ed075628>
+    ## <environment: 0x0000025a69a677b0>
 
 ``` r
 ## estimated coefficient; truth is c(1, 10, 2, 0, 0)
@@ -455,7 +404,7 @@ $$\widehat{Y} = D_{\text{new}}\widehat{\boldsymbol{\beta}} $$
 
 3)  To account for sampling variability, we use the delta method to
     compute the variance of the fitted values:
-    $$\widehat{\text{Var}}(\widehat{Y}) = D_{new}\widehat{\text{Var}}(\widehat{\mathbf{\beta}})D_{new}^T$$\$
+    $$\widehat{\text{Var}}(\widehat{Y}) = D_{new}\widehat{\text{Var}}(\widehat{\mathbf{\beta}})D_{new}^T$$
     Then we construct 95% Wald-type confidence intervals:
     $$\widehat{Y} \pm z_{0.975} \sqrt{\widehat{\text{Var}}(\widehat{Y})}$$
 
@@ -539,15 +488,15 @@ sparcc.nonpar <- sparcc(
 
     ## STEP 1: estimate nonparametric nuisance parameters
 
-    ## STEP 1 complete (1.4 seconds)
+    ## STEP 1 complete (1.37 seconds)
 
     ## STEP 2: obtain SPARCC estimator
 
-    ## STEP 2 complete (72.94 seconds)
+    ## STEP 2 complete (81.29 seconds)
 
     ## STEP 3: obtain SPARCC variance estimator
 
-    ## STEP 3 complete (43.38 seconds)
+    ## STEP 3 complete (17.65 seconds)
 
 The output is a list containing `x.model`, `c.model`, and
 `outcome.model`, similar to that for the parametric model
