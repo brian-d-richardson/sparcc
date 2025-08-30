@@ -2,12 +2,12 @@
 % Please edit documentation in R/data_gen_beta.R
 \name{get.c.param.beta}
 \alias{get.c.param.beta}
-\title{get beta parameters for C given desired censoring proportion}
+\title{get beta parameters for C given desired right-censoring proportion}
 \usage{
 get.c.param.beta(q, x.theta, x.gamma, c.gamma)
 }
 \arguments{
-\item{q}{a number in \link{0,1}, the censoring proportion}
+\item{q}{a number in \link{0,1}, the right-censoring proportion}
 
 \item{x.theta}{a positive number, theta parameter for X}
 
@@ -19,5 +19,5 @@ get.c.param.beta(q, x.theta, x.gamma, c.gamma)
 a positive number, the theta parameter for C
 }
 \description{
-get beta parameters for C given desired censoring proportion
+get beta parameters for C given desired right-censoring proportion
 }

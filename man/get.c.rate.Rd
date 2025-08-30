@@ -2,12 +2,12 @@
 % Please edit documentation in R/data_gen_gamma.R
 \name{get.c.rate}
 \alias{get.c.rate}
-\title{get rate parameter for C given desired censoring proportion}
+\title{get rate parameter for C given desired right-censoring proportion}
 \usage{
 get.c.rate(q, x.rate, x.shape, c.shape)
 }
 \arguments{
-\item{q}{a number in \link{0,1}, the censoring proportion}
+\item{q}{a number in \link{0,1}, the right-censoring proportion}
 
 \item{x.rate}{a positive number, rate parameter for gamma distribution of X}
 
@@ -19,5 +19,5 @@ get.c.rate(q, x.rate, x.shape, c.shape)
 rate parameter for gamma distribution of C
 }
 \description{
-get rate parameter for C given desired censoring proportion
+get rate parameter for C given desired right-censoring proportion
 }

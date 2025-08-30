@@ -2,7 +2,7 @@
 % Please edit documentation in R/data_gen_gamma.R
 \name{get.q.gamma}
 \alias{get.q.gamma}
-\title{get censoring probability q given X and C ~ gamma}
+\title{get right-censoring probability q given X and C ~ gamma}
 \usage{
 get.q.gamma(x.rate, x.shape, c.rate, c.shape)
 }
@@ -16,8 +16,8 @@ get.q.gamma(x.rate, x.shape, c.rate, c.shape)
 \item{c.shape}{a positive number, shape parameter for gamma distribution of C}
 }
 \value{
-a number in \link{0,1}, the censoring proportion q
+a number in \link{0,1}, the right-censoring proportion q
 }
 \description{
-get censoring probability q given X and C ~ gamma
+get right-censoring probability q given X and C ~ gamma
 }

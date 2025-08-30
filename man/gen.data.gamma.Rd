@@ -9,7 +9,7 @@ gen.data.gamma(n, q, B, s2, x.means, x.shape, c.shape)
 \arguments{
 \item{n}{a positive integer, the sample size}
 
-\item{q}{a number in \link{0,1}, the censoring proportion}
+\item{q}{a number in \link{0,1}, the right-censoring proportion}
 
 \item{B}{a vector of numbers, parameters in the outcome model}
 
@@ -23,7 +23,7 @@ gen.data.gamma(n, q, B, s2, x.means, x.shape, c.shape)
 a list of the following data frames:
 \itemize{
 \item{\code{datf}: the full data set with Y, X, C, Z}
-\item{\code{dat0}: the oracle data Y, W, Delta, Z (with no censoring)}
+\item{\code{dat0}: the oracle data Y, W, Delta, Z (with no right-censoring)}
 \item{\code{datcc}: the observed data Y, W, Delta, Z}
 \item{\code{dat}: the complete cases from the observed data}
 }

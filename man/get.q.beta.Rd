@@ -2,7 +2,7 @@
 % Please edit documentation in R/data_gen_beta.R
 \name{get.q.beta}
 \alias{get.q.beta}
-\title{get censoring probability q given X and C ~ Beta}
+\title{get right-censoring probability q given X and C ~ Beta}
 \usage{
 get.q.beta(x.theta, x.gamma, c.theta, c.gamma)
 }
@@ -16,8 +16,8 @@ get.q.beta(x.theta, x.gamma, c.theta, c.gamma)
 \item{c.gamma}{a positive number, gamma parameter for C}
 }
 \value{
-a number in \link{0,1}, the censoring proportion q
+a number in \link{0,1}, the right-censoring proportion q
 }
 \description{
-get censoring probability q given X and C ~ Beta
+get right-censoring probability q given X and C ~ Beta
 }

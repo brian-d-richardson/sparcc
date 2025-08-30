@@ -2,7 +2,7 @@
 % Please edit documentation in R/spline_fit.R
 \name{fit.spline}
 \alias{fit.spline}
-\title{Fit spline model with censored outcome data}
+\title{Fit spline model with right-censored outcome data}
 \usage{
 fit.spline(dat, m.knots, deg, Boundary.knots)
 }
@@ -27,5 +27,5 @@ a list including
 }
 }
 \description{
-Fit spline model with censored outcome data
+Fit spline model with right-censored outcome data
 }

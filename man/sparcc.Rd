@@ -23,8 +23,8 @@ sparcc(
 \item{data}{a data frame with the following columns
 \itemize{
 \item{\code{Y}: outcome}
-\item{\code{W}: minimum of the censored covariate \code{X} and the censoring time \code{C}}
-\item{\code{Delta}: an indicator if \code{X} is observed (\code{Delta = 1}) or censored
+\item{\code{W}: minimum of the right-censored covariate \code{X} and the censoring variable \code{C}}
+\item{\code{Delta}: an indicator if \code{X} is observed (\code{Delta = 1}) or right-censored
 (\code{Delta = 0})}
 \item{\code{Z}: a discrete-valued uncensored covariate}
 }}
@@ -33,7 +33,7 @@ sparcc(
 to be included in the outcome model (\code{TRUE}) or not (\code{FALSE}), default is
 \code{TRUE}}
 
-\item{nuisance.models}{model type for nuisance distribution models
+\item{nuisance.models}{model type for nuisance parameters f_{X|Z} and f_{C|Z}
 ("parametric" or "nonparametric)}
 
 \item{distr.x}{a character string "name" naming a distribution for \code{X|Z},
@@ -96,6 +96,6 @@ each level of \code{Z}),
 }
 \description{
 To fit the SPARCC estimator for linear model with a conditionally normal
-outcome \code{Y}, a censored covariate \code{X}, and a discrete-valued uncensored
+outcome \code{Y}, a randomly right-censored covariate \code{X}, and a discrete-valued uncensored
 covariate \code{Z}.
 }
