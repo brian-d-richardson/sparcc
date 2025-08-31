@@ -15,9 +15,9 @@ For this synthetic analysis, synthetic data are generated to mimic the structure
 
 ---
 
-### R Scripts
+### Workflow
 
-Five R scripts are used:
+Five R scripts are used. The entire synthetic data analysis can be reproduced by running these R scripts in order:
 
 * `01-SynthData-Generation.R`: generates synthetic analysis data sets (stored in `derived-data/`)
 * `02-SynthData-Analysis-TMS.R`: analyzes data with the Total Motor Score (TMS) outcome
