@@ -284,8 +284,10 @@ We can use these estimated coefficients and corresponding covariance matrix to p
 $$\widehat{Y} = D_{\text{new}}\widehat{\boldsymbol{\beta}} $$
 
 (iii) To account for sampling variability, we use the delta method to compute the variance of the fitted values:
+
 $$\widehat{\text{Var}}(\widehat{Y}) = D_{new}\widehat{\text{Var}}(\widehat{\mathbf{\beta}})D_{new}^T$$
 Then we construct 95\% Wald-type confidence intervals:
+
 $$\widehat{Y} \pm z_{0.975} \sqrt{\widehat{\text{Var}}(\widehat{Y})}$$
 ```{r}
 

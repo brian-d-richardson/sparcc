@@ -294,11 +294,11 @@ sparcc.param <- sparcc(
 
     ## STEP 2: obtain SPARCC estimator
 
-    ## STEP 2 complete (51.03 seconds)
+    ## STEP 2 complete (50.71 seconds)
 
     ## STEP 3: obtain SPARCC variance estimator
 
-    ## STEP 3 complete (17.29 seconds)
+    ## STEP 3 complete (17.81 seconds)
 
 The `sparcc` function returns a list with three items: `x.model`,
 `c.model`, and `outcome.model`, which are themselves lists with results
@@ -362,7 +362,7 @@ sparcc.param$outcome.model$outcome.fmla
 ```
 
     ## Y ~ X * Z
-    ## <environment: 0x0000025a69a677b0>
+    ## <environment: 0x00000171a3a213b8>
 
 ``` r
 ## estimated coefficient; truth is c(1, 10, 2, 0, 0)
@@ -404,9 +404,11 @@ $$\widehat{Y} = D_{\text{new}}\widehat{\boldsymbol{\beta}} $$
 
 3)  To account for sampling variability, we use the delta method to
     compute the variance of the fitted values:
-    $$\widehat{\text{Var}}(\widehat{Y}) = D_{new}\widehat{\text{Var}}(\widehat{\mathbf{\beta}})D_{new}^T$$
-    Then we construct 95% Wald-type confidence intervals:
-    $$\widehat{Y} \pm z_{0.975} \sqrt{\widehat{\text{Var}}(\widehat{Y})}$$
+
+$$\widehat{\text{Var}}(\widehat{Y}) = D_{new}\widehat{\text{Var}}(\widehat{\mathbf{\beta}})D_{new}^T$$
+Then we construct 95% Wald-type confidence intervals:
+
+$$\widehat{Y} \pm z_{0.975} \sqrt{\widehat{\text{Var}}(\widehat{Y})}$$
 
 ``` r
 ## new X and Z data for fitting the regression model
@@ -488,15 +490,15 @@ sparcc.nonpar <- sparcc(
 
     ## STEP 1: estimate nonparametric nuisance parameters
 
-    ## STEP 1 complete (1.37 seconds)
+    ## STEP 1 complete (1.49 seconds)
 
     ## STEP 2: obtain SPARCC estimator
 
-    ## STEP 2 complete (81.29 seconds)
+    ## STEP 2 complete (59396.71 seconds)
 
     ## STEP 3: obtain SPARCC variance estimator
 
-    ## STEP 3 complete (17.65 seconds)
+    ## STEP 3 complete (18.25 seconds)
 
 The output is a list containing `x.model`, `c.model`, and
 `outcome.model`, similar to that for the parametric model
