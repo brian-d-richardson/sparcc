@@ -157,10 +157,11 @@ datf %>%
   theme(legend.position = "bottom")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-3-1.png)<!-- --> For the
-observed data, all `n = 800` observations again appear in the
+![](README_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+
+For the observed data, all `n = 800` observations again appear in the
 scatterplot, with colors indicating the level of $Z$. But in this plot,
-the outcome $Y$ is plotted against the observed value `W = min(X, C)` of
+the outcome $Y$ is plotted against the observed value $W = min(X, C)$ of
 the right-censored covariate. Using this plot, the outcome model
 parameters are not so easily ascertained. For example, the average slope
 of $Y$ with respect to $X$ does not appear to be 10.
@@ -267,8 +268,8 @@ sufficient.
 `range.x` and `range.x` describe the ranges of the right-censored
 covariate $X$ and the censoring variable $C$. Since, in practice, only
 the minimum $W$ of $X$ and $C$ is observed for each observation, it may
-be difficult to know exactly what the maximum value of these two
-variables is. Plausible maximum values could be chosen based on a
+be difficult to know exactly what the maximum values of these two
+variables are. Plausible maximum values could be chosen based on a
 combination of the observed data (e.g., the maximum observed values of
 $W$ among censored and uncensored observations) and subject matter
 knowledge about $X$ and $C$.
@@ -290,15 +291,15 @@ sparcc.param <- sparcc(
 
     ## STEP 1: estimate parametric nuisance parameters
 
-    ## STEP 1 complete (0.21 seconds)
+    ## STEP 1 complete (0.45 seconds)
 
     ## STEP 2: obtain SPARCC estimator
 
-    ## STEP 2 complete (50.71 seconds)
+    ## STEP 2 complete (70.74 seconds)
 
     ## STEP 3: obtain SPARCC variance estimator
 
-    ## STEP 3 complete (17.81 seconds)
+    ## STEP 3 complete (17.55 seconds)
 
 The `sparcc` function returns a list with three items: `x.model`,
 `c.model`, and `outcome.model`, which are themselves lists with results
@@ -362,7 +363,7 @@ sparcc.param$outcome.model$outcome.fmla
 ```
 
     ## Y ~ X * Z
-    ## <environment: 0x00000171a3a213b8>
+    ## <environment: 0x000002ece293dd90>
 
 ``` r
 ## estimated coefficient; truth is c(1, 10, 2, 0, 0)
@@ -406,6 +407,7 @@ $$\widehat{Y} = D_{\text{new}}\widehat{\boldsymbol{\beta}} $$
     compute the variance of the fitted values:
 
 $$\widehat{\text{Var}}(\widehat{Y}) = D_{new}\widehat{\text{Var}}(\widehat{\mathbf{\beta}})D_{new}^T$$
+
 Then we construct 95% Wald-type confidence intervals:
 
 $$\widehat{Y} \pm z_{0.975} \sqrt{\widehat{\text{Var}}(\widehat{Y})}$$
@@ -490,15 +492,15 @@ sparcc.nonpar <- sparcc(
 
     ## STEP 1: estimate nonparametric nuisance parameters
 
-    ## STEP 1 complete (1.49 seconds)
+    ## STEP 1 complete (1.45 seconds)
 
     ## STEP 2: obtain SPARCC estimator
 
-    ## STEP 2 complete (59396.71 seconds)
+    ## STEP 2 complete (51.08 seconds)
 
     ## STEP 3: obtain SPARCC variance estimator
 
-    ## STEP 3 complete (18.25 seconds)
+    ## STEP 3 complete (18.04 seconds)
 
 The output is a list containing `x.model`, `c.model`, and
 `outcome.model`, similar to that for the parametric model
