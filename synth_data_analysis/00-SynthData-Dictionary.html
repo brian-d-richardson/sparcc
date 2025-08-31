@@ -11,7 +11,7 @@
 
 <meta name="author" content="Brian Richardson" />
 
-<meta name="date" content="2025-08-29" />
+<meta name="date" content="2025-08-31" />
 
 <title>Data Dictionary: SPARCC Synthetic Data Analysis</title>
 
@@ -441,7 +441,7 @@ display: none;
 <h1 class="title toc-ignore">Data Dictionary: SPARCC Synthetic Data
 Analysis</h1>
 <h4 class="author">Brian Richardson</h4>
-<h4 class="date">08/29/2025</h4>
+<h4 class="date">08/31/2025</h4>
 
 </div>
 
@@ -449,7 +449,7 @@ Analysis</h1>
 <p>This document describes the data used in the synthetic data analysis
 accompanying the <code>sparcc</code> R package and the paper “SPARCC:
 Semi-Parametric Robust Estimation in a Right-Censored Covariate Model,”
-which is currently under revision. A pre-print can be found here: <a href="https://arxiv.org/abs/2409.07795" class="uri">https://arxiv.org/abs/2409.07795</a>.</p>
+which is currently under revision.</p>
 <p>The real analysis uses data from the ENROLL-HD study, available upon
 request at: <a href="https://enroll-hd.org/for-researchers/access-data-biosamples/" class="uri">https://enroll-hd.org/for-researchers/access-data-biosamples/</a>.</p>
 <p>For this synthetic analysis, synthetic data are generated to mimic
@@ -467,8 +467,7 @@ Total Motor Score (TMS) outcome</li>
 <li><code>03-SynthData-Analysis-SDMT.R</code>: analyzes data with the
 Symbol Digit Modalities Test (SDMT) outcome</li>
 <li><code>04-SynthData-Analysis-cUHDRS.R</code>: analyzes data with the
-composite Unified Huntington’s Disease Rating Scale (cUHDRS)
-outcome</li>
+composite Unified Huntington Disease Rating Scale (cUHDRS) outcome</li>
 <li><code>05-SynthData-Results.R</code>: compiles results across
 outcomes, produces tables, and produces figures in
 <code>figures/</code></li>
@@ -491,9 +490,9 @@ and stored in <code>derived-data/</code>:</p>
 <h4><code>datf_*</code> data sets</h4>
 <p>Contain the following variables: - <code>Y</code>: numeric outcome
 (TMS, SDMT, or cUHDRS, depending on suffix)<br />
-- <code>C</code>: time (years) until study exit<br />
-- <code>X</code>: time (years) until Huntington’s disease diagnosis (NA
-if censored, i.e., if exit occurs before diagnosis)<br />
+- <code>C</code>: time (years) to study exit<br />
+- <code>X</code>: time (years) to Huntington disease diagnosis (NA if
+right-censored, i.e., if exit occurs before diagnosis)<br />
 - <code>W</code>: observed time, <code>min(X, C)</code><br />
 - <code>Delta</code>: censoring indicator (1 if uncensored, 0 if
 censored)<br />
@@ -518,7 +517,7 @@ distribution model for <code>C</code> given <code>Z</code>.</p>
 <p>Three outcomes are analyzed:<br />
 - <strong>Total Motor Score (TMS):</strong> transformed as <span class="math inline">\(y \mapsto \log(y+1)\)</span><br />
 - <strong>Symbol Digit Modalities Test (SDMT)</strong><br />
-- <strong>Composite Unified Huntington’s Disease Rating Scale
+- <strong>Composite Unified Huntington Disease Rating Scale
 (cUHDRS)</strong></p>
 </div>
 
